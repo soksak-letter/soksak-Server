@@ -1,7 +1,6 @@
 // src/index.js
 import cors from "cors";
 import dotenv from "dotenv";
-dotenv.config();
 import express from "express";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
@@ -20,6 +19,8 @@ app.use(
     credentials: true,
   })
 );
+dotenv.config();
+
 // "http://localhost:5173", "http://localhost:3000", 
 app.use(express.static("public"));
 app.use(express.json());
@@ -43,7 +44,7 @@ app.use(
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(specs));
 
-// 공통 응답 헬퍼 (한 번만!)
+// 공통 응답 헬퍼
 app.use((req, res, next) => {
   res.success = (success) => {
     return res.json({ resultType: "SUCCESS", error: null, success });
@@ -63,13 +64,11 @@ export const isLogin = (req, res, next) => {
   const user = req.session?.user;
 
   if (user) {
-    // 이후 로직에서 일관되게 쓰라고 박아줌
     req.user = user;
     req.userName = user.name;
     return next();
   }
 
-  // ✅ 여기서 throw 하지 말고 401로 명확히 응답 (네 공통응답 포맷에 맞춤)
   return res.status(401).json({
     resultType: "FAIL",
     error: {
