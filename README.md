@@ -102,20 +102,20 @@
 ---
 
 ## 폴더 구조
-📦soksak-Server
- ┣ 📂.github
- ┣ 📂prisma
- ┃ ┗ 📜schema.prisma
- ┣ 📂src
- ┃ ┣ 📂controllers
- ┃ ┣ 📂errors
- ┃ ┣ 📂repositories
- ┃ ┣ 📂services
- ┃ ┣ 📂utils
- ┃ ┣ 📜db.config.js
- ┃ ┗ 📜index.js
- ┣ 📜.gitignore
- ┣ 📜package-lock.json
- ┣ 📜package.json
- ┣ 📜README.md
- ┗ 📜swagger.config.js
+📦soksak-Server<br/>
+ ┣ 📂.github<br/>
+ ┣ 📂prisma<br/>
+ ┃ ┗ 📜schema.prisma<br/>
+ ┣ 📂src<br/>
+ ┃ ┣ 📂controllers<br/>
+ ┃ ┣ 📂errors<br/>
+ ┃ ┣ 📂repositories<br/>
+ ┃ ┣ 📂services<br/>
+ ┃ ┣ 📂utils<br/>
+ ┃ ┣ 📜db.config.js<br/>
+ ┃ ┗ 📜index.js<br/>
+ ┣ 📜.gitignore<br/>
+ ┣ 📜package-lock.json<br/>
+ ┣ 📜package.json<br/>
+ ┣ 📜README.md<br/>
+ ┗ 📜swagger.config.js<br/>
