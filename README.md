@@ -1,7 +1,3 @@
-<p align='center'>
-    <img src="https://capsule-render.vercel.app/api?type=waving&color=FFADAD&height=300&section=header&text=WHYLOG&fontSize=70&animation=fadeIn&fontColor=525252&fontAlignY=38&desc=WHY를%20기록하는%20회고%20서비스&descAlignY=51&descAlign=62"/>
-</p>
-
 ## 🔨 Tech Stack (Node.js Server)
 
 ### Languages
