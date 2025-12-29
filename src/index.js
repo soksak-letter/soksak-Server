@@ -7,8 +7,9 @@ import swaggerUi from "swagger-ui-express";
 import session from "express-session";
 import { specs } from "../swagger.config.js";
 
+dotenv.config();
+
 const app = express();
-app.set("trust proxy", 1);
 const port = process.env.PORT || 3000;
 
 // 미들웨어 설정
@@ -19,7 +20,8 @@ app.use(
     credentials: true,
   })
 );
-dotenv.config();
+app.set("trust proxy", 1);
+
 
 // "http://localhost:5173", "http://localhost:3000", 
 app.use(express.static("public"));
@@ -109,10 +111,10 @@ app.use((err, req, res, next) => {
 });
 
 // 서버 실행
-app.listen(process.env.PORT || 3000, async () => {
-  console.log(
-    `현재 토큰: ${process.env.GROQ_API_KEY ? "로드 성공" : "로드 실패"}`
-  );
-  await hugRepository.warmupModel();
-  console.log(`Server is running on port ${process.env.PORT || 3000}`);
+app.listen(port, async () => {
+  // console.log(
+  //   `현재 토큰: ${process.env.GROQ_API_KEY ? "로드 성공" : "로드 실패"}`
+  // );
+  // await hugRepository.warmupModel();
+  console.log(`Server is running on port ${port}`);
 });
