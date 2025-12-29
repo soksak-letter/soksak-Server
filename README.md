@@ -90,6 +90,8 @@
    - Refactor
    - Style
    - Test
+   - Chore
+   - docs
 
 2. 커밋 메시지
 - `Feat: 사용자 로그인 API 구현 (#9)`
@@ -101,9 +103,16 @@
 
 ---
 
-## 폴더 구조
-📦soksak-Server<br/>
- ┣ 📂.github<br/>
+## SSH Tunneling
+
+### 1. 터널링 실행
+터미널을 열고 아래 명령어를 입력한 뒤 prisma 사용
+
+```
+ssh -fN -i "public 키 위치" - L 3307:(DB가 있는 서브넷 private ip):3306 ubuntu@(백엔드 서버 public ip)
+```
+ 
+┣ 📂.github<br/>
  ┣ 📂prisma<br/>
  ┃ ┗ 📜schema.prisma<br/>
  ┣ 📂src<br/>
