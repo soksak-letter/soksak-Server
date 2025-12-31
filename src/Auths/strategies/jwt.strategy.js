@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
-import { prisma } from "./db.config.js";
+import { findUserById } from "../../repositories/user.repository.js";
 
 dotenv.config();
 const secret = process.env.JWT_SECREAT;
@@ -16,7 +16,7 @@ const jwtOptions = {
  */
 export const jwtStrategy = new JwtStrategy(jwtOptions, async (payload, done) => {
     try {
-        const user = await prisma.user.findFirst({ where: { id: payload.id, isDeleted: false }});
+        const user = await findUserById(payload);
         
         if(user) {
             return done(null, user);
