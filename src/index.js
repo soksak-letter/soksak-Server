@@ -7,6 +7,7 @@ import swaggerUi from "swagger-ui-express";
 import session from "express-session";
 import passport from "passport";
 import { googleStrategy } from "./Auths/strategies/google.strategy.js";
+import { jwtStrategy } from "./configs/auth.config.js";
 import { specs } from "../swagger.config.js";
 
 dotenv.config();
@@ -33,6 +34,7 @@ app.use(passport.initialize());
 
 // 로그인 전략
 passport.use(googleStrategy);
+passport.use(jwtStrategy);
 
 app.use(
   session({
@@ -67,26 +69,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// 로그인 확인 미들웨어, 추후 토큰 기반 인증으로 변경 예정
-export const isLogin = (req, res, next) => {
-  const user = req.session?.user;
-
-  if (user) {
-    req.user = user;
-    req.userName = user.name;
-    return next();
-  }
-
-  return res.status(401).json({
-    resultType: "FAIL",
-    error: {
-      errorCode: "AUTH_401",
-      reason: "로그인이 필요합니다.",
-      data: null,
-    },
-    success: null,
-  });
-};
+// 로그인 확인 미들웨어
+export const isLogin = passport.authenticate('jwt', { session: false });
 
 // 비동기 에러 래퍼
 const asyncHandler = (fn) => (req, res, next) => {
@@ -124,7 +108,6 @@ app.get("/oauth2/callback/google",
     });
   }
 )
-
 
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
