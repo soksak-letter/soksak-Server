@@ -11,9 +11,9 @@ datasource db {
 }
 
 model User {
-  id              BigInt    @id @default(autoincrement()) @map("id")
+  id              Int    @id @default(autoincrement()) @map("id")
   email           String    @unique @map("email")
-  nickname        String    @unique @map("nickname")
+  nickname        String?   @map("nickname")
   profileImageUrl String?   @map("profile_image_url")
   bio             String?   @map("bio")
   gender          String?   @map("gender")
@@ -22,7 +22,7 @@ model User {
   isDeleted       Boolean   @default(false) @map("is_deleted")
   deletedAt       DateTime? @map("deleted_at")
   createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
 
   notificationSetting UserNotificationSetting?
   deviceTokens        UserDeviceToken[]
@@ -52,7 +52,7 @@ model User {
 }
 
 model UserNotificationSetting {
-  userId               BigInt   @id @map("user_id")
+  userId               Int   @id @map("user_id")
   letterEnabled        Boolean  @map("letter_enabled")
   replyEnabled         Boolean  @map("reply_enabled")
   weeklyReportEnabled  Boolean  @map("weekly_report_enabled")
@@ -65,8 +65,8 @@ model UserNotificationSetting {
 }
 
 model UserDeviceToken {
-  id          BigInt   @id @default(autoincrement()) @map("id")
-  userId      BigInt   @map("user_id")
+  id          Int   @id @default(autoincrement()) @map("id")
+  userId      Int   @map("user_id")
   deviceType  String   @map("device_type")
   deviceToken String   @map("device_token")
   lastSeenAt  DateTime @default(now()) @map("last_seen_at")
@@ -79,8 +79,8 @@ model UserDeviceToken {
 }
 
 model UserAgreement {
-  id              BigInt   @id @default(autoincrement()) @map("id")
-  userId          BigInt   @map("user_id")
+  id              Int   @id @default(autoincrement()) @map("id")
+  userId          Int   @map("user_id")
   termsAgreed     Boolean  @map("terms_agreed")
   privacyAgreed   Boolean  @map("privacy_agreed")
   marketingAgreed Boolean  @map("marketing_agreed")
@@ -93,8 +93,8 @@ model UserAgreement {
 }
 
 model Auth {
-  id             BigInt   @id @default(autoincrement()) @map("id")
-  userId         BigInt   @map("user_id")
+  id             Int   @id @default(autoincrement()) @map("id")
+  userId         Int   @map("user_id")
   provider       String   @map("provider")
   providerUserId String?  @map("provider_user_id")
   email          String?  @map("email")
@@ -109,8 +109,8 @@ model Auth {
 }
 
 model RefreshToken {
-  id        BigInt    @id @default(autoincrement()) @map("id")
-  userId    BigInt    @map("user_id")
+  id        Int    @id @default(autoincrement()) @map("id")
+  userId    Int    @map("user_id")
   tokenHash String    @unique @map("token_hash")
   expiresAt DateTime  @map("expires_at")
   revokedAt DateTime? @map("revoked_at")
@@ -146,7 +146,7 @@ model Interest {
 }
 
 model UserInterest {
-  userId     BigInt   @map("user_id")
+  userId     Int   @map("user_id")
   interestId Int      @map("interest_id")
   createdAt  DateTime @default(now()) @map("created_at")
 
@@ -202,7 +202,7 @@ model MatchingSession {
 
 model SessionParticipant {
   sessionId String   @map("session_id")
-  userId    BigInt   @map("user_id")
+  userId    Int   @map("user_id")
   role      String?  @map("role")
   joinedAt  DateTime @default(now()) @map("joined_at")
 
@@ -215,10 +215,10 @@ model SessionParticipant {
 }
 
 model SessionReview {
-  id                BigInt   @id @default(autoincrement()) @map("id")
+  id                Int   @id @default(autoincrement()) @map("id")
   sessionId         String   @map("session_id")
-  reviewerUserId    BigInt   @map("reviewer_user_id")
-  targetUserId      BigInt   @map("target_user_id")
+  reviewerUserId    Int   @map("reviewer_user_id")
+  targetUserId      Int   @map("target_user_id")
   temperatureScore Int      @map("temperature_score")
   reviewTag         String   @map("review_tag")
   comment           String?  @db.Text @map("comment")
@@ -235,9 +235,9 @@ model SessionReview {
 }
 
 model Letter {
-  id             BigInt    @id @default(autoincrement()) @map("id")
-  senderUserId   BigInt    @map("sender_user_id")
-  receiverUserId BigInt?   @map("receiver_user_id")
+  id             Int    @id @default(autoincrement()) @map("id")
+  senderUserId   Int    @map("sender_user_id")
+  receiverUserId Int?   @map("receiver_user_id")
   sessionId      String?   @map("session_id")
   letterType     String    @map("letter_type")
   questionId     Int?      @map("question_id")
@@ -269,7 +269,7 @@ model Letter {
 }
 
 model LetterDesign {
-  letterId BigInt @id @map("letter_id")
+  letterId Int @id @map("letter_id")
   paperId  Int    @map("paper_id")
   stampId  Int    @map("stamp_id")
   fontId   Int    @map("font_id")
@@ -316,7 +316,7 @@ model LetterAssetFont {
 }
 
 model LetterEmotionTag {
-  letterId BigInt @map("letter_id")
+  letterId Int @map("letter_id")
   tag      String @map("tag")
 
   letter Letter @relation(fields: [letterId], references: [id])
@@ -335,7 +335,7 @@ model AiKeyword {
 }
 
 model LetterAiKeyword {
-  letterId  BigInt   @map("letter_id")
+  letterId  Int   @map("letter_id")
   keywordId Int      @map("keyword_id")
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -348,8 +348,8 @@ model LetterAiKeyword {
 }
 
 model LetterLike {
-  letterId  BigInt   @map("letter_id")
-  userId    BigInt   @map("user_id")
+  letterId  Int   @map("letter_id")
+  userId    Int   @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
 
   letter Letter @relation(fields: [letterId], references: [id])
@@ -362,8 +362,8 @@ model LetterLike {
 
 model FriendRequest {
   id              String   @id @map("id")
-  requesterUserId BigInt   @map("requester_user_id")
-  receiverUserId  BigInt   @map("receiver_user_id")
+  requesterUserId Int   @map("requester_user_id")
+  receiverUserId  Int   @map("receiver_user_id")
   sessionId       String?  @map("session_id")
   status          String   @map("status")
   createdAt       DateTime @default(now()) @map("created_at")
@@ -380,9 +380,9 @@ model FriendRequest {
 }
 
 model Friend {
-  id        BigInt   @id @default(autoincrement()) @map("id")
-  userAId   BigInt   @map("user_a_id")
-  userBId   BigInt   @map("user_b_id")
+  id        Int   @id @default(autoincrement()) @map("id")
+  userAId   Int   @map("user_a_id")
+  userBId   Int   @map("user_b_id")
   createdAt DateTime @default(now()) @map("created_at")
 
   userA User @relation("UserA", fields: [userAId], references: [id])
@@ -394,8 +394,8 @@ model Friend {
 }
 
 model Block {
-  blockerUserId BigInt   @map("blocker_user_id")
-  blockedUserId BigInt   @map("blocked_user_id")
+  blockerUserId Int   @map("blocker_user_id")
+  blockedUserId Int   @map("blocked_user_id")
   createdAt     DateTime @default(now()) @map("created_at")
 
   blocker User @relation("Blocker", fields: [blockerUserId], references: [id])
@@ -407,10 +407,10 @@ model Block {
 }
 
 model UserReport {
-  id             BigInt   @id @default(autoincrement()) @map("id")
-  reporterUserId BigInt   @map("reporter_user_id")
-  targetUserId   BigInt   @map("target_user_id")
-  letterId       BigInt?  @map("letter_id")
+  id             Int   @id @default(autoincrement()) @map("id")
+  reporterUserId Int   @map("reporter_user_id")
+  targetUserId   Int   @map("target_user_id")
+  letterId       Int?  @map("letter_id")
   status         String   @map("status")
   createdAt      DateTime @default(now()) @map("created_at")
 
@@ -426,7 +426,7 @@ model UserReport {
 }
 
 model UserReportReason {
-  reportId BigInt @map("report_id")
+  reportId Int @map("report_id")
   reason   String @map("reason")
 
   report UserReport @relation(fields: [reportId], references: [id])
@@ -436,8 +436,8 @@ model UserReportReason {
 }
 
 model Inquiry {
-  id            BigInt    @id @default(autoincrement()) @map("id")
-  userId        BigInt    @map("user_id")
+  id            Int    @id @default(autoincrement()) @map("id")
+  userId        Int    @map("user_id")
   category      String    @map("category")
   status        String    @map("status")
   title         String    @map("title")
@@ -453,8 +453,8 @@ model Inquiry {
 }
 
 model Restriction {
-  id        BigInt   @id @default(autoincrement()) @map("id")
-  userId    BigInt   @map("user_id")
+  id        Int   @id @default(autoincrement()) @map("id")
+  userId    Int   @map("user_id")
   type      String   @map("type")
   reason    String   @map("reason")
   startsAt  DateTime @map("starts_at")
@@ -468,7 +468,7 @@ model Restriction {
 }
 
 model Notice {
-  id        BigInt   @id @default(autoincrement()) @map("id")
+  id        Int   @id @default(autoincrement()) @map("id")
   title     String   @map("title")
   content   String   @db.Text @map("content")
   pinned    Boolean  @map("pinned")
@@ -489,8 +489,8 @@ model PolicyDocument {
 }
 
 model WeeklyReport {
-  id          BigInt   @id @default(autoincrement()) @map("id")
-  userId      BigInt   @map("user_id")
+  id          Int   @id @default(autoincrement()) @map("id")
+  userId      Int   @map("user_id")
   year        Int      @map("year")
   week        Int      @map("week")
   summaryText String?  @db.Text @map("summary_text")
@@ -506,7 +506,7 @@ model WeeklyReport {
 }
 
 model WeeklyReportEmotion {
-  reportId BigInt @map("report_id")
+  reportId Int @map("report_id")
   emotion  String @map("emotion")
   ratio    Float  @map("ratio")
   count    Int    @map("count")
@@ -518,7 +518,7 @@ model WeeklyReportEmotion {
 }
 
 model WeeklyReportKeyword {
-  reportId BigInt @map("report_id")
+  reportId Int @map("report_id")
   keyword  String @map("keyword")
   count    Int    @map("count")
 
@@ -529,8 +529,8 @@ model WeeklyReportKeyword {
 }
 
 model WeeklyReportHighlight {
-  reportId      BigInt @map("report_id")
-  letterId      BigInt @map("letter_id")
+  reportId      Int @map("report_id")
+  letterId      Int @map("letter_id")
   highlightType String @map("highlight_type")
 
   report WeeklyReport @relation(fields: [reportId], references: [id])

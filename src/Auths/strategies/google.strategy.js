@@ -13,12 +13,12 @@ const googleVerify = async (profile) => {
         throw new Error(`profile.email was not found: ${profile}`);
     }
 
-    const user = prisma.user.findFirst({ where: { email: email } });
+    const user = await prisma.user.findFirst({ where: { email: email } });
     if(user !== null) {
         return { id: user.id, email: user.email };
     }
 
-    const newUser = prisma.user.create({ data: { email: email } });
+    const newUser = await prisma.user.create({ data: { email: email } });
     
     return { id: newUser.id, email: newUser.email};
 }
