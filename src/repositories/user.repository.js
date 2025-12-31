@@ -18,10 +18,21 @@ export const findUserById = async (payload) => {
     }
 }
 
-export const createUser = async (email) => {
+export const createUserAndAuth = async ({user, auth}) => {
+    console.log(auth);
     try{
-        const user = await prisma.user.create({ data: { email: email } });
-        return user;
+        const newUser = await prisma.user.create({ 
+            data: {
+                email: user.email,
+                auths: {
+                    create: {
+                        email: user.email,
+                        ...auth
+                    }
+                }  
+            }
+        });
+        return newUser;
     } catch(err) {
         throw new Error(err);
     }
