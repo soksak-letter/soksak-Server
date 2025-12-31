@@ -5,6 +5,8 @@ import express from "express";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
 import session from "express-session";
+import passport from "passport";
+import { googleStrategy } from "./Auths/strategies/google.strategy.js";
 import { specs } from "../swagger.config.js";
 
 dotenv.config();
@@ -27,6 +29,10 @@ app.set("trust proxy", 1);
 app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(passport.initialize());
+
+// 로그인 전략
+passport.use(googleStrategy);
 
 app.use(
   session({
@@ -82,7 +88,6 @@ export const isLogin = (req, res, next) => {
   });
 };
 
-
 // 비동기 에러 래퍼
 const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
@@ -92,6 +97,33 @@ const asyncHandler = (fn) => (req, res, next) => {
 app.get("/", (req, res) => {
   res.send("Hello World! Server is running.");
 });
+
+// 로그인/회원가입
+app.get("/oauth2/login/google",
+  passport.authenticate("google", {
+    session: false
+  })
+);
+
+app.get("/oauth2/callback/google",
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect: "/login-failed"
+  }),
+
+  (req, res) => {
+    const tokens = req.user;
+
+    res.status(200).json({
+      resultType: "SUCCESS",
+      error: null,
+      success: {
+          message: "Google 로그인 성공!",
+          tokens: tokens
+      }
+    });
+  }
+)
 
 
 app.use((err, req, res, next) => {
@@ -112,9 +144,5 @@ app.use((err, req, res, next) => {
 
 // 서버 실행
 app.listen(port, async () => {
-  // console.log(
-  //   `현재 토큰: ${process.env.GROQ_API_KEY ? "로드 성공" : "로드 실패"}`
-  // );
-  // await hugRepository.warmupModel();
   console.log(`Server is running on port ${port}`);
 });
