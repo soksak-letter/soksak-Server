@@ -1,8 +1,6 @@
-import dotenv from "dotenv";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import { findUserById } from "../../repositories/user.repository.js";
 
-dotenv.config();
 const secret = process.env.JWT_SECREAT;
 
 const jwtOptions = {

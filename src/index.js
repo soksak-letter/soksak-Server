@@ -6,9 +6,10 @@ import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
 import session from "express-session";
 import passport from "passport";
-import { googleStrategy } from "./Auths/strategies/google.strategy.js";
-import { jwtStrategy } from "./Auths/strategies/jwt.strategy.js";
 import { specs } from "./configs/swagger.config.js";
+import { jwtStrategy } from "./Auths/strategies/jwt.strategy.js";
+import { googleStrategy } from "./Auths/strategies/google.strategy.js";
+import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use(passport.initialize());
 
 // 로그인 전략
 passport.use(googleStrategy);
+passport.use(kakaoStrategy);
 passport.use(jwtStrategy);
 
 app.use(
@@ -83,26 +85,39 @@ app.get("/", (req, res) => {
 });
 
 // 로그인/회원가입
-app.get("/auth/login/google",
-  passport.authenticate("google", {
-    session: false
-  })
+app.get("/auth/login/:provider",
+  (req, res, next) => {
+    const { provider } = req.params;
+    
+    const auth = passport.authenticate(provider, {
+      session: false
+    })
+
+    auth(req, res, next);
+  }
 );
 
-app.get("/auth/callback/google",
-  passport.authenticate("google", {
-    session: false,
-    failureRedirect: "/login-failed"
-  }),
+app.get("/auth/callback/:provider",
+  (req, res, next) => {
+    const { provider } = req.params;
+    
+    const auth = passport.authenticate(provider, {
+      session: false,
+      failureRedirect: "/login-failed"
+    });
+    
+    auth(req, res, next);
+  }, 
 
   (req, res) => {
     const {id, jwtAccessToken, jwtRefreshToken} = req.user;
+    const { provider } = req.params;
 
     res.status(200).json({
       resultType: "SUCCESS",
       error: null,
       success: {
-          message: "Google 로그인 성공!",
+          message: `${provider} 로그인 성공!`,
           id: id,
           tokens: { jwtAccessToken, jwtRefreshToken }
       }
