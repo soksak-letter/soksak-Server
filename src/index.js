@@ -11,6 +11,7 @@ import { jwtStrategy } from "./Auths/strategies/jwt.strategy.js";
 import { googleStrategy } from "./Auths/strategies/google.strategy.js";
 import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
 import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
+import { handleRefreshToken } from "./controllers/auth.controller.js";
 
 dotenv.config();
 
@@ -37,8 +38,8 @@ app.use(passport.initialize());
 // 로그인 전략
 passport.use(googleStrategy);
 passport.use(kakaoStrategy);
-passport.use(jwtStrategy);
 passport.use(naverStrategy);
+passport.use(jwtStrategy);
 
 app.use(
   session({
@@ -127,12 +128,14 @@ app.get("/auth/callback/:provider",
   }
 )
 
-app.get('/mypage', isLogin, (req, res) => {
+app.get("/mypage", isLogin, (req, res) => {
   res.status(200).success({
     message: `인증 성공! ${req.user.name}님의 마이페이지입니다.`,
     user: req.user,
   });
 });
+
+app.get("/auth/refresh", handleRefreshToken);
 
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);

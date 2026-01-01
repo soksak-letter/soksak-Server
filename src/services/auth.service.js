@@ -1,5 +1,5 @@
 import { findUserByEmail, createUserAndAuth } from "../repositories/user.repository.js";
-import { generateAccessToken, generateRefreshToken } from "../Auths/token.js";
+import { generateAccessToken, generateRefreshToken, verifyToken } from "../Auths/token.js";
 
 /**
  * 유저가 서비스에 가입했는지 확인하고 JWT를 반환하는 함수
@@ -11,12 +11,14 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
         throw new Error(`이메일이 존재하지 않습니다: ${email}`);
     }
 
-    const user = await findUserByEmail(email);
+    let user = await findUserByEmail(email);
+    console.log(user);
     if(user && user.provider !== provider) {
         throw new Error(`이미 ${user.provider}에서 가입한 이메일입니다`);
     }
-
+    
     if(!user) {
+        console.log("else문");
         user = await createUserAndAuth({
             user: {
                 email
@@ -27,14 +29,22 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
             }
         });
     }
-    
+
     const payload = { id: user.id, email: user.email };
     const jwtAccessToken = generateAccessToken(user);
     const jwtRefreshToken = generateRefreshToken(user);
-    console.log("hello");
+    
     return {
         user: payload,
         jwtAccessToken,
         jwtRefreshToken
     };
 };
+
+export const refreshToken = (token) => {
+    const payload = verifyToken(token);
+
+    const jwtAccessToken = generateAccessToken(payload);
+
+    return jwtAccessToken;
+}

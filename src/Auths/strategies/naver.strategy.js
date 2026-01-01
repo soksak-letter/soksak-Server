@@ -12,7 +12,6 @@ export const naverStrategy = new NaverStrategy(
 
     async (accessToken, refreshToken, profile, cb) => {
         try{
-            console.log(profile);
             const {user, jwtAccessToken, jwtRefreshToken} = await verifySocialAccount(createSocialUserDTO(profile));
 
             return cb(null, {

@@ -1,5 +1,4 @@
 export const createSocialUserDTO = (profile) => {
-
     switch(profile.provider) {
         case "google" :
             return {

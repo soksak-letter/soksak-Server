@@ -4,6 +4,7 @@ export const findUserByEmail = async (email) => {
     try{
         const user = await prisma.user.findFirst({ 
             select: {
+                id: true,
                 auths: {
                     select: {
                         provider: true
@@ -14,9 +15,12 @@ export const findUserByEmail = async (email) => {
                 email: email,
             }
         });
+
+        if(!user) return null;
+
         return {
             id: user.id,
-            provider: user.auths[0].provider
+            provider: user.auths?.[0]?.provider
         };
     } catch (err) {
         throw new Error(err);
