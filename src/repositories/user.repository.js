@@ -2,8 +2,22 @@ import { prisma } from "../configs/db.config.js";
 
 export const findUserByEmail = async (email) => {
     try{
-        const user = await prisma.user.findFirst({ where: { email: email }});
-        return user;
+        const user = await prisma.user.findFirst({ 
+            select: {
+                auths: {
+                    select: {
+                        provider: true
+                    }
+                }
+            },
+            where: { 
+                email: email,
+            }
+        });
+        return {
+            id: user.id,
+            provider: user.auths[0].provider
+        };
     } catch (err) {
         throw new Error(err);
     }
@@ -19,7 +33,7 @@ export const findUserById = async (payload) => {
 }
 
 export const createUserAndAuth = async ({user, auth}) => {
-    console.log(auth);
+    
     try{
         const newUser = await prisma.user.create({ 
             data: {

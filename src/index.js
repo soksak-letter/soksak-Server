@@ -10,6 +10,7 @@ import { specs } from "./configs/swagger.config.js";
 import { jwtStrategy } from "./Auths/strategies/jwt.strategy.js";
 import { googleStrategy } from "./Auths/strategies/google.strategy.js";
 import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
+import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use(passport.initialize());
 passport.use(googleStrategy);
 passport.use(kakaoStrategy);
 passport.use(jwtStrategy);
+passport.use(naverStrategy);
 
 app.use(
   session({
@@ -103,7 +105,7 @@ app.get("/auth/callback/:provider",
     
     const auth = passport.authenticate(provider, {
       session: false,
-      failureRedirect: "/login-failed"
+      // failureRedirect: "/login-failed" // 추후 구현
     });
     
     auth(req, res, next);

@@ -12,6 +12,9 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
     }
 
     const user = await findUserByEmail(email);
+    if(user && user.provider !== provider) {
+        throw new Error(`이미 ${user.provider}에서 가입한 이메일입니다`);
+    }
 
     if(!user) {
         user = await createUserAndAuth({
@@ -22,7 +25,7 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
                 provider: provider,
                 providerUserId: providerUserId
             }
-        });    
+        });
     }
     
     const payload = { id: user.id, email: user.email };

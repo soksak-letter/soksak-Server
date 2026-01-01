@@ -1,21 +1,18 @@
-import { Strategy as GoogleStrategy } from "passport-google-oauth20"
+import { Strategy as NaverStrategy } from "passport-naver-v2";
 import { verifySocialAccount } from "../../services/auth.service.js";
 import { createSocialUserDTO } from "../../dtos/auth.dto.js";
 
-/**
- * 구글 로그인 전략 객체 
- */
-
-export const googleStrategy = new GoogleStrategy(
+export const naverStrategy = new NaverStrategy(
     {
-        clientID: process.env.PASSPORT_GOOGLE_CLIENT_ID,
-        clientSecret: process.env.PASSPORT_GOOGLE_CLIENT_SECREAT,
-        callbackURL: "/auth/callback/google", 
+        clientID: process.env.PASSPORT_NAVER_CLIENT_ID,
+        clientSecret: process.env.PASSPORT_NAVER_CLIENT_SECREAT,
+        callbackURL: "/auth/callback/naver",
         scope: ["email", "profile"]
     },
 
     async (accessToken, refreshToken, profile, cb) => {
         try{
+            console.log(profile);
             const {user, jwtAccessToken, jwtRefreshToken} = await verifySocialAccount(createSocialUserDTO(profile));
 
             return cb(null, {
@@ -26,5 +23,5 @@ export const googleStrategy = new GoogleStrategy(
         } catch (err) {
             return cb(err);
         } 
-    } 
+    }
 ) 
