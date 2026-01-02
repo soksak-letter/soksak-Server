@@ -1,10 +1,13 @@
 import { findUserByEmail, createUserAndAuth } from "../repositories/user.repository.js";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../Auths/token.js";
+import { getRefreshToken, saveRefreshToken } from "../repositories/auth.repository.js";
 
 /**
  * 유저가 서비스에 가입했는지 확인하고 JWT를 반환하는 함수
  * 이미 가입한 경우: DB에 있던 id, email 반환
  * 새로 가입한 경우: user 생성 및 로그인 정보 auth에 저장
+ * 
+ * 생성된 refresh token은 redis에 저장
  */
 export const verifySocialAccount = async ({email, provider, providerUserId}) => {
     if(!email) {
@@ -12,13 +15,12 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
     }
 
     let user = await findUserByEmail(email);
-    console.log(user);
+
     if(user && user.provider !== provider) {
         throw new Error(`이미 ${user.provider}에서 가입한 이메일입니다`);
     }
-    
+
     if(!user) {
-        console.log("else문");
         user = await createUserAndAuth({
             user: {
                 email
@@ -29,10 +31,11 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
             }
         });
     }
-
     const payload = { id: user.id, email: user.email };
     const jwtAccessToken = generateAccessToken(user);
     const jwtRefreshToken = generateRefreshToken(user);
+
+    saveRefreshToken({id: user.id, jwtRefreshToken});
     
     return {
         user: payload,
@@ -41,9 +44,11 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
     };
 };
 
-export const refreshToken = (token) => {
+export const updateRefreshToken = async (token) => {
     const payload = verifyToken(token);
-
+    const savedRefreshToken = await getRefreshToken(payload.id);
+    
+    if(savedRefreshToken !== token) throw new Error("유효하지 않은 토큰입니다.");
     const jwtAccessToken = generateAccessToken(payload);
 
     return jwtAccessToken;

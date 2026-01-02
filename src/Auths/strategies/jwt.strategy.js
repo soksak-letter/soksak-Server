@@ -1,11 +1,9 @@
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import { findUserById } from "../../repositories/user.repository.js";
 
-const secret = process.env.JWT_SECREAT;
-
 const jwtOptions = {
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: secret
+    secretOrKey: process.env.JWT_ACCESS_SECREAT
 }
 
 /**

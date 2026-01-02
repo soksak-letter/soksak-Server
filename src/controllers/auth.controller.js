@@ -1,6 +1,6 @@
-import { refreshToken } from "../services/auth.service.js";
+import { updateRefreshToken } from "../services/auth.service.js";
 
-export const handleRefreshToken = (req, res, next) => {
+export const handleRefreshToken = async (req, res, next) => {
     try{
         const authHeader = req.get("authorization");
 
@@ -8,7 +8,7 @@ export const handleRefreshToken = (req, res, next) => {
 
         const token = authHeader.split(" ")[1];
 
-        const jwtAccessToken = refreshToken(token);
+        const jwtAccessToken = await updateRefreshToken(token);
 
         res.status(200).success({jwtAccessToken});
     } catch(err) {

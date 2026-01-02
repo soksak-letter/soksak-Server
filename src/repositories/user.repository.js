@@ -5,6 +5,7 @@ export const findUserByEmail = async (email) => {
         const user = await prisma.user.findFirst({ 
             select: {
                 id: true,
+                email: true,
                 auths: {
                     select: {
                         provider: true
@@ -20,6 +21,7 @@ export const findUserByEmail = async (email) => {
 
         return {
             id: user.id,
+            email: user.email,
             provider: user.auths?.[0]?.provider
         };
     } catch (err) {
@@ -37,7 +39,6 @@ export const findUserById = async (payload) => {
 }
 
 export const createUserAndAuth = async ({user, auth}) => {
-    
     try{
         const newUser = await prisma.user.create({ 
             data: {
@@ -50,7 +51,12 @@ export const createUserAndAuth = async ({user, auth}) => {
                 }  
             }
         });
-        return newUser;
+
+        return {
+            id: newUser.id,
+            email: newUser.email,
+            provider: newUser.auths?.[0]?.provider
+        };
     } catch(err) {
         throw new Error(err);
     }
