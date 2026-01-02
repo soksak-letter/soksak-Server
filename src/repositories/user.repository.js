@@ -1,0 +1,63 @@
+import { prisma } from "../configs/db.config.js";
+
+export const findUserByEmail = async (email) => {
+    try{
+        const user = await prisma.user.findFirst({ 
+            select: {
+                id: true,
+                email: true,
+                auths: {
+                    select: {
+                        provider: true
+                    }
+                }
+            },
+            where: { 
+                email: email,
+            }
+        });
+
+        if(!user) return null;
+
+        return {
+            id: user.id,
+            email: user.email,
+            provider: user.auths?.[0]?.provider
+        };
+    } catch (err) {
+        throw new Error(err);
+    }
+}
+
+export const findUserById = async (payload) => {
+    try{
+        const user = await prisma.user.findFirst({ where: { id: payload.id, isDeleted: false }});
+        return user;
+    } catch (err) {
+        throw new Error(err);
+    }
+}
+
+export const createUserAndAuth = async ({user, auth}) => {
+    try{
+        const newUser = await prisma.user.create({ 
+            data: {
+                email: user.email,
+                auths: {
+                    create: {
+                        email: user.email,
+                        ...auth
+                    }
+                }  
+            }
+        });
+
+        return {
+            id: newUser.id,
+            email: newUser.email,
+            provider: newUser.auths?.[0]?.provider
+        };
+    } catch(err) {
+        throw new Error(err);
+    }
+}
