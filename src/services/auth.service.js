@@ -1,3 +1,4 @@
+import bcrypt from "bcrypt"
 import { findUserByEmail, createUserAndAuth } from "../repositories/user.repository.js";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../Auths/token.js";
 import { getRefreshToken, saveRefreshToken } from "../repositories/auth.repository.js";
@@ -47,9 +48,35 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
 export const updateRefreshToken = async (token) => {
     const payload = verifyToken(token);
     const savedRefreshToken = await getRefreshToken(payload.id);
-    
+
     if(savedRefreshToken !== token) throw new Error("유효하지 않은 토큰입니다.");
     const jwtAccessToken = generateAccessToken(payload);
 
     return jwtAccessToken;
+}
+
+export const createUser = async (data) => {
+    const hashedPassword = await saveHashedPassword();
+
+    user = await createUserAndAuth({
+        user: {
+            email: data.email,
+            name: data.name,
+            phoneNumber: data.phoneNumber
+        },
+        auth: {
+            provider: "soksak",
+            hashedPassword: hashedPassword
+        }
+    });
+}
+
+export const checkEmail = async (email) => {
+    const user = await findUserByEmail(email);
+    
+    if(user) {
+        throw new Error(`이미 ${user.provider}에서 가입한 이메일입니다`);
+    }
+
+    return { exists: false }
 }

@@ -11,7 +11,7 @@ import { jwtStrategy } from "./Auths/strategies/jwt.strategy.js";
 import { googleStrategy } from "./Auths/strategies/google.strategy.js";
 import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
 import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
-import { handleRefreshToken } from "./controllers/auth.controller.js";
+import { handleCheckEmail, handleRefreshToken } from "./controllers/auth.controller.js";
 
 dotenv.config();
 
@@ -135,7 +135,8 @@ app.get("/mypage", isLogin, (req, res) => {
   });
 });
 
-app.get("")
+app.get("/auth/signup");
+app.get("/auth/email/exists", handleCheckEmail);
 app.get("/auth/refresh", handleRefreshToken);
 
 app.use((err, req, res, next) => {
