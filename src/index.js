@@ -88,7 +88,7 @@ app.get("/", (req, res) => {
 });
 
 // 로그인/회원가입
-app.get("/auth/login/:provider",
+app.get("/auth/oauth/:provider",
   (req, res, next) => {
     const { provider } = req.params;
     
@@ -135,6 +135,7 @@ app.get("/mypage", isLogin, (req, res) => {
   });
 });
 
+app.get("")
 app.get("/auth/refresh", handleRefreshToken);
 
 app.use((err, req, res, next) => {
