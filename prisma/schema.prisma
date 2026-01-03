@@ -85,6 +85,7 @@ model UserAgreement {
   userId          Int   @map("user_id")
   termsAgreed     Boolean  @map("terms_agreed")
   privacyAgreed   Boolean  @map("privacy_agreed")
+  ageOver14Agreed Boolean  @map("age_over_14_agreed")
   marketingAgreed Boolean  @map("marketing_agreed")
   agreedAt        DateTime @default(now()) @map("agreed_at")
 
