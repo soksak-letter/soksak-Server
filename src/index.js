@@ -11,7 +11,8 @@ import { jwtStrategy } from "./Auths/strategies/jwt.strategy.js";
 import { googleStrategy } from "./Auths/strategies/google.strategy.js";
 import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
 import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
-import { handleRefreshToken } from "./controllers/auth.controller.js";
+import { handleCheckEmail, handleLogin, handleRefreshToken, handleSignUp } from "./controllers/auth.controller.js";
+import { validateEmail, validatePassword } from "./middlewares/validation.middleware.js";
 
 dotenv.config();
 
@@ -88,7 +89,7 @@ app.get("/", (req, res) => {
 });
 
 // 로그인/회원가입
-app.get("/auth/login/:provider",
+app.get("/auth/oauth/:provider",
   (req, res, next) => {
     const { provider } = req.params;
     
@@ -135,6 +136,9 @@ app.get("/mypage", isLogin, (req, res) => {
   });
 });
 
+app.post("/auth/signup", validateEmail, validatePassword, handleSignUp);
+app.post("/auth/login", validateEmail, validatePassword, handleLogin);
+app.post("/auth/email/exists", validateEmail, handleCheckEmail);
 app.get("/auth/refresh", handleRefreshToken);
 
 app.use((err, req, res, next) => {

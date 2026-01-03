@@ -13,7 +13,9 @@ datasource db {
 model User {
   id              Int    @id @default(autoincrement()) @map("id")
   email           String    @unique @map("email")
+  name            String?   @map("name")
   nickname        String?   @map("nickname")
+  phoneNumber     String?   @unique @map("phone_number")
   profileImageUrl String?   @map("profile_image_url")
   bio             String?   @map("bio")
   gender          String?   @map("gender")
@@ -83,6 +85,7 @@ model UserAgreement {
   userId          Int   @map("user_id")
   termsAgreed     Boolean  @map("terms_agreed")
   privacyAgreed   Boolean  @map("privacy_agreed")
+  ageOver14Agreed Boolean  @map("age_over_14_agreed")
   marketingAgreed Boolean  @map("marketing_agreed")
   agreedAt        DateTime @default(now()) @map("agreed_at")
 

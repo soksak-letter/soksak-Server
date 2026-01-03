@@ -38,9 +38,9 @@ export const findUserById = async (payload) => {
     }
 }
 
-export const createUserAndAuth = async ({user, auth}) => {
+export const createUserAndAuth = async ({user, auth}, tx = prisma) => {
     try{
-        const newUser = await prisma.user.create({ 
+        const newUser = await tx.user.create({ 
             data: {
                 email: user.email,
                 auths: {
@@ -57,6 +57,16 @@ export const createUserAndAuth = async ({user, auth}) => {
             email: newUser.email,
             provider: newUser.auths?.[0]?.provider
         };
+    } catch(err) {
+        throw new Error(err);
+    }
+}
+
+export const createUserAgreement = async (data, tx = prisma) => {
+    try{
+        await tx.userAgreement.create({
+            data: data
+        });
     } catch(err) {
         throw new Error(err);
     }
