@@ -2,7 +2,9 @@ import bcrypt from "bcrypt"
 import { prisma } from "../configs/db.config.js";
 import { findUserByEmail, createUserAndAuth, createUserAgreement } from "../repositories/user.repository.js";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../Auths/token.js";
-import { getHashedPassword, getRefreshToken, saveRefreshToken } from "../repositories/auth.repository.js";
+import { checkEmailRateLimit, getHashedPassword, getRefreshToken, saveEmailVarifyCode, saveRefreshToken } from "../repositories/auth.repository.js";
+import { createRandomNumber } from "../utils/random.util.js";
+import { transporter } from "../configs/mailer.config.js";
 
 /**
  * 유저가 서비스에 가입했는지 확인하고 JWT를 반환하는 함수
@@ -119,4 +121,21 @@ export const checkEmail = async (email) => {
     }
 
     return { exists: false }
+}
+
+export const verifyEmail = async ({email}) => {
+    const isLocked = await checkEmailRateLimit(email);
+    if(!isLocked) throw new Error("5분 후 다시 시도해주세요.");
+
+    const authCode = createRandomNumber(6);
+    await saveEmailVarifyCode({email, authCode});
+
+    const info = await transporter.sendMail({
+        from: `"속삭편지" <${process.env.MAILER_USER}>`,
+        to: email,
+        subject: "[속삭] 회원가입 인증번호",
+        html: `<h1>인증번호는 ${authCode} 입니다.</h1>`
+    })
+    console.log()
+    return info;
 }

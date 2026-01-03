@@ -15,6 +15,21 @@ export const getRefreshToken = async (id) => {
 
 export const getHashedPassword = async (email) => {
     const {passwordHash} = await prisma.auth.findFirst({ select: { passwordHash: true }, where: { email: email } });
-    console.log(passwordHash);
+
     return passwordHash;
+}
+
+export const saveEmailVarifyCode = async ({email, authCode}) => {
+    await redis.set(`emailVerifyNumber:${email}`, authCode, {
+        EX: 60 * 10 // 10분
+    });
+}
+
+export const checkEmailRateLimit = async (email) => {
+    const isLocked = await redis.set(`limit:send-email:${email}`, "locked", {
+        NX: true,   // 중복 저장 방지
+        EX: 60 * 5  // 5분
+    })
+
+    return isLocked
 }

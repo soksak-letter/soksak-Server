@@ -1,4 +1,4 @@
-import { checkEmail, signUpUser, loginUser, updateRefreshToken } from "../services/auth.service.js";
+import { checkEmail, signUpUser, loginUser, updateRefreshToken, verifyEmail } from "../services/auth.service.js";
 
 export const handleSignUp = async (req, res, next) => {
     const { email } = req.body;
@@ -43,6 +43,16 @@ export const handleRefreshToken = async (req, res, next) => {
         const jwtAccessToken = await updateRefreshToken(token);
 
         res.status(200).success({jwtAccessToken});
+    } catch(err) {
+        next(err);
+    }
+}
+
+export const handleVerifyEmail = async (req, res, next) => {
+    try{
+        const result = await verifyEmail(req.body);
+
+        res.status(200).success(result);
     } catch(err) {
         next(err);
     }
