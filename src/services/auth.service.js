@@ -123,7 +123,7 @@ export const checkEmail = async (email) => {
     return { exists: false }
 }
 
-export const verifyEmail = async ({email}) => {
+export const SendverifyEmailCode = async ({email}) => {
     const isLocked = await checkEmailRateLimit(email);
     if(!isLocked) throw new Error("5분 후 다시 시도해주세요.");
 
@@ -136,6 +136,6 @@ export const verifyEmail = async ({email}) => {
         subject: "[속삭] 회원가입 인증번호",
         html: `<h1>인증번호는 ${authCode} 입니다.</h1>`
     })
-    console.log()
+    
     return info;
 }

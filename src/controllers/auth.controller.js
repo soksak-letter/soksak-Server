@@ -1,4 +1,4 @@
-import { checkEmail, signUpUser, loginUser, updateRefreshToken, verifyEmail } from "../services/auth.service.js";
+import { checkEmail, signUpUser, loginUser, updateRefreshToken, SendverifyEmailCode } from "../services/auth.service.js";
 
 export const handleSignUp = async (req, res, next) => {
     const { email } = req.body;
@@ -22,7 +22,7 @@ export const handleLogin = async (req, res, next) => {
     }
 }
 
-export const handleCheckEmail = async (req, res, next) => {
+export const handleCheckDuplicatedEmail = async (req, res, next) => {
     const { email } = req.body;
     try{
         const { exists } = await checkEmail(email); 
@@ -48,9 +48,9 @@ export const handleRefreshToken = async (req, res, next) => {
     }
 }
 
-export const handleVerifyEmail = async (req, res, next) => {
+export const handleSendVerifyEmailCode = async (req, res, next) => {
     try{
-        const result = await verifyEmail(req.body);
+        const result = await SendverifyEmailCode(req.body);
 
         res.status(200).success(result);
     } catch(err) {
