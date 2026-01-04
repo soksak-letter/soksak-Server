@@ -14,7 +14,6 @@ model User {
   id              Int    @id @default(autoincrement()) @map("id")
   email           String    @unique @map("email")
   name            String?   @map("name")
-  username        String?   @map("username")
   nickname        String?   @map("nickname")
   phoneNumber     String?   @unique @map("phone_number")
   profileImageUrl String?   @map("profile_image_url")
@@ -97,11 +96,12 @@ model UserAgreement {
 }
 
 model Auth {
-  id             Int   @id @default(autoincrement()) @map("id")
-  userId         Int   @map("user_id")
+  id             Int      @id @default(autoincrement()) @map("id")
+  userId         Int      @map("user_id")
+  username       String?  @map("username") @unique
   provider       String   @map("provider")
   providerUserId String?  @map("provider_user_id")
-  email          String?  @map("email")
+  email          String?  @map("email")   @unique
   passwordHash   String?  @map("password_hash")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
