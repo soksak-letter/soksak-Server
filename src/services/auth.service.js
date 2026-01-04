@@ -1,8 +1,10 @@
 import bcrypt from "bcrypt"
 import { prisma } from "../configs/db.config.js";
-import { findUserByEmail, createUserAndAuth, createUserAgreement } from "../repositories/user.repository.js";
+import { findUserByEmail, createUserAndAuth, createUserAgreement, findUserByUsername } from "../repositories/user.repository.js";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../Auths/token.js";
-import { getHashedPassword, getRefreshToken, saveRefreshToken } from "../repositories/auth.repository.js";
+import { checkEmailRateLimit, createEmailVerifiedKey, getEmailVerifiedKey, getEmailVerifyCode, getHashedPassword, getRefreshToken, saveEmailVerifyCode, saveRefreshToken, updatePassword } from "../repositories/auth.repository.js";
+import { createRandomNumber } from "../utils/random.util.js";
+import { transporter } from "../configs/mailer.config.js";
 
 /**
  * 유저가 서비스에 가입했는지 확인하고 JWT를 반환하는 함수
@@ -34,8 +36,8 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
         });
     }
     const payload = { id: user.id, email: user.email };
-    const jwtAccessToken = generateAccessToken(user);
-    const jwtRefreshToken = generateRefreshToken(user);
+    const jwtAccessToken = generateAccessToken(user, "1h");
+    const jwtRefreshToken = generateRefreshToken(user, "14d");
 
     await saveRefreshToken({id: user.id, jwtRefreshToken});
     
@@ -46,12 +48,18 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
     };
 };
 
+/**
+ * 
+ * 
+ * @param {string} token 
+ * @returns {string} token
+ */
 export const updateRefreshToken = async (token) => {
     const payload = verifyToken(token);
     const savedRefreshToken = await getRefreshToken(payload.id);
 
     if(savedRefreshToken !== token) throw new Error("유효하지 않은 토큰입니다.");
-    const jwtAccessToken = generateAccessToken(payload);
+    const jwtAccessToken = generateAccessToken(payload, "1h");
 
     return jwtAccessToken;
 }
@@ -69,7 +77,8 @@ export const signUpUser = async (data) => {
                 phoneNumber: data.phoneNumber
             },
             auth: {
-                provider: "soksak",
+                username: data.username,
+                provider: "soksak",                
                 passwordHash: passwordHash
             }
         }, tx);
@@ -88,19 +97,19 @@ export const signUpUser = async (data) => {
     return { newUser };
 }
 
-export const loginUser = async ({email, password}) => {
-    const user = await findUserByEmail(email);
-    if(!user) throw new Error("이메일 또는 비밀번호가 일치하지 않습니다.");
+export const loginUser = async ({username, password}) => {
+    const user = await findUserByUsername(username);
+    if(!user) throw new Error("아이디 또는 비밀번호가 일치하지 않습니다.");
 
-    const passwordHash = await getHashedPassword(email);
-    if(!passwordHash) throw new Error("이메일 또는 비밀번호가 일치하지 않습니다.");
+    const passwordHash = await getHashedPassword(username);
+    if(!passwordHash) throw new Error("아이디 또는 비밀번호가 일치하지 않습니다.");
 
     const isValidPassword = await bcrypt.compare(password, passwordHash);
-    if(!isValidPassword) throw new Error("이메일 또는 비밀번호가 일치하지 않습니다.");
+    if(!isValidPassword) throw new Error("아이디 또는 비밀번호가 일치하지 않습니다.");
 
-    const payload = { id: user.id, email: user.email };
-    const jwtAccessToken = generateAccessToken(user);
-    const jwtRefreshToken = generateRefreshToken(user);
+    const payload = { id: user.id, username: user.username };
+    const jwtAccessToken = generateAccessToken(user, "1h");
+    const jwtRefreshToken = generateRefreshToken(user, "14d");
 
     await saveRefreshToken({id: user.id, jwtRefreshToken});
 
@@ -111,7 +120,7 @@ export const loginUser = async ({email, password}) => {
     };
 }
 
-export const checkEmail = async (email) => {
+export const checkDuplicatedEmail = async (email) => {
     const user = await findUserByEmail(email);
     
     if(user) {
@@ -119,4 +128,80 @@ export const checkEmail = async (email) => {
     }
 
     return { exists: false }
+}
+
+export const checkDuplicatedUsername = async (username) => {
+    const user = await findUserByUsername(username);
+
+    if(user) {
+        throw new Error(`이미 존재하는 아이디입니다.`);
+    }
+    
+    return { exists: false }
+}
+
+export const SendVerifyEmailCode = async ({email, type}) => {
+    const user = await findUserByEmail(email);
+    if(!user) throw new Error("해당 정보로 가입된 계정을 찾을 수 없습니다.");
+
+    const isLocked = await checkEmailRateLimit(email, type);
+    if(!isLocked) throw new Error("5분 후 다시 시도해주세요.");
+
+    const authCode = createRandomNumber(6);
+    await saveEmailVerifyCode({email, authCode, type});
+
+    const info = await transporter.sendMail({
+        from: `"속삭편지" <${process.env.MAILER_USER}>`,
+        to: email,
+        subject: "[속삭] 회원가입 인증번호",
+        html: `<h1>인증번호는 ${authCode} 입니다.</h1>`
+    })
+
+    return info;
+}
+
+export const checkEmailCode = async ({email, code, type}) => {
+    const storedCode = await getEmailVerifyCode(email, type);
+    if(storedCode !== code) throw new Error("인증번호가 일치하지 않습니다.");
+
+    const result = { verified: true };
+
+    switch (type) {
+        case "find-id":
+            await createEmailVerifiedKey(email, type);
+            break;
+
+        case "reset-password":
+            const user = await findUserByEmail(email);
+            if(!user) throw new Error("해당 이메일의 가입정보가 없습니다");
+            
+            result.jwtAccessToken = generateAccessToken(user, "10m");
+            break;
+            
+        default:
+            break;
+    }
+
+    return result
+}
+
+export const getAccountInfo = async (email) => {
+    const isValid = await getEmailVerifiedKey(email, "find-id");
+    if(!isValid) throw new Error("인증되지 않은 이메일입니다.");
+
+    const user = await findUserByEmail(email);
+
+    if(!user) throw new Error("해당 이메일의 가입정보가 없습니다");
+
+    return {
+        username: user.username,
+        createdAt: user.createdAt
+    }
+}
+
+export const resetPassword = async ({userId, password}) => {
+    const passwordHash = await bcrypt.hash(password, 10);
+    await updatePassword({userId, newPassword: passwordHash});
+
+    return { message: "비밀번호 재설정이 완료되었습니다." };
 }
