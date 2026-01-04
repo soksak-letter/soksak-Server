@@ -48,6 +48,12 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
     };
 };
 
+/**
+ * 
+ * 
+ * @param {string} token 
+ * @returns {string} token
+ */
 export const updateRefreshToken = async (token) => {
     const payload = verifyToken(token);
     const savedRefreshToken = await getRefreshToken(payload.id);
@@ -144,14 +150,14 @@ export const SendVerifyEmailCode = async ({email, type}) => {
     const authCode = createRandomNumber(6);
     await saveEmailVerifyCode({email, authCode, type});
 
-    // const info = await transporter.sendMail({
-    //     from: `"속삭편지" <${process.env.MAILER_USER}>`,
-    //     to: email,
-    //     subject: "[속삭] 회원가입 인증번호",
-    //     html: `<h1>인증번호는 ${authCode} 입니다.</h1>`
-    // })
-    console.log(authCode);
-    return ;
+    const info = await transporter.sendMail({
+        from: `"속삭편지" <${process.env.MAILER_USER}>`,
+        to: email,
+        subject: "[속삭] 회원가입 인증번호",
+        html: `<h1>인증번호는 ${authCode} 입니다.</h1>`
+    })
+
+    return info;
 }
 
 export const checkEmailCode = async ({email, code, type}) => {
