@@ -19,14 +19,14 @@ export const getHashedPassword = async (username) => {
     return passwordHash;
 }
 
-export const saveEmailVarifyCode = async ({email, authCode}) => {
-    await redis.set(`emailVerifyNumber:${email}`, authCode, {
+export const saveEmailVerifyCode = async ({email, authCode, type}) => {
+    await redis.set(`emailVerifyNumber:${type}:${email}`, authCode, {
         EX: 60 * 10 // 10분
     });
 }
 
-export const checkEmailRateLimit = async (email) => {
-    const isLocked = await redis.set(`limit:send-email:${email}`, "locked", {
+export const checkEmailRateLimit = async (email, type) => {
+    const isLocked = await redis.set(`limit:send-email:${type}:${email}`, "locked", {
         NX: true,   // 중복 저장 방지
         EX: 60 * 5  // 5분
     })
@@ -34,8 +34,38 @@ export const checkEmailRateLimit = async (email) => {
     return isLocked
 }
 
-export const getEmailVarifyCode = async (email) => {
-    const authCode = await redis.get(`emailVerifyNumber:${email}`);
+export const getEmailVerifyCode = async (email, type) => {
+    const authCode = await redis.get(`emailVerifyNumber:${type}:${email}`);
 
     return authCode;
+}
+
+/**
+ * 이메일 인증 성공시 2분간 아이디 접근 권한 생성
+ * 
+ * @param {string} email 
+ * @param {string} type 
+ */
+export const createEmailVerifiedKey = async (email, type) => {
+    await redis.set(`${type}:varified:${email}`, "pass", { 
+        EX: 60 * 2 // 2분
+    })
+}
+
+export const getEmailVerifiedKey = async (email, type) => {
+    const isValid = await redis.get(`${type}:varified:${email}`);
+
+    return isValid;
+}
+
+export const updatePassword = async ({userId, newPassword}) => {
+    console.log (userId + " " + newPassword);
+    await prisma.auth.update({
+        data: {
+            passwordHash: newPassword
+        },
+        where: {
+            userId: userId
+        }
+    });
 }

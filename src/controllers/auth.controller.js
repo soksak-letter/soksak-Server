@@ -1,4 +1,4 @@
-import { checkDuplicatedEmail, checkDuplicatedUsername, signUpUser, loginUser, updateRefreshToken, SendVerifyEmailCode, checkEmailCode } from "../services/auth.service.js";
+import { checkDuplicatedEmail, checkDuplicatedUsername, signUpUser, loginUser, updateRefreshToken, SendVerifyEmailCode, checkEmailCode, getAccountInfo, resetPassword } from "../services/auth.service.js";
 
 export const handleSignUp = async (req, res, next) => {
     const { email, username } = req.body;
@@ -59,8 +59,11 @@ export const handleRefreshToken = async (req, res, next) => {
 }
 
 export const handleSendVerifyEmailCode = async (req, res, next) => {
+    const {type} = req.params;
+    const {email} = req.body;
+
     try{
-        const result = await SendVerifyEmailCode(req.body);
+        const result = await SendVerifyEmailCode({email, type});
 
         res.status(200).success(result);
     } catch(err) {
@@ -69,8 +72,33 @@ export const handleSendVerifyEmailCode = async (req, res, next) => {
 }
 
 export const handleCheckEmailCode = async (req, res, next) => {
+    const {type} = req.params;
+    const {email, code} = req.body;
     try{
-        const result = await checkEmailCode(req.body);
+        const result = await checkEmailCode({email, code, type});
+
+        res.status(200).success(result);
+    } catch(err) {
+        next(err);
+    }
+}
+
+export const handleGetAccountInfo = async (req, res, next) => {
+    const {email} = req.body;
+    try{
+        const result = await getAccountInfo(email);
+
+        res.status(200).success(result);
+    } catch(err) {
+        next(err);
+    }
+}
+
+export const handleResetPassword = async (req, res, next) => {
+    const userId = req.user.id;
+    const {password} = req.body;
+    try{
+        const result = await resetPassword({userId, password});
 
         res.status(200).success(result);
     } catch(err) {

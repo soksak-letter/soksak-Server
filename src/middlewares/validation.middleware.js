@@ -25,3 +25,13 @@ export const validatePassword = (req, res, next) => {
 
     next();
 }
+
+export const validateAuthParameterType = (req, res, next) => {
+    const { type } = req.params;
+
+    const allowAuthType = ["find-id", "reset-password"];
+
+    if(!allowAuthType.includes(type)) throw new Error(`잘못된 파라미터입니다: ${type}`);
+
+    next();
+}

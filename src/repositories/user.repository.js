@@ -20,7 +20,7 @@ export const findUserByEmail = async (email) => {
         });
 
         if(!user) return null;
-        console.log(user);
+        
         return {
             id: user.id,
             email: user.email,
