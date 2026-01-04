@@ -97,7 +97,7 @@ model UserAgreement {
 
 model Auth {
   id             Int      @id @default(autoincrement()) @map("id")
-  userId         Int      @map("user_id")
+  userId         Int      @map("user_id")  @unique
   username       String?  @map("username") @unique
   provider       String   @map("provider")
   providerUserId String?  @map("provider_user_id")
