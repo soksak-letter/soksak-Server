@@ -6,9 +6,11 @@ export const findUserByEmail = async (email) => {
             select: {
                 id: true,
                 email: true,
+                createdAt: true,
                 auths: {
                     select: {
-                        provider: true
+                        provider: true,
+                        username: true
                     }
                 }
             },
@@ -18,11 +20,13 @@ export const findUserByEmail = async (email) => {
         });
 
         if(!user) return null;
-
+        console.log(user);
         return {
             id: user.id,
             email: user.email,
-            provider: user.auths?.[0]?.provider
+            createdAt: user.createdAt,
+            provider: user.auths?.[0]?.provider,
+            username: user.auths?.[0]?.username
         };
     } catch (err) {
         throw new Error(err);
@@ -38,13 +42,26 @@ export const findUserById = async (payload) => {
     }
 }
 
+export const findUserByUsername = async (username) => {
+    try{
+        const user = await prisma.user.findFirst({ where: { auths: { some: { username: username } } }});
+        return user;
+    } catch (err) {
+        throw new Error(err);
+    }
+}
+
 export const createUserAndAuth = async ({user, auth}, tx = prisma) => {
+    console.log(user);
     try{
         const newUser = await tx.user.create({ 
             data: {
                 email: user.email,
+                name: user.name,
+                phoneNumber: user.phoneNumber,
                 auths: {
                     create: {
+                        username: user.username,
                         email: user.email,
                         ...auth
                     }

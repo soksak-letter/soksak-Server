@@ -13,8 +13,8 @@ export const getRefreshToken = async (id) => {
     return value;
 }
 
-export const getHashedPassword = async (email) => {
-    const {passwordHash} = await prisma.auth.findFirst({ select: { passwordHash: true }, where: { email: email } });
+export const getHashedPassword = async (username) => {
+    const {passwordHash} = await prisma.auth.findFirst({ select: { passwordHash: true }, where: { username } });
 
     return passwordHash;
 }
@@ -32,4 +32,10 @@ export const checkEmailRateLimit = async (email) => {
     })
 
     return isLocked
+}
+
+export const getEmailVarifyCode = async (email) => {
+    const authCode = await redis.get(`emailVerifyNumber:${email}`);
+
+    return authCode;
 }

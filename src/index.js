@@ -11,7 +11,7 @@ import { jwtStrategy } from "./Auths/strategies/jwt.strategy.js";
 import { googleStrategy } from "./Auths/strategies/google.strategy.js";
 import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
 import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
-import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode } from "./controllers/auth.controller.js";
+import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode } from "./controllers/auth.controller.js";
 import { validateEmail, validatePassword } from "./middlewares/validation.middleware.js";
 
 dotenv.config();
@@ -137,10 +137,11 @@ app.get("/mypage", isLogin, (req, res) => {
 });
 
 app.post("/auth/signup", validateEmail, validatePassword, handleSignUp);
-app.post("/auth/login", validateEmail, validatePassword, handleLogin);
+app.post("/auth/login", validatePassword, handleLogin);
 app.post("/auth/email/exists", validateEmail, handleCheckDuplicatedEmail);
 app.get("/auth/refresh", handleRefreshToken);
 app.post("/auth/verification-codes", validateEmail, handleSendVerifyEmailCode);
+app.post("/auth/verification-codes/confirm", validateEmail, handleCheckEmailCode);
 
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);

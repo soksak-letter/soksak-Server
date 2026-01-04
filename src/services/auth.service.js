@@ -1,8 +1,8 @@
 import bcrypt from "bcrypt"
 import { prisma } from "../configs/db.config.js";
-import { findUserByEmail, createUserAndAuth, createUserAgreement } from "../repositories/user.repository.js";
+import { findUserByEmail, createUserAndAuth, createUserAgreement, findUserByUsername } from "../repositories/user.repository.js";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../Auths/token.js";
-import { checkEmailRateLimit, getHashedPassword, getRefreshToken, saveEmailVarifyCode, saveRefreshToken } from "../repositories/auth.repository.js";
+import { checkEmailRateLimit, getEmailVarifyCode, getHashedPassword, getRefreshToken, saveEmailVarifyCode, saveRefreshToken } from "../repositories/auth.repository.js";
 import { createRandomNumber } from "../utils/random.util.js";
 import { transporter } from "../configs/mailer.config.js";
 
@@ -71,7 +71,8 @@ export const signUpUser = async (data) => {
                 phoneNumber: data.phoneNumber
             },
             auth: {
-                provider: "soksak",
+                username: data.username,
+                provider: "soksak",                
                 passwordHash: passwordHash
             }
         }, tx);
@@ -90,17 +91,17 @@ export const signUpUser = async (data) => {
     return { newUser };
 }
 
-export const loginUser = async ({email, password}) => {
-    const user = await findUserByEmail(email);
-    if(!user) throw new Error("이메일 또는 비밀번호가 일치하지 않습니다.");
+export const loginUser = async ({username, password}) => {
+    const user = await findUserByUsername(username);
+    if(!user) throw new Error("아이디 또는 비밀번호가 일치하지 않습니다.");
 
-    const passwordHash = await getHashedPassword(email);
-    if(!passwordHash) throw new Error("이메일 또는 비밀번호가 일치하지 않습니다.");
+    const passwordHash = await getHashedPassword(username);
+    if(!passwordHash) throw new Error("아이디 또는 비밀번호가 일치하지 않습니다.");
 
     const isValidPassword = await bcrypt.compare(password, passwordHash);
-    if(!isValidPassword) throw new Error("이메일 또는 비밀번호가 일치하지 않습니다.");
+    if(!isValidPassword) throw new Error("아이디 또는 비밀번호가 일치하지 않습니다.");
 
-    const payload = { id: user.id, email: user.email };
+    const payload = { id: user.id, username: user.username };
     const jwtAccessToken = generateAccessToken(user);
     const jwtRefreshToken = generateRefreshToken(user);
 
@@ -113,7 +114,7 @@ export const loginUser = async ({email, password}) => {
     };
 }
 
-export const checkEmail = async (email) => {
+export const checkDuplicatedEmail = async (email) => {
     const user = await findUserByEmail(email);
     
     if(user) {
@@ -123,7 +124,20 @@ export const checkEmail = async (email) => {
     return { exists: false }
 }
 
-export const SendverifyEmailCode = async ({email}) => {
+export const checkDuplicatedUsername = async (username) => {
+    const user = await findUserByUsername(username);
+
+    if(user) {
+        throw new Error(`이미 존재하는 아이디입니다.`);
+    }
+    
+    return { exists: false }
+}
+
+export const SendVerifyEmailCode = async ({email}) => {
+    const user = await findUserByEmail(email);
+    if(!user) throw new Error("해당 정보로 가입된 계정을 찾을 수 없습니다.");
+
     const isLocked = await checkEmailRateLimit(email);
     if(!isLocked) throw new Error("5분 후 다시 시도해주세요.");
 
@@ -136,6 +150,19 @@ export const SendverifyEmailCode = async ({email}) => {
         subject: "[속삭] 회원가입 인증번호",
         html: `<h1>인증번호는 ${authCode} 입니다.</h1>`
     })
-    
+
     return info;
+}
+
+export const checkEmailCode = async ({email, code}) => {
+    const storedCode = await getEmailVarifyCode(email);
+
+    if(storedCode !== code) throw new Error("인증번호가 일치하지 않습니다.");
+
+    const user = await findUserByEmail(email);
+
+    return {
+        username: user.username,
+        createdAt: user.createdAt
+    }
 }
