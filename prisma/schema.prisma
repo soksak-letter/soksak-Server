@@ -14,6 +14,7 @@ model User {
   id              Int    @id @default(autoincrement()) @map("id")
   email           String    @unique @map("email")
   name            String?   @map("name")
+  username        String?   @map("user_name")
   nickname        String?   @map("nickname")
   phoneNumber     String?   @unique @map("phone_number")
   profileImageUrl String?   @map("profile_image_url")
