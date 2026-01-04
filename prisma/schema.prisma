@@ -10,8 +10,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ==========================================
+// 1. 유저 관련 모델 (User & Profile)
+// ==========================================
+
 model User {
-  id              Int    @id @default(autoincrement()) @map("id")
+  id              Int       @id @default(autoincrement()) @map("id")
   email           String    @unique @map("email")
   name            String?   @map("name")
   nickname        String?   @map("nickname")
@@ -30,7 +34,6 @@ model User {
   deviceTokens        UserDeviceToken[]
   agreements          UserAgreement[]
   auths               Auth[]
-  refreshTokens       RefreshToken[]
   interests           UserInterest[]
   joinedSessions      SessionParticipant[]
   writtenReviews      SessionReview[]          @relation("Reviewer")
@@ -54,194 +57,76 @@ model User {
 }
 
 model UserNotificationSetting {
-  userId               Int   @id @map("user_id")
-  letterEnabled        Boolean  @map("letter_enabled")
-  replyEnabled         Boolean  @map("reply_enabled")
-  weeklyReportEnabled  Boolean  @map("weekly_report_enabled")
-  marketingEnabled     Boolean  @map("marketing_enabled")
-  updatedAt            DateTime @updatedAt @map("updated_at")
+  userId                Int      @id @map("user_id")
+  letterEnabled         Boolean  @map("letter_enabled")
+  replyEnabled          Boolean  @map("reply_enabled")
+  weeklyReportEnabled   Boolean  @map("weekly_report_enabled")
+  marketingEnabled      Boolean  @map("marketing_enabled")
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_notification_setting")
 }
 
 model UserDeviceToken {
-  id          Int   @id @default(autoincrement()) @map("id")
-  userId      Int   @map("user_id")
+  id          Int      @id @default(autoincrement()) @map("id")
+  userId      Int      @map("user_id")
   deviceType  String   @map("device_type")
   deviceToken String   @map("device_token")
   lastSeenAt  DateTime @default(now()) @map("last_seen_at")
   createdAt   DateTime @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("user_device_token")
 }
 
 model UserAgreement {
-  id              Int   @id @default(autoincrement()) @map("id")
-  userId          Int   @map("user_id")
+  id              Int      @id @default(autoincrement()) @map("id")
+  userId          Int      @map("user_id")
   termsAgreed     Boolean  @map("terms_agreed")
   privacyAgreed   Boolean  @map("privacy_agreed")
   ageOver14Agreed Boolean  @map("age_over_14_agreed")
   marketingAgreed Boolean  @map("marketing_agreed")
   agreedAt        DateTime @default(now()) @map("agreed_at")
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("user_agreement")
 }
 
+// ==========================================
+// 2. 인증 관련 모델 (Auth & Token)
+// ==========================================
+
 model Auth {
   id             Int      @id @default(autoincrement()) @map("id")
-  userId         Int      @map("user_id")  @unique
-  username       String?  @map("username") @unique
+  userId         Int      @unique @map("user_id")
+  username       String?  @unique @map("username")
   provider       String   @map("provider")
   providerUserId String?  @map("provider_user_id")
-  email          String?  @map("email")   @unique
+  email          String?  @unique @map("email")
   passwordHash   String?  @map("password_hash")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("auth")
 }
 
-model RefreshToken {
-  id        Int    @id @default(autoincrement()) @map("id")
-  userId    Int    @map("user_id")
-  tokenHash String    @unique @map("token_hash")
-  expiresAt DateTime  @map("expires_at")
-  revokedAt DateTime? @map("revoked_at")
-  createdAt DateTime  @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@map("refresh_token")
-}
-
-model EmailVerification {
-  id           String    @id @map("id")
-  email        String    @map("email")
-  purpose      String    @map("purpose")
-  codeHash     String    @map("code_hash")
-  expiresAt    DateTime  @map("expires_at")
-  attemptCount Int       @default(0) @map("attempt_count")
-  resendCount  Int       @default(0) @map("resend_count")
-  consumedAt   DateTime? @map("consumed_at")
-  createdAt    DateTime  @default(now()) @map("created_at")
-
-  @@map("email_verification")
-}
-
-model Interest {
-  id       Int            @id @default(autoincrement()) @map("id")
-  name     String         @unique @map("name")
-  isActive Boolean        @default(true) @map("is_active")
-  users    UserInterest[]
-
-  @@map("interest")
-}
-
-model UserInterest {
-  userId     Int   @map("user_id")
-  interestId Int      @map("interest_id")
-  createdAt  DateTime @default(now()) @map("created_at")
-
-  user      User     @relation(fields: [userId], references: [id])
-  interest Interest @relation(fields: [interestId], references: [id])
-
-  @@id([userId, interestId])
-  @@index([interestId])
-  @@map("user_interest")
-}
-
-model Question {
-  id        Int      @id @default(autoincrement()) @map("id")
-  content   String   @db.Text @map("content")
-  isActive  Boolean  @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  dailyQuestions   DailyQuestion[]
-  matchingSessions MatchingSession[]
-  letters          Letter[]
-
-  @@map("question")
-}
-
-model DailyQuestion {
-  day         DateTime @id @db.Date @map("day")
-  questionId  Int      @map("question_id")
-  publishedAt DateTime @default(now()) @map("published_at")
-
-  question Question @relation(fields: [questionId], references: [id])
-
-  @@index([questionId])
-  @@map("daily_question")
-}
-
-model MatchingSession {
-  id         String    @id @map("id")
-  questionId Int       @map("question_id")
-  status     String    @map("status")
-  maxTurns   Int       @default(10) @map("max_turns")
-  startedAt  DateTime  @default(now()) @map("started_at")
-  endedAt    DateTime? @map("ended_at")
-
-  question       Question             @relation(fields: [questionId], references: [id])
-  participants   SessionParticipant[]
-  reviews        SessionReview[]
-  letters        Letter[]
-  friendRequests FriendRequest[]
-
-  @@index([questionId])
-  @@map("matching_session")
-}
-
-model SessionParticipant {
-  sessionId String   @map("session_id")
-  userId    Int   @map("user_id")
-  role      String?  @map("role")
-  joinedAt  DateTime @default(now()) @map("joined_at")
-
-  session MatchingSession @relation(fields: [sessionId], references: [id])
-  user    User            @relation(fields: [userId], references: [id])
-
-  @@id([sessionId, userId])
-  @@index([userId])
-  @@map("session_participant")
-}
-
-model SessionReview {
-  id                Int   @id @default(autoincrement()) @map("id")
-  sessionId         String   @map("session_id")
-  reviewerUserId    Int   @map("reviewer_user_id")
-  targetUserId      Int   @map("target_user_id")
-  temperatureScore Int      @map("temperature_score")
-  reviewTag         String   @map("review_tag")
-  comment           String?  @db.Text @map("comment")
-  createdAt         DateTime @default(now()) @map("created_at")
-
-  session  MatchingSession @relation(fields: [sessionId], references: [id])
-  reviewer User            @relation("Reviewer", fields: [reviewerUserId], references: [id])
-  target   User            @relation("TargetUser", fields: [targetUserId], references: [id])
-
-  @@index([sessionId])
-  @@index([reviewerUserId])
-  @@index([targetUserId])
-  @@map("session_review")
-}
+// ==========================================
+// 3. 편지 및 에셋 (Letter & Assets)
+// ==========================================
 
 model Letter {
-  id             Int    @id @default(autoincrement()) @map("id")
-  senderUserId   Int    @map("sender_user_id")
-  receiverUserId Int?   @map("receiver_user_id")
+  id             Int       @id @default(autoincrement()) @map("id")
+  senderUserId   Int       @map("sender_user_id")
+  receiverUserId Int?      @map("receiver_user_id")
   sessionId      String?   @map("session_id")
   letterType     String    @map("letter_type")
   questionId     Int?      @map("question_id")
@@ -254,10 +139,11 @@ model Letter {
   readAt         DateTime? @map("read_at")
   createdAt      DateTime  @default(now()) @map("created_at")
 
-  sender          User                    @relation("Sender", fields: [senderUserId], references: [id])
-  receiver        User?                   @relation("Receiver", fields: [receiverUserId], references: [id])
-  session         MatchingSession?        @relation(fields: [sessionId], references: [id])
-  question        Question?               @relation(fields: [questionId], references: [id])
+  sender   User             @relation("Sender", fields: [senderUserId], references: [id], onDelete: Cascade)
+  receiver User?            @relation("Receiver", fields: [receiverUserId], references: [id], onDelete: Cascade)
+  session  MatchingSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  question Question?        @relation(fields: [questionId], references: [id], onDelete: SetNull)
+  
   design          LetterDesign?
   emotionTags     LetterEmotionTag[]
   aiKeywords      LetterAiKeyword[]
@@ -274,11 +160,11 @@ model Letter {
 
 model LetterDesign {
   letterId Int @id @map("letter_id")
-  paperId  Int    @map("paper_id")
-  stampId  Int    @map("stamp_id")
-  fontId   Int    @map("font_id")
+  paperId  Int @map("paper_id")
+  stampId  Int @map("stamp_id")
+  fontId   Int @map("font_id")
 
-  letter Letter           @relation(fields: [letterId], references: [id])
+  letter Letter           @relation(fields: [letterId], references: [id], onDelete: Cascade)
   paper  LetterAssetPaper @relation(fields: [paperId], references: [id])
   stamp  LetterAssetStamp @relation(fields: [stampId], references: [id])
   font   LetterAssetFont  @relation(fields: [fontId], references: [id])
@@ -320,13 +206,26 @@ model LetterAssetFont {
 }
 
 model LetterEmotionTag {
-  letterId Int @map("letter_id")
+  letterId Int    @map("letter_id")
   tag      String @map("tag")
 
-  letter Letter @relation(fields: [letterId], references: [id])
+  letter Letter @relation(fields: [letterId], references: [id], onDelete: Cascade)
 
   @@id([letterId, tag])
   @@map("letter_emotion_tag")
+}
+
+model LetterAiKeyword {
+  letterId  Int      @map("letter_id")
+  keywordId Int      @map("keyword_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  letter  Letter    @relation(fields: [letterId], references: [id], onDelete: Cascade)
+  keyword AiKeyword @relation(fields: [keywordId], references: [id])
+
+  @@id([letterId, keywordId])
+  @@index([keywordId])
+  @@map("letter_ai_keyword")
 }
 
 model AiKeyword {
@@ -338,43 +237,34 @@ model AiKeyword {
   @@map("ai_keyword")
 }
 
-model LetterAiKeyword {
-  letterId  Int   @map("letter_id")
-  keywordId Int      @map("keyword_id")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  letter  Letter    @relation(fields: [letterId], references: [id])
-  keyword AiKeyword @relation(fields: [keywordId], references: [id])
-
-  @@id([letterId, keywordId])
-  @@index([keywordId])
-  @@map("letter_ai_keyword")
-}
-
 model LetterLike {
-  letterId  Int   @map("letter_id")
-  userId    Int   @map("user_id")
+  letterId  Int      @map("letter_id")
+  userId    Int      @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
 
-  letter Letter @relation(fields: [letterId], references: [id])
-  user   User   @relation(fields: [userId], references: [id])
+  letter Letter @relation(fields: [letterId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([letterId, userId])
   @@index([userId])
   @@map("letter_like")
 }
 
+// ==========================================
+// 4. 소셜 및 관계 (Friend, Block, Report)
+// ==========================================
+
 model FriendRequest {
   id              String   @id @map("id")
-  requesterUserId Int   @map("requester_user_id")
-  receiverUserId  Int   @map("receiver_user_id")
+  requesterUserId Int      @map("requester_user_id")
+  receiverUserId  Int      @map("receiver_user_id")
   sessionId       String?  @map("session_id")
   status          String   @map("status")
   createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
 
-  requester User             @relation("Requester", fields: [requesterUserId], references: [id])
-  receiver  User             @relation("FriendReceiver", fields: [receiverUserId], references: [id])
+  requester User             @relation("Requester", fields: [requesterUserId], references: [id], onDelete: Cascade)
+  receiver  User             @relation("FriendReceiver", fields: [receiverUserId], references: [id], onDelete: Cascade)
   session   MatchingSession? @relation(fields: [sessionId], references: [id])
 
   @@index([requesterUserId])
@@ -384,13 +274,13 @@ model FriendRequest {
 }
 
 model Friend {
-  id        Int   @id @default(autoincrement()) @map("id")
-  userAId   Int   @map("user_a_id")
-  userBId   Int   @map("user_b_id")
+  id        Int      @id @default(autoincrement()) @map("id")
+  userAId   Int      @map("user_a_id")
+  userBId   Int      @map("user_b_id")
   createdAt DateTime @default(now()) @map("created_at")
 
-  userA User @relation("UserA", fields: [userAId], references: [id])
-  userB User @relation("UserB", fields: [userBId], references: [id])
+  userA User @relation("UserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB User @relation("UserB", fields: [userBId], references: [id], onDelete: Cascade)
 
   @@index([userAId])
   @@index([userBId])
@@ -398,12 +288,12 @@ model Friend {
 }
 
 model Block {
-  blockerUserId Int   @map("blocker_user_id")
-  blockedUserId Int   @map("blocked_user_id")
+  blockerUserId Int      @map("blocker_user_id")
+  blockedUserId Int      @map("blocked_user_id")
   createdAt     DateTime @default(now()) @map("created_at")
 
-  blocker User @relation("Blocker", fields: [blockerUserId], references: [id])
-  blocked User @relation("Blocked", fields: [blockedUserId], references: [id])
+  blocker User @relation("Blocker", fields: [blockerUserId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blockedUserId], references: [id], onDelete: Cascade)
 
   @@id([blockerUserId, blockedUserId])
   @@index([blockedUserId])
@@ -411,16 +301,16 @@ model Block {
 }
 
 model UserReport {
-  id             Int   @id @default(autoincrement()) @map("id")
-  reporterUserId Int   @map("reporter_user_id")
-  targetUserId   Int   @map("target_user_id")
-  letterId       Int?  @map("letter_id")
+  id             Int      @id @default(autoincrement()) @map("id")
+  reporterUserId Int      @map("reporter_user_id")
+  targetUserId   Int      @map("target_user_id")
+  letterId       Int?     @map("letter_id")
   status         String   @map("status")
   createdAt      DateTime @default(now()) @map("created_at")
 
-  reporter User               @relation("Reporter", fields: [reporterUserId], references: [id])
-  target   User               @relation("ReportTarget", fields: [targetUserId], references: [id])
-  letter   Letter?            @relation(fields: [letterId], references: [id])
+  reporter User               @relation("Reporter", fields: [reporterUserId], references: [id], onDelete: Cascade)
+  target   User               @relation("ReportTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+  letter   Letter?            @relation(fields: [letterId], references: [id], onDelete: Cascade)
   reasons  UserReportReason[]
 
   @@index([reporterUserId])
@@ -430,77 +320,28 @@ model UserReport {
 }
 
 model UserReportReason {
-  reportId Int @map("report_id")
+  reportId Int    @map("report_id")
   reason   String @map("reason")
 
-  report UserReport @relation(fields: [reportId], references: [id])
+  report UserReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
   @@id([reportId, reason])
   @@map("user_report_reason")
 }
 
-model Inquiry {
-  id            Int    @id @default(autoincrement()) @map("id")
-  userId        Int    @map("user_id")
-  category      String    @map("category")
-  status        String    @map("status")
-  title         String    @map("title")
-  content       String    @db.Text @map("content")
-  answerContent String?   @db.Text @map("answer_content")
-  answeredAt    DateTime? @map("answered_at")
-  createdAt     DateTime  @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@map("inquiry")
-}
-
-model Restriction {
-  id        Int   @id @default(autoincrement()) @map("id")
-  userId    Int   @map("user_id")
-  type      String   @map("type")
-  reason    String   @map("reason")
-  startsAt  DateTime @map("starts_at")
-  endsAt    DateTime @map("ends_at")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@map("restriction")
-}
-
-model Notice {
-  id        Int   @id @default(autoincrement()) @map("id")
-  title     String   @map("title")
-  content   String   @db.Text @map("content")
-  pinned    Boolean  @map("pinned")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@map("notice")
-}
-
-model PolicyDocument {
-  key         String   @id @map("key")
-  version     String   @map("version")
-  content     String   @db.Text @map("content")
-  effectiveAt DateTime @map("effective_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  @@map("policy_document")
-}
+// ==========================================
+// 5. 주간 리포트 (Weekly Report)
+// ==========================================
 
 model WeeklyReport {
-  id          Int   @id @default(autoincrement()) @map("id")
-  userId      Int   @map("user_id")
+  id          Int      @id @default(autoincrement()) @map("id")
+  userId      Int      @map("user_id")
   year        Int      @map("year")
   week        Int      @map("week")
   summaryText String?  @db.Text @map("summary_text")
   generatedAt DateTime @default(now()) @map("generated_at")
 
-  user       User                    @relation(fields: [userId], references: [id])
+  user       User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   emotions   WeeklyReportEmotion[]
   keywords   WeeklyReportKeyword[]
   highlights WeeklyReportHighlight[]
@@ -510,37 +351,192 @@ model WeeklyReport {
 }
 
 model WeeklyReportEmotion {
-  reportId Int @map("report_id")
+  reportId Int    @map("report_id")
   emotion  String @map("emotion")
   ratio    Float  @map("ratio")
   count    Int    @map("count")
 
-  report WeeklyReport @relation(fields: [reportId], references: [id])
+  report WeeklyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
   @@id([reportId, emotion])
   @@map("weekly_report_emotion")
 }
 
 model WeeklyReportKeyword {
-  reportId Int @map("report_id")
+  reportId Int    @map("report_id")
   keyword  String @map("keyword")
   count    Int    @map("count")
 
-  report WeeklyReport @relation(fields: [reportId], references: [id])
+  report WeeklyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
   @@id([reportId, keyword])
   @@map("weekly_report_keyword")
 }
 
 model WeeklyReportHighlight {
-  reportId      Int @map("report_id")
-  letterId      Int @map("letter_id")
+  reportId      Int    @map("report_id")
+  letterId      Int    @map("letter_id")
   highlightType String @map("highlight_type")
 
-  report WeeklyReport @relation(fields: [reportId], references: [id])
-  letter Letter       @relation(fields: [letterId], references: [id])
+  report WeeklyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  letter Letter       @relation(fields: [letterId], references: [id], onDelete: Cascade)
 
   @@id([reportId, letterId])
   @@index([letterId])
   @@map("weekly_report_highlight_letter")
+}
+
+// ==========================================
+// 6. 기타 공통 모델
+// ==========================================
+
+model UserInterest {
+  userId     Int      @map("user_id")
+  interestId Int      @map("interest_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interest Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+
+  @@id([userId, interestId])
+  @@index([interestId])
+  @@map("user_interest")
+}
+
+model Interest {
+  id       Int            @id @default(autoincrement()) @map("id")
+  name     String         @unique @map("name")
+  isActive Boolean        @default(true) @map("is_active")
+  users    UserInterest[]
+
+  @@map("interest")
+}
+
+model Question {
+  id        Int      @id @default(autoincrement()) @map("id")
+  content   String   @db.Text @map("content")
+  isActive  Boolean  @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  dailyQuestions  DailyQuestion[]
+  matchingSessions MatchingSession[]
+  letters         Letter[]
+
+  @@map("question")
+}
+
+model DailyQuestion {
+  day         DateTime @id @db.Date @map("day")
+  questionId  Int      @map("question_id")
+  publishedAt DateTime @default(now()) @map("published_at")
+
+  question Question @relation(fields: [questionId], references: [id])
+
+  @@index([questionId])
+  @@map("daily_question")
+}
+
+model MatchingSession {
+  id         String    @id @map("id")
+  questionId Int       @map("question_id")
+  status     String    @map("status")
+  maxTurns   Int       @default(10) @map("max_turns")
+  startedAt  DateTime  @default(now()) @map("started_at")
+  endedAt    DateTime? @map("ended_at")
+
+  question     Question             @relation(fields: [questionId], references: [id])
+  participants SessionParticipant[]
+  reviews      SessionReview[]
+  letters      Letter[]
+  friendRequests FriendRequest[]
+
+  @@index([questionId])
+  @@map("matching_session")
+}
+
+model SessionParticipant {
+  sessionId String   @map("session_id")
+  userId    Int      @map("user_id")
+  role      String?  @map("role")
+  joinedAt  DateTime @default(now()) @map("joined_at")
+
+  session MatchingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, userId])
+  @@index([userId])
+  @@map("session_participant")
+}
+
+model SessionReview {
+  id               Int      @id @default(autoincrement()) @map("id")
+  sessionId        String   @map("session_id")
+  reviewerUserId   Int      @map("reviewer_user_id")
+  targetUserId     Int      @map("target_user_id")
+  temperatureScore Int      @map("temperature_score")
+  reviewTag        String   @map("review_tag")
+  comment          String?  @db.Text @map("comment")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  session  MatchingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  reviewer User            @relation("Reviewer", fields: [reviewerUserId], references: [id], onDelete: Cascade)
+  target   User            @relation("TargetUser", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([reviewerUserId])
+  @@index([targetUserId])
+  @@map("session_review")
+}
+
+model Inquiry {
+  id            Int       @id @default(autoincrement()) @map("id")
+  userId        Int       @map("user_id")
+  category      String    @map("category")
+  status        String    @map("status")
+  title         String    @map("title")
+  content       String    @db.Text @map("content")
+  answerContent String?   @db.Text @map("answer_content")
+  answeredAt    DateTime? @map("answered_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("inquiry")
+}
+
+model Restriction {
+  id        Int      @id @default(autoincrement()) @map("id")
+  userId    Int      @map("user_id")
+  type      String   @map("type")
+  reason    String   @map("reason")
+  startsAt  DateTime @map("starts_at")
+  endsAt    DateTime @map("ends_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("restriction")
+}
+
+model Notice {
+  id        Int      @id @default(autoincrement()) @map("id")
+  title     String   @map("title")
+  content   String   @db.Text @map("content")
+  pinned    Boolean  @map("pinned")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("notice")
+}
+
+model PolicyDocument {
+  key         String   @id @map("key")
+  version     String   @map("version")
+  content     String   @db.Text @map("content")
+  effectiveAt DateTime @map("effective_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("policy_document")
 }
