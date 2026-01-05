@@ -27,6 +27,7 @@ export const verifyToken = (token) => {
  */
 export const getTTLFromToken = (token) => {
     const payload = jwt.decode(token);
+
     const now = Math.floor(Date.now() / 1000);
     const ttl = payload.exp - now;
 

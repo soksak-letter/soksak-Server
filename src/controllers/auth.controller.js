@@ -25,10 +25,9 @@ export const handleLogin = async (req, res, next) => {
 }
 
 export const handleLogout = async (req, res, next) => {
-    const {id, provider} = req.user;
-    const token = req.headers.authorization.split(" ")[1];
+    const {id, provider, token} = req.user;
     const ttl = getTTLFromToken(token);
-    console.log(id + " " + provider + " " + token + " " + ttl);
+    
     try{
         const result = await logoutUser({id, provider, token, ttl});
 
