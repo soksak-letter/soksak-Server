@@ -2,7 +2,7 @@ import bcrypt from "bcrypt"
 import { prisma } from "../configs/db.config.js";
 import { findUserByEmail, createUserAndAuth, createUserAgreement, findUserByUsername } from "../repositories/user.repository.js";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../Auths/token.js";
-import { checkEmailRateLimit, createEmailVerifiedKey, getEmailVerifiedKey, getEmailVerifyCode, getHashedPassword, getRefreshToken, saveEmailVerifyCode, saveRefreshToken, updatePassword } from "../repositories/auth.repository.js";
+import { checkEmailRateLimit, createEmailVerifiedKey, getEmailVerifiedKey, getEmailVerifyCode, getHashedPassword, getRefreshToken, revokeToken, saveEmailVerifyCode, saveRefreshToken, updatePassword } from "../repositories/auth.repository.js";
 import { createRandomNumber } from "../utils/random.util.js";
 import { transporter } from "../configs/mailer.config.js";
 
@@ -35,9 +35,9 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
             }
         });
     }
-    const payload = { id: user.id, email: user.email };
-    const jwtAccessToken = generateAccessToken(user, "1h");
-    const jwtRefreshToken = generateRefreshToken(user, "14d");
+    const payload = { id: user.id, email: user.email, provider: user.provider };
+    const jwtAccessToken = generateAccessToken(payload, "1h");
+    const jwtRefreshToken = generateRefreshToken(payload, "14d");
 
     await saveRefreshToken({id: user.id, jwtRefreshToken});
     
@@ -48,12 +48,6 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
     };
 };
 
-/**
- * 
- * 
- * @param {string} token 
- * @returns {string} token
- */
 export const updateRefreshToken = async (token) => {
     const payload = verifyToken(token);
     const savedRefreshToken = await getRefreshToken(payload.id);
@@ -107,17 +101,23 @@ export const loginUser = async ({username, password}) => {
     const isValidPassword = await bcrypt.compare(password, passwordHash);
     if(!isValidPassword) throw new Error("아이디 또는 비밀번호가 일치하지 않습니다.");
 
-    const payload = { id: user.id, username: user.username };
-    const jwtAccessToken = generateAccessToken(user, "1h");
-    const jwtRefreshToken = generateRefreshToken(user, "14d");
+    const payload = { id: user.id, email: user.email, provider: user.provider};
+    const jwtAccessToken = generateAccessToken(payload, "1h");
+    const jwtRefreshToken = generateRefreshToken(payload, "14d");
 
     await saveRefreshToken({id: user.id, jwtRefreshToken});
 
     return {
-        user: payload,
         jwtAccessToken,
         jwtRefreshToken
     };
+}
+
+export const logoutUser = async ({id, provider, token, ttl}) => {
+    const isLogout = await revokeToken(id, token, ttl);
+    if(!isLogout) throw new Error("삭제되지 않았습니다. 다시 시도해주세요.");
+
+    return { status: "Logged Out"};
 }
 
 export const checkDuplicatedEmail = async (email) => {

@@ -1,4 +1,5 @@
-import { checkDuplicatedEmail, checkDuplicatedUsername, signUpUser, loginUser, updateRefreshToken, SendVerifyEmailCode, checkEmailCode, getAccountInfo, resetPassword } from "../services/auth.service.js";
+import { getTTLFromToken } from "../Auths/token.js";
+import { checkDuplicatedEmail, checkDuplicatedUsername, signUpUser, loginUser, updateRefreshToken, SendVerifyEmailCode, checkEmailCode, getAccountInfo, resetPassword, logoutUser } from "../services/auth.service.js";
 
 export const handleSignUp = async (req, res, next) => {
     const { email, username } = req.body;
@@ -16,6 +17,20 @@ export const handleSignUp = async (req, res, next) => {
 export const handleLogin = async (req, res, next) => {
     try{
         const result = await loginUser(req.body);
+
+        res.status(200).success({ result });
+    } catch(err) {
+        next(err);
+    }
+}
+
+export const handleLogout = async (req, res, next) => {
+    const {id, provider} = req.user;
+    const token = req.headers.authorization.split(" ")[1];
+    const ttl = getTTLFromToken(token);
+    console.log(id + " " + provider + " " + token + " " + ttl);
+    try{
+        const result = await logoutUser({id, provider, token, ttl});
 
         res.status(200).success({ result });
     } catch(err) {

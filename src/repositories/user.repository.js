@@ -35,8 +35,28 @@ export const findUserByEmail = async (email) => {
 
 export const findUserById = async (payload) => {
     try{
-        const user = await prisma.user.findFirst({ where: { id: payload.id, isDeleted: false }});
-        return user;
+        const user = await prisma.user.findFirst({ 
+            where: { 
+                id: payload.id, 
+                isDeleted: false 
+            },
+            select: {
+                id: true,
+                email: true,
+                auths: {
+                    select: {
+                        provider: true
+                    }
+                }
+            }
+        });
+        return {
+            id: user.id,
+            email: user.email,
+            createdAt: user.createdAt,
+            provider: user.auths?.[0]?.provider,
+            username: user.auths?.[0]?.username
+        };
     } catch (err) {
         throw new Error(err);
     }
@@ -44,15 +64,38 @@ export const findUserById = async (payload) => {
 
 export const findUserByUsername = async (username) => {
     try{
-        const user = await prisma.user.findFirst({ where: { auths: { some: { username: username } } }});
-        return user;
+        const user = await prisma.user.findFirst({
+            where: { 
+                auths: { 
+                    some: { 
+                        username: username 
+                    } 
+                } 
+            },
+            select: {
+                id: true,
+                email: true,
+                auths: {
+                    select: {
+                        provider: true
+                    }
+                }
+            }
+        });
+
+        return {
+            id: user.id,
+            email: user.email,
+            createdAt: user.createdAt,
+            provider: user.auths?.[0]?.provider,
+            username: user.auths?.[0]?.username
+        };
     } catch (err) {
         throw new Error(err);
     }
 }
 
 export const createUserAndAuth = async ({user, auth}, tx = prisma) => {
-    console.log(user);
     try{
         const newUser = await tx.user.create({ 
             data: {
@@ -66,6 +109,15 @@ export const createUserAndAuth = async ({user, auth}, tx = prisma) => {
                         ...auth
                     }
                 }  
+            },
+            select: {
+                id: true,
+                email: true,
+                auths: {
+                    select: {
+                        provider: true
+                    }
+                }
             }
         });
 
