@@ -140,3 +140,20 @@ export const createUserAgreement = async (data, tx = prisma) => {
         throw new Error(err);
     }
 }
+
+export const softDeleteUser = async (id) => {
+    try{
+        await prisma.user.update({
+            data: {
+                isDeleted: true,
+                deletedAt: new Date()
+            },
+            where: { id: id }
+        })
+    } catch(err) {
+        if(err.code === 'P2025') {
+            throw new Error("존재하지 않는 유저입니다.");   // 이런 에러처리는 MVP까지 한 뒤에 적용
+        }
+        throw new Error(err);
+    }
+}

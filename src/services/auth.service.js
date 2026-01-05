@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt"
 import { prisma } from "../configs/db.config.js";
-import { findUserByEmail, createUserAndAuth, createUserAgreement, findUserByUsername } from "../repositories/user.repository.js";
+import { findUserByEmail, createUserAndAuth, createUserAgreement, findUserByUsername, softDeleteUser } from "../repositories/user.repository.js";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../Auths/token.js";
 import { checkEmailRateLimit, createEmailVerifiedKey, getEmailVerifiedKey, getEmailVerifyCode, getHashedPassword, getRefreshToken, revokeToken, saveEmailVerifyCode, saveRefreshToken, updatePassword } from "../repositories/auth.repository.js";
 import { createRandomNumber } from "../utils/random.util.js";
@@ -113,11 +113,17 @@ export const loginUser = async ({username, password}) => {
     };
 }
 
-export const logoutUser = async ({id, provider, token, ttl}) => {
+export const logoutUser = async ({id, token, ttl}) => {
     const isLogout = await revokeToken(id, token, ttl);
     if(!isLogout) throw new Error("삭제되지 않았습니다. 다시 시도해주세요.");
 
     return { status: "Logged Out"};
+}
+
+export const withdrawUser = async ({provider, id}) => {
+    await softDeleteUser(id);
+
+    return { status: "Deleted" };
 }
 
 export const checkDuplicatedEmail = async (email) => {
