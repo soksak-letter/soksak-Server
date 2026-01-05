@@ -348,7 +348,7 @@ model WeeklyReport {
 
   @@index([userId])
   @@map("weekly_report")
-} 
+}  
 
 model WeeklyReportEmotion {
   reportId Int    @map("report_id")
