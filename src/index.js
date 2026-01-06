@@ -13,6 +13,7 @@ import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
 import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword } from "./controllers/auth.controller.js";
 import { validateAuthParameterType, validateEmail, validatePassword } from "./middlewares/validation.middleware.js";
+import { handleGetLetterAssets } from "./controllers/asset.controller.js";
 
 dotenv.config();
 
@@ -136,14 +137,16 @@ app.get("/mypage", isLogin, (req, res) => {
   });
 });
 
-app.post("/auth/signup", validateEmail, validatePassword, handleSignUp);
-app.post("/auth/login", validatePassword, handleLogin);
-app.post("/auth/email/exists", validateEmail, handleCheckDuplicatedEmail);
-app.get("/auth/refresh", handleRefreshToken);
-app.post("/auth/:type/verification-codes", validateAuthParameterType, validateEmail, handleSendVerifyEmailCode);
-app.post("/auth/:type/verification-codes/confirm", validateAuthParameterType, validateEmail, handleCheckEmailCode);
-app.get("/auth/find-id", validateEmail, handleGetAccountInfo);
-app.patch("/auth/reset-password", isLogin, validatePassword, handleResetPassword);
+app.post("/auth/signup", validateEmail, validatePassword, handleSignUp);    // 회원가입
+app.post("/auth/login", validatePassword, handleLogin);                     // 로그인
+app.post("/auth/email/exists", validateEmail, handleCheckDuplicatedEmail);  // 이메일 중복 확인
+app.get("/auth/refresh", handleRefreshToken);                               // 액세스 토큰 재발급
+app.post("/auth/:type/verification-codes", validateAuthParameterType, validateEmail, handleSendVerifyEmailCode);    // 이메일 인증번호 전송
+app.post("/auth/:type/verification-codes/confirm", validateAuthParameterType, validateEmail, handleCheckEmailCode); // 이메일 인증번호 확인
+app.get("/auth/find-id", validateEmail, handleGetAccountInfo);                                                      // 아이디 찾기
+app.patch("/auth/reset-password", isLogin, validatePassword, handleResetPassword);                                  // 비밀번호 찾기
+
+app.get("/letter-assets", isLogin, handleGetLetterAssets);                  // 편지 꾸미기 리소스 목록 조회
 
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
