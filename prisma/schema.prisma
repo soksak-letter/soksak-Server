@@ -199,6 +199,7 @@ model LetterAssetFont {
   id         Int            @id @default(autoincrement()) @map("id")
   name       String         @map("name")
   fontFamily String         @map("font_family")
+  assetUrl   String         @map("asset_url")
   isActive   Boolean        @map("is_active")
   designs    LetterDesign[]
 
