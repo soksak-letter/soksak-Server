@@ -45,11 +45,15 @@ export const findUserById = async (payload) => {
                 email: true,
                 auths: {
                     select: {
-                        provider: true
+                        provider: true,
+                        username: true
                     }
                 }
             }
         });
+
+        if(!user) return null;
+
         return {
             id: user.id,
             email: user.email,
@@ -77,11 +81,14 @@ export const findUserByUsername = async (username) => {
                 email: true,
                 auths: {
                     select: {
-                        provider: true
+                        provider: true,
+                        username: true
                     }
                 }
             }
         });
+        
+        if(!user) return null;
 
         return {
             id: user.id,

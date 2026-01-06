@@ -26,7 +26,7 @@ export const handleLogin = async (req, res, next) => {
 }
 
 export const handleLogout = async (req, res, next) => {
-    const {id, token} = req.user;
+    const {id, provider, token} = req.user;
     const ttl = getTTLFromToken(token);
 
     try{

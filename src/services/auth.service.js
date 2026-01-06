@@ -76,7 +76,7 @@ export const signUpUser = async (data) => {
                 passwordHash: passwordHash
             }
         }, tx);
-
+        
         await createUserAgreement({
             userId: user.id,
             termsAgreed: data.termsAgreed,
