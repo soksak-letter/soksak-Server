@@ -127,7 +127,7 @@ model Letter {
   id             Int       @id @default(autoincrement()) @map("id")
   senderUserId   Int       @map("sender_user_id")
   receiverUserId Int?      @map("receiver_user_id")
-  sessionId      String?   @map("session_id")
+  sessionId      Int?      @map("session_id")
   letterType     String    @map("letter_type")
   questionId     Int?      @map("question_id")
   title          String    @map("title")
@@ -255,10 +255,10 @@ model LetterLike {
 // ==========================================
 
 model FriendRequest {
-  id              String   @id @map("id")
+  id              Int      @id @default(autoincrement()) @map("id")
   requesterUserId Int      @map("requester_user_id")
   receiverUserId  Int      @map("receiver_user_id")
-  sessionId       String?  @map("session_id")
+  sessionId       Int?     @map("session_id")
   status          String   @map("status")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
@@ -437,7 +437,7 @@ model DailyQuestion {
 }
 
 model MatchingSession {
-  id         String    @id @map("id")
+  id         Int       @id @default(autoincrement()) @map("id")
   questionId Int       @map("question_id")
   status     String    @map("status")
   maxTurns   Int       @default(10) @map("max_turns")
@@ -455,7 +455,7 @@ model MatchingSession {
 }
 
 model SessionParticipant {
-  sessionId String   @map("session_id")
+  sessionId Int      @map("session_id")
   userId    Int      @map("user_id")
   role      String?  @map("role")
   joinedAt  DateTime @default(now()) @map("joined_at")
@@ -470,7 +470,7 @@ model SessionParticipant {
 
 model SessionReview {
   id               Int      @id @default(autoincrement()) @map("id")
-  sessionId        String   @map("session_id")
+  sessionId        Int      @map("session_id")
   reviewerUserId   Int      @map("reviewer_user_id")
   targetUserId     Int      @map("target_user_id")
   temperatureScore Int      @map("temperature_score")
