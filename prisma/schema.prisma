@@ -255,7 +255,7 @@ model LetterLike {
 // ==========================================
 
 model FriendRequest {
-  id              String   @id @map("id")
+  id              Int      @id @map("id") @default(autoincrement())
   requesterUserId Int      @map("requester_user_id")
   receiverUserId  Int      @map("receiver_user_id")
   sessionId       String?  @map("session_id")

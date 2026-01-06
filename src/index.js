@@ -12,6 +12,16 @@ import { googleStrategy } from "./Auths/strategies/google.strategy.js";
 import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
 import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword } from "./controllers/auth.controller.js";
+import { handlePostUserBlock } from "./controllers/block.controller.js";
+import {
+  handleGetFriendsList,
+  handlePostFriendsRequest,
+  handleGetIncomingFriendRequests,
+  handleGetOutgoingFriendRequests,
+  handleAcceptFriendRequest,
+  handleRejectFriendRequest,
+  handleDeleteFriend,
+} from "./controllers/friend.controller.js";
 import { validateAuthParameterType, validateEmail, validatePassword } from "./middlewares/validation.middleware.js";
 
 dotenv.config();
@@ -29,8 +39,6 @@ app.use(
 );
 app.set("trust proxy", 1);
 
-
-// "http://localhost:5173", "http://localhost:3000", 
 app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -87,7 +95,28 @@ const asyncHandler = (fn) => (req, res, next) => {
 app.get("/", (req, res) => {
   res.send("Hello World! Server is running.");
 });
+app.post("/blocks", asyncHandler(handlePostUserBlock));
 
+//친구(신청/수락/목록/취소)
+app.get("/friends", asyncHandler(handleGetFriendsList));
+app.post("/friends/requests", asyncHandler(handlePostFriendsRequest));
+app.get(
+  "/friends/requests/incoming",
+  asyncHandler(handleGetIncomingFriendRequests)
+);
+app.get(
+  "/friends/requests/outgoing",
+  asyncHandler(handleGetOutgoingFriendRequests)
+);
+app.post(
+  "/friends/requests/accept",
+  asyncHandler(handleAcceptFriendRequest)
+);
+app.post(
+  "/friends/requests/reject",
+  asyncHandler(handleRejectFriendRequest)
+);
+app.delete("/friends/requests/:requestId", asyncHandler(handleDeleteFriend));
 // 로그인/회원가입
 app.get("/auth/oauth/:provider",
   (req, res, next) => {
