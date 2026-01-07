@@ -36,7 +36,7 @@ export const findUserByEmail = async (email) => {
 export const findUserById = async (id) => {
     try{
         const user = await prisma.user.findFirst({ where: { id: id, isDeleted: false }});
-        console.log(user);
+        
         return user;
     } catch (err) {
         throw new Error(err);

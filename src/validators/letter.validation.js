@@ -25,10 +25,11 @@ class BaseLetterValidator {
         }
         if(this.title && (this.title.length < 3 || this.title.length > 20)) this.errors.push(`제목은 최소 3자, 최대 20자까지 입니다.`);
         if(this.content && this.content.length > 500) this.errors.push(`본문은 최대 500자까지 입니다.`);
+        if(this.questionId < 1 || this.paperId < 1 || this.stampId < 1 || this.fontId < 1) this.errors.push(`id는 1부터 유효합니다.`);
     }
 }
 
-export class ToMeValidator extends BaseLetterValidator {
+export class LetterToMeValidator extends BaseLetterValidator {
     constructor(data){
         super(data);
         this.scheduledAt = data.scheduledAt;
@@ -47,6 +48,26 @@ export class ToMeValidator extends BaseLetterValidator {
             this.errors.push("예약 시간은 현재 시간보다 미래여야 합니다.");
         }
         
+        if(this.errors.length > 0) throw new Error(this.errors);
+    }
+}
+
+export class LetterToOtherValidator extends BaseLetterValidator{
+    constructor(data){
+        super(data);
+        this.receiverUserId = data.receiverUserId;
+
+        this.validateToOther();
+    }
+
+    validateToOther(){
+        if(!this.receiverUserId){
+            this.errors.push(`receiverUserId 필드는 필수입니다.`);
+        }
+        if(!this.receiverUserId && this.receiverUserId < 1){
+            this.errors.push(`id는 1부터 유효합니다.`);
+        }
+
         if(this.errors.length > 0) throw new Error(this.errors);
     }
 }
