@@ -12,7 +12,7 @@ const jwtOptions = {
  */
 export const jwtStrategy = new JwtStrategy(jwtOptions, async (payload, done) => {
     try {
-        const user = await findUserById(payload);
+        const user = await findUserById(payload.id);
         
         if(user) {
             return done(null, user);
