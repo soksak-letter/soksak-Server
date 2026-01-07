@@ -91,7 +91,7 @@ app.get("/", (req, res) => {
 });
 
 // 로그인/회원가입
-app.get("/auth/oauth/:provider", handleCheckDuplicatedEmail,
+app.get("/auth/oauth/:provider",
   (req, res, next) => {
     const { provider } = req.params;
     
