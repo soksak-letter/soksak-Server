@@ -17,6 +17,7 @@
     "@aws-sdk/client-s3": "^3.955.0",
     "@huggingface/inference": "^4.13.5",
     "@prisma/client": "5.19.1",
+    "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
