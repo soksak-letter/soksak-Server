@@ -13,6 +13,22 @@ export const getRefreshToken = async (id) => {
     return value;
 }
 
+export const revokeToken = async (id, token, ttl) => {
+    const result = await redis.unlink(`refreshToken:${id}`);
+
+    await redis.set(`blackList:accessToken:${token}`, "blackList", {
+        EX: ttl
+    })
+
+    return result;
+}
+
+export const getBlackListToken = async (token) => {
+    const value = await redis.get(`blackList:accessToken:${token}`);
+
+    return value;
+}
+
 export const getHashedPassword = async (username) => {
     const {passwordHash} = await prisma.auth.findFirst({ select: { passwordHash: true }, where: { username } });
 
@@ -59,7 +75,7 @@ export const getEmailVerifiedKey = async (email, type) => {
 }
 
 export const updatePassword = async ({userId, newPassword}) => {
-    console.log (userId + " " + newPassword);
+
     await prisma.auth.update({
         data: {
             passwordHash: newPassword

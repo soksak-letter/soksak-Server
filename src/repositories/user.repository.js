@@ -35,9 +35,32 @@ export const findUserByEmail = async (email) => {
 
 export const findUserById = async (id) => {
     try{
-        const user = await prisma.user.findFirst({ where: { id: id, isDeleted: false }});
+        const user = await prisma.user.findFirst({ 
+            where: { 
+                id: id, 
+                isDeleted: false 
+            },
+            select: {
+                id: true,
+                email: true,
+                auths: {
+                    select: {
+                        provider: true,
+                        username: true
+                    }
+                }
+            }
+        });
         
-        return user;
+        if(!user) return null;
+
+        return {
+            id: user.id,
+            email: user.email,
+            createdAt: user.createdAt,
+            provider: user.auths?.[0]?.provider,
+            username: user.auths?.[0]?.username
+        };
     } catch (err) {
         throw new Error(err);
     }
@@ -45,15 +68,41 @@ export const findUserById = async (id) => {
 
 export const findUserByUsername = async (username) => {
     try{
-        const user = await prisma.user.findFirst({ where: { auths: { some: { username: username } } }});
-        return user;
+        const user = await prisma.user.findFirst({
+            where: { 
+                auths: { 
+                    some: { 
+                        username: username 
+                    } 
+                } 
+            },
+            select: {
+                id: true,
+                email: true,
+                auths: {
+                    select: {
+                        provider: true,
+                        username: true
+                    }
+                }
+            }
+        });
+        
+        if(!user) return null;
+
+        return {
+            id: user.id,
+            email: user.email,
+            createdAt: user.createdAt,
+            provider: user.auths?.[0]?.provider,
+            username: user.auths?.[0]?.username
+        };
     } catch (err) {
         throw new Error(err);
     }
 }
 
 export const createUserAndAuth = async ({user, auth}, tx = prisma) => {
-    console.log(user);
     try{
         const newUser = await tx.user.create({ 
             data: {
@@ -67,6 +116,15 @@ export const createUserAndAuth = async ({user, auth}, tx = prisma) => {
                         ...auth
                     }
                 }  
+            },
+            select: {
+                id: true,
+                email: true,
+                auths: {
+                    select: {
+                        provider: true
+                    }
+                }
             }
         });
 
@@ -86,6 +144,23 @@ export const createUserAgreement = async (data, tx = prisma) => {
             data: data
         });
     } catch(err) {
+        throw new Error(err);
+    }
+}
+
+export const softDeleteUser = async (id) => {
+    try{
+        await prisma.user.update({
+            data: {
+                isDeleted: true,
+                deletedAt: new Date()
+            },
+            where: { id: id }
+        })
+    } catch(err) {
+        if(err.code === 'P2025') {
+            throw new Error("존재하지 않는 유저입니다.");   // 이런 에러처리는 MVP까지 한 뒤에 적용
+        }
         throw new Error(err);
     }
 }
