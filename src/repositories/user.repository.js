@@ -33,11 +33,11 @@ export const findUserByEmail = async (email) => {
     }
 }
 
-export const findUserById = async (payload) => {
+export const findUserById = async (id) => {
     try{
         const user = await prisma.user.findFirst({ 
             where: { 
-                id: payload.id, 
+                id: id, 
                 isDeleted: false 
             },
             select: {
@@ -51,7 +51,7 @@ export const findUserById = async (payload) => {
                 }
             }
         });
-
+        
         if(!user) return null;
 
         return {

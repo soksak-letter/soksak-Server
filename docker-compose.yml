@@ -1,0 +1,10 @@
+services:
+  db:
+    image: mysql:latest
+    container_name: soksak-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 'kanodaisuki'
+      MYSQL_DATABASE: 'soksak'
+    ports: 
+    - "3360:3306"
