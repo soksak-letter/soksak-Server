@@ -1,0 +1,72 @@
+import { prisma } from "../configs/db.config.js"
+
+export const getLetterDetail = async (id) => {
+    const letter = await prisma.letter.findFirst({
+        select: {
+            id: true,
+            title: true,
+            contentCipher: true,
+            deliveredAt: true,
+            question: {
+                select: {
+                    content: true
+                }
+            },
+            design: {
+                select: {
+                    paper: {
+                        select: {
+                            id: true,
+                            name: true,
+                            assetUrl: true
+                        }
+                    },
+                    stamp: {
+                        select: {
+                            id: true,
+                            name: true,
+                            assetUrl: true
+                        }
+                    },
+                    font: {
+                        select: {
+                            id: true,
+                            name: true,
+                            assetUrl: true   
+                        }
+                    }
+                }
+            }
+        },
+        where: {
+            id: id
+        }
+    })
+    
+    if(!letter) return null;
+
+    return {
+        id: letter.id,
+        title: letter.title,
+        contentCipher: letter.title,
+        deliveredAt: letter.deliveredAt,
+        question: letter?.question.content,
+        design: {
+            paper: {
+                id: letter?.design?.paper?.id,
+                name: letter?.design?.paper?.name,
+                assetUrl: letter?.design?.paper?.assetUrl
+            },
+            stamp: {
+                id: letter?.design?.stamp?.id,
+                name: letter?.design?.stamp?.name,
+                assetUrl: letter?.design?.stamp?.assetUrl
+            },
+            font: {
+                id: letter?.design?.font?.id,
+                name: letter?.design?.font?.name,
+                assetUrl: letter?.design?.font?.assetUrl
+            }
+        }
+    }
+}
