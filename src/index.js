@@ -15,6 +15,8 @@ import { validateAuthParameterType, validateEmail, validatePassword } from "./va
 import { handleGetLetterAssets } from "./controllers/asset.controller.js";
 import { handleSendMyLetter, handleSendOtherLetter } from "./controllers/letter.controller.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser } from "./controllers/auth.controller.js";
+import { handlePatchOnboardingStep1 } from "./controllers/user.controller.js";
+import {handleGetAllInterests,handleGetMyInterests,handleUpdateMyOnboardingInterests,} from "./controllers/interest.controller.js";
 
 dotenv.config();
 
@@ -168,6 +170,14 @@ app.use((err, req, res, next) => {
     success: null,
   });
 });
+
+
+app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1);
+
+// 관심사
+app.get("/interests/all", handleGetAllInterests); // 전체 목록 (로그인 불필요)
+app.get("/interests", isLogin, handleGetMyInterests); // 내 선택 목록 (로그인 필요)
+app.put("/users/me/onboarding/interests", isLogin, handleUpdateMyOnboardingInterests);
 
 // 서버 실행
 app.listen(port, async () => {
