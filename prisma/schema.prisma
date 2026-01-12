@@ -57,12 +57,10 @@ model User {
 }
 
 model UserNotificationSetting {
-  userId                Int      @id @map("user_id")
-  letterEnabled         Boolean  @map("letter_enabled")
-  replyEnabled          Boolean  @map("reply_enabled")
-  weeklyReportEnabled   Boolean  @map("weekly_report_enabled")
-  marketingEnabled      Boolean  @map("marketing_enabled")
-  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at")
+  userId           Int      @id @map("user_id")
+  letterEnabled    Boolean  @default(true)  @map("letter_enabled")
+  marketingEnabled Boolean  @default(false) @map("marketing_enabled")
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
