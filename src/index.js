@@ -18,6 +18,7 @@ import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSign
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriend } from "./controllers/friend.controller.js";
 import { handlePatchOnboardingStep1 } from "./controllers/user.controller.js";
 import {handleGetAllInterests,handleGetMyInterests,handleUpdateMyOnboardingInterests,} from "./controllers/interest.controller.js";
+import { handleGetMyNotificationSettings, handleUpdateMyNotificationSettings } from "./controllers/notification.controller.js";
 
 dotenv.config();
 
@@ -187,6 +188,12 @@ app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1);
 app.get("/interests/all", handleGetAllInterests); // 전체 목록 (로그인 불필요)
 app.get("/interests", isLogin, handleGetMyInterests); // 내 선택 목록 (로그인 필요)
 app.put("/users/me/onboarding/interests", isLogin, handleUpdateMyOnboardingInterests);
+
+// 알람 설정
+// patch 
+app.patch("/users/me/notification-settings", isLogin, handleUpdateMyNotificationSettings);
+// get
+app.get("/users/me/notification-settings", isLogin, handleGetMyNotificationSettings);
 
 // 서버 실행
 app.listen(port, async () => {
