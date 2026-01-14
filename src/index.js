@@ -15,6 +15,7 @@ import { validateAuthParameterType, validateEmail, validatePassword } from "./va
 import { handleGetLetterAssets } from "./controllers/asset.controller.js";
 import { handleSendMyLetter, handleSendOtherLetter } from "./controllers/letter.controller.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser } from "./controllers/auth.controller.js";
+import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriend } from "./controllers/friend.controller.js";
 import { handlePatchOnboardingStep1 } from "./controllers/user.controller.js";
 import {handleGetAllInterests,handleGetMyInterests,handleUpdateMyOnboardingInterests,} from "./controllers/interest.controller.js";
 
@@ -139,6 +140,14 @@ app.get("/mypage", isLogin, (req, res) => {
     user: req.user,
   });
 });
+
+app.get("/friends", isLogin, asyncHandler(handleGetFriendsList)); //친구 목록 불러오기
+app.post("/friends/requests", isLogin, asyncHandler(handlePostFriendsRequest)); //친구 신청
+app.get("/friends/requests/incoming", isLogin, asyncHandler(handleGetIncomingFriendRequests)); //들어온 친구 신청 불러오기
+app.get("/friends/requests/outgoing", isLogin, asyncHandler(handleGetOutgoingFriendRequests)); //보낸 친구 신청 불러오기
+app.post("/friends/requests/accept", isLogin, asyncHandler(handleAcceptFriendRequest)); //들어온 친구 신청 수락
+app.post("/friends/requests/reject", isLogin, asyncHandler(handleRejectFriendRequest)); //들어온 친구 신청 거절
+app.delete("/friends/requests/:targetUserId", isLogin, asyncHandler(handleDeleteFriend)); //보낸 친구 신청 삭제
 
 app.post("/auth/signup", validateEmail, validatePassword, handleSignUp);    // 회원가입
 app.post("/auth/login", validatePassword, handleLogin);                     // 로그인
