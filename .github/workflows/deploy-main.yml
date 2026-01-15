@@ -23,18 +23,21 @@ jobs:
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
-          # Secret 값을 변수 거치지 않고 직접 파일에 씁니다.
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          echo "$INSTANCE_SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-          # HostName 뒤에 직접 Secret 값을 꽂아넣습니다.
-          cat >> ~/.ssh/config <<EOF
+          # 접속 별명 설정
+          cat >>~/.ssh/config <<END
           Host umc9thworkbook
-            HostName ${{ secrets.EC2_HOST }}
-            User ubuntu
+            HostName $INSTANCE_HOST
+            User $INSTANCE_USER
             IdentityFile ~/.ssh/id_rsa
             StrictHostKeyChecking no
-          EOF
+          END
+        env:
+          INSTANCE_USER: ubuntu
+          INSTANCE_HOST: ${{ secrets.INSTANCE_HOST }}
+          INSTANCE_SSH_KEY: ${{ secrets.INSTANCE_SSH_KEY }}
 
       - name: Copy Workspace
         run: |
