@@ -16,6 +16,7 @@ import { handleGetLetterAssets } from "./controllers/asset.controller.js";
 import { handleSendMyLetter, handleSendOtherLetter } from "./controllers/letter.controller.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser } from "./controllers/auth.controller.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriend } from "./controllers/friend.controller.js";
+import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
 import { handlePatchOnboardingStep1 } from "./controllers/user.controller.js";
 import {handleGetAllInterests,handleGetMyInterests,handleUpdateMyOnboardingInterests,} from "./controllers/interest.controller.js";
 import { handleGetMyNotificationSettings, handleUpdateMyNotificationSettings } from "./controllers/notification.controller.js";
@@ -149,6 +150,11 @@ app.get("/friends/requests/outgoing", isLogin, asyncHandler(handleGetOutgoingFri
 app.post("/friends/requests/accept", isLogin, asyncHandler(handleAcceptFriendRequest)); //들어온 친구 신청 수락
 app.post("/friends/requests/reject", isLogin, asyncHandler(handleRejectFriendRequest)); //들어온 친구 신청 거절
 app.delete("/friends/requests/:targetUserId", isLogin, asyncHandler(handleDeleteFriend)); //보낸 친구 신청 삭제
+
+app.post("/matching/sessions/:questionId", isLogin, asyncHandler(handlePostMatchingSession)); //세션 생성
+app.patch("/matching/sessions/:sessionId/friends", isLogin, asyncHandler(handlePatchMatchingSessionStatusFriends)); //세션 친구됨으로 변경
+app.patch("/matching/sessions/:sessionId/discards", isLogin, asyncHandler(handlePatchMatchingSessionStatusDiscarded)); //세션 삭제됨으로 변경
+app.post("/matching/sessions/:sessionId/reviews", isLogin, asyncHandler(handlePostSessionReview)); //세션 리뷰 작성
 
 app.post("/auth/signup", validateEmail, validatePassword, handleSignUp);    // 회원가입
 app.post("/auth/login", validatePassword, handleLogin);                     // 로그인
