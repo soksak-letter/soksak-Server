@@ -5,7 +5,7 @@ export const getLetterDetail = async (id) => {
         select: {
             id: true,
             title: true,
-            contentCipher: true,
+            content: true,
             deliveredAt: true,
             question: {
                 select: {
@@ -18,7 +18,7 @@ export const getLetterDetail = async (id) => {
                         select: {
                             id: true,
                             name: true,
-                            assetUrl: true
+                            paperAssetUrl: true
                         }
                     },
                     stamp: {
@@ -48,14 +48,14 @@ export const getLetterDetail = async (id) => {
     return {
         id: letter.id,
         title: letter.title,
-        contentCipher: letter.title,
+        content: letter.title,
         deliveredAt: letter.deliveredAt,
         question: letter?.question.content,
         design: {
             paper: {
                 id: letter?.design?.paper?.id,
                 name: letter?.design?.paper?.name,
-                assetUrl: letter?.design?.paper?.assetUrl
+                assetUrl: letter?.design?.paper?.paperAssetUrl
             },
             stamp: {
                 id: letter?.design?.stamp?.id,
@@ -71,7 +71,7 @@ export const getLetterDetail = async (id) => {
     }
 }
 
-// senderUserId = receiverUserId, letterType, questionId, title, contentCipher, isPublic, status, scheduledAt 필수 deliveredAt, readAt은 scheduledAt에 따라서
+// senderUserId = receiverUserId, letterType, questionId, title, content, isPublic, status, scheduledAt 필수 deliveredAt, readAt은 scheduledAt에 따라서
 export const createLetter = async ({letter, design}) => {
     await prisma.letter.create({
         data: {
@@ -81,4 +81,51 @@ export const createLetter = async ({letter, design}) => {
             }
         }
     });
+}
+
+export const getFriendLetters = async ({userId, friendId}) => {
+    const letters = await prisma.letter.findMany({
+        where: {
+            OR:[
+                { senderUserId: userId, receiverUserId: friendId },
+                { senderUserId: friendId, receiverUserId: userId }
+            ]
+        },
+        select: {
+            id: true,
+            title: true,
+            deliveredAt: true,
+            readAt: true,
+            question: {
+                select: {
+                    content: true
+                }
+            },
+            design: {
+                select: {
+                    paper: {
+                        select: {
+                            id: true,
+                            name: true,
+                            paperAssetUrl: true
+                        }
+                    },
+                    stamp: {
+                        select: {
+                            id: true,
+                            name: true,
+                            assetUrl: true
+                        }
+                    },
+                }
+            }
+        }
+    })
+
+    const question = letters[0]?.question?.content;
+    
+    return { 
+        letters: letters.map(({ question, ...rest }) => rest), 
+        question 
+    };
 }

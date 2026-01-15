@@ -1,4 +1,4 @@
-import { getLetter } from "../services/letter.service.js";
+import { getLetter, getLetterFromFriend } from "../services/letter.service.js";
 import { LetterToMeValidator, LetterToOtherValidator } from "../validators/letter.validation.js";
 import { sendLetterToMe, sendLetterToOther } from "../services/letter.service.js";
 
@@ -33,6 +33,19 @@ export const handleSendOtherLetter = async (req, res, next) => {
         const result = await sendLetterToOther(userId, data);
 
         res.status(200).success( result );
+    } catch(err) {
+        next(err);
+    }
+}
+
+export const handleGetLetterFromFriend = async (req, res, next) => {
+    const friendId = parseInt(req.params.friendId);
+    const userId = req.user.id;
+    
+    try{
+        const letters = await getLetterFromFriend({userId, friendId});
+
+        res.status(200).success( letters );
     } catch(err) {
         next(err);
     }

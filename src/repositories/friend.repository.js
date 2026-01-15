@@ -120,3 +120,22 @@ export async function deleteFriend(userId, targetUserId) {
     },
   });
 } // 친구 신청 삭제
+
+export const findFriendById = async (userId, friendId) => {
+  const isFriend = await xprisma.friend.findFirst({
+    where: {
+      OR: [
+        { userAId: userId, userBId: friendId },
+        { userAId: friendId, userBId: userId }
+      ]
+    },
+  })
+
+  if(!isFriend) return null;
+
+  const friend = await prisma.user.findFirst({
+    where: { id: friendId }
+  });
+
+  return friend;
+} // 특정 친구 조회
