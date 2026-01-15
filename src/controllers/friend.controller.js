@@ -5,7 +5,7 @@ import {
   getOutgoingFriendRequests,
   acceptFriendRequest,
   rejectFriendRequest,
-  deleteFriendData as deleteFriend,
+  deleteFriendRequestData as deleteFriendRequest,
 } from "../services/friend.service.js";
 
 function userIsNull(...users) {
@@ -22,7 +22,7 @@ function userIsNull(...users) {
 }
 export const handleGetFriendsList = async (req, res, next) => {
   // 친구 목록 조회 로직 구현
-  const userId = req.body.userId; // 세션이나 토큰에서 가져오는걸로 변경 필요
+  const userId = req.user.id;
 
   userIsNull(userId);
 
@@ -39,14 +39,15 @@ export const handleGetFriendsList = async (req, res, next) => {
 export const handlePostFriendsRequest = async (req, res, next) => {
   console.log("1. controller start", req.body);
 
-  const userId = req.body.userId;
+  const userId = req.user.id;
   const targetUserId = req.body.targetUserId;
+  const sessionId = req.body.sessionId;
 
   userIsNull(userId, targetUserId);
 
   try {
     console.log("2. before service");
-    const result = await postFriendRequest(userId, targetUserId);
+    const result = await postFriendRequest(userId, targetUserId, sessionId);
     console.log("3. after service", result);
 return res.status(result.status).json({ message: result.message, data: result.data });
   } catch (error) {
@@ -59,7 +60,7 @@ return res.status(result.status).json({ message: result.message, data: result.da
 export const handleGetIncomingFriendRequests = async (req, res, next) => {
   // 들어온 친구 신청 목록 조회 로직 구현
 
-  const userId = req.body.userId; // 세션이나 토큰에서 가져오는걸로 변경 필요
+  const userId = req.user.id;
   userIsNull(userId);
   try {
     const result = await getIncomingFriendRequests(userId);
@@ -73,7 +74,7 @@ export const handleGetIncomingFriendRequests = async (req, res, next) => {
 
 export const handleGetOutgoingFriendRequests = async (req, res, next) => {
   // 보낸 친구 신청 목록 조회 로직 구현
-  const userId = req.body.userId; // 세션이나 토큰에서 가져오는걸로 변경 필요
+  const userId = req.user.id;
   console.log("userId1:"+ userId);
   userIsNull(userId);
   console.log("userId2:"+ userId);
@@ -89,11 +90,11 @@ export const handleGetOutgoingFriendRequests = async (req, res, next) => {
 
 export const handleAcceptFriendRequest = async (req, res, next) => {
   // 친구 신청 수락 로직 구현
-  const userId = req.body.userId; // 세션이나 토큰에서 가져오는걸로 변경 필요
-  const targetUserId = req.body.targetUserId;
+  const receiverUserId = req.user.id;
+  const requesterUserId = req.body.targetUserId;
   userIsNull(userId, targetUserId);
   try {
-    const result = await acceptFriendRequest(userId, targetUserId);
+    const result = await acceptFriendRequest(receiverUserId, requesterUserId);
     res.status(result.status).json({ data: result.data, message: result.message });
   } catch (error) {
     next(error);
@@ -102,8 +103,8 @@ export const handleAcceptFriendRequest = async (req, res, next) => {
 
 export const handleRejectFriendRequest = async (req, res, next) => {
   // 친구 신청 거절 로직 구현
-  const userId = req.body.userId; // 세션이나 토큰에서 가져오는걸로 변경 필요
-  const targetUserId = req.body.targetUserId;
+  const receiverUserId = req.user.id;
+  const requesterUserId = req.body.targetUserId;
   userIsNull(userId, targetUserId);
   try {
     const result = await rejectFriendRequest(userId, targetUserId);
@@ -114,12 +115,12 @@ export const handleRejectFriendRequest = async (req, res, next) => {
 };
 
 export const handleDeleteFriend = async (req, res, next) => {
-  // 친구 삭제(취소) 로직 구현
-  const userId = req.body.userId; // 세션이나 토큰에서 가져오는걸로 변경 필요
-  const friendId = req.params.requestId;
-  userIsNull(userId, friendId);
+  // 친구 신청 취소 로직
+  const userId = req.user.id;
+  const targetUserId = Number(req.params.targetUserId);
+  userIsNull(userId, targetUserId);
   try {
-    const result = await deleteFriend(userId, friendId);
+    const result = await deleteFriendRequest(userId, targetUserId);
     res.status(result.status).json({ data: result.data, message: result.message });
   } catch (error) {
     next(error);
