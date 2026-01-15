@@ -129,7 +129,7 @@ model Letter {
   letterType     String    @map("letter_type")
   questionId     Int?      @map("question_id")
   title          String    @map("title")
-  contentCipher  String    @db.Text @map("content_cipher")
+  content        String    @db.Text @map("content")
   isPublic       Boolean   @map("is_public")
   status         String    @map("status")
   scheduledAt    DateTime? @map("scheduled_at")
@@ -176,7 +176,8 @@ model LetterDesign {
 model LetterAssetPaper {
   id       Int            @id @default(autoincrement()) @map("id")
   name     String         @map("name")
-  assetUrl String         @map("asset_url")
+  paperAssetUrl String    @map("paper_asset_url")
+  envelopeAssetUrl String @map("envelope_asset_url")
   isActive Boolean        @map("is_active")
   designs  LetterDesign[]
 
