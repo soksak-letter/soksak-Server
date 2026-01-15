@@ -1,5 +1,6 @@
 import { findFriendById } from "../repositories/friend.repository.js";
 import { createLetter, getFriendLetters, getLetterDetail } from "../repositories/letter.repository.js"
+import { createLetterLike, deleteLetterLike, findLetterLike } from "../repositories/like.repository.js";
 
 export const getLetter = async (id) => {
     const letter = await getLetterDetail(id);
@@ -64,7 +65,7 @@ export const sendLetterToOther = async (userId, data) => {
 export const getLetterFromFriend = async ({userId, friendId}) => {
     const friend = await findFriendById(userId, friendId);
     if(!friend) throw new Error("친구가 아닙니다.");
-    
+
     const {letters, question} = await getFriendLetters({userId, friendId});
 
     return {
@@ -72,4 +73,28 @@ export const getLetterFromFriend = async ({userId, friendId}) => {
         firstQuestion: question, 
         letters
     };
+}
+
+export const addLetterLike = async ({userId, letterId}) => {
+    const isLiked = await findLetterLike({userId, letterId});
+    if(isLiked) throw new Error("이미 좋아요를 눌렀습니다."); 
+
+    await createLetterLike({userId, letterId});
+
+    return {
+        letterId,
+        isLiked: true
+    }
+}
+
+export const removeLetterLike = async ({userId, letterId}) => {
+    const isLiked = await findLetterLike({userId, letterId});
+    if(!isLiked) throw new Error("이미 좋아요를 누르지 않았습니다."); 
+
+    await deleteLetterLike({userId, letterId});
+
+    return {
+        letterId,
+        isLiked: false
+    }
 }

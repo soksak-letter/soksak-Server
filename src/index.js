@@ -13,7 +13,7 @@ import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
 import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
 import { validateAuthParameterType, validateEmail, validatePassword } from "./validators/auth.validation.js";
 import { handleGetLetterAssets } from "./controllers/asset.controller.js";
-import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleGetLetterFromFriend } from "./controllers/letter.controller.js";
+import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleGetLetterFromFriend, handleRemoveLetterLike, handleAddLetterLike } from "./controllers/letter.controller.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser } from "./controllers/auth.controller.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriend } from "./controllers/friend.controller.js";
 import { handlePatchOnboardingStep1 } from "./controllers/user.controller.js";
@@ -156,8 +156,8 @@ app.post("/auth/email/exists", validateEmail, handleCheckDuplicatedEmail);  // �
 app.get("/auth/refresh", handleRefreshToken);                               // 액세스 토큰 재발급
 app.post("/auth/:type/verification-codes", validateAuthParameterType, validateEmail, handleSendVerifyEmailCode);    // 이메일 인증번호 전송
 app.post("/auth/:type/verification-codes/confirm", validateAuthParameterType, validateEmail, handleCheckEmailCode); // 이메일 인증번호 확인
-app.get("/auth/find-id", validateEmail, handleGetAccountInfo);                                                      // 아이디 찾기
-app.patch("/auth/reset-password", isLogin, validatePassword, handleResetPassword);                                  // 비밀번호 찾기
+app.get("/auth/find-id", validateEmail, handleGetAccountInfo);              // 아이디 찾기
+app.patch("/auth/reset-password", isLogin, validatePassword, handleResetPassword);    // 비밀번호 찾기
 app.post("/auth/logout", isLogin, handleLogout);                            // 로그아웃
 app.delete("/users", isLogin, handleWithdrawUser);                          // 탈퇴
 
@@ -165,7 +165,9 @@ app.get("/letter-assets", isLogin, handleGetLetterAssets);        // 편지 꾸�
 app.post("/letter/me", isLogin, handleSendMyLetter);              // 나에게 편지 전송
 app.post("/letter/other", isLogin, handleSendOtherLetter);        // 타인/친구에게 편지 전송
 app.get("/letters/:letterId", isLogin, handleGetLetterDetail);    // 편지 상세 조회
-app.get("/friends/:friendId/conversations", isLogin, handleGetLetterFromFriend);  // 친구 편지 목록 조회
+app.get("/friends/:friendId/conversations", isLogin, handleGetLetterFromFriend);  // 친구 대화 목록 화면 조회
+app.post("/letters/:letterId/like", isLogin, handleAddLetterLike);                // 편지 좋아요 추가
+app.delete("/letters/:letterId/like", isLogin, handleRemoveLetterLike);           // 편지 좋아요 삭제
 
 app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1); // 온보딩 설정 
 

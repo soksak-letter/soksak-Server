@@ -123,7 +123,7 @@ export const getFriendLetters = async ({userId, friendId}) => {
     })
 
     const question = letters[0]?.question?.content;
-    
+
     return { 
         letters: letters.map(({ question, ...rest }) => rest), 
         question 
