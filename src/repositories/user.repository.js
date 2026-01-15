@@ -1,51 +1,166 @@
-import { prisma } from "../db.config.js";
+import { prisma } from "../configs/db.config.js";
 
+export const findUserByEmail = async (email) => {
+    try{
+        const user = await prisma.user.findFirst({ 
+            select: {
+                id: true,
+                email: true,
+                createdAt: true,
+                auths: {
+                    select: {
+                        provider: true,
+                        username: true
+                    }
+                }
+            },
+            where: { 
+                email: email,
+            }
+        });
 
-export const findByUserId = async (userId) => {
-  return prisma.user.findUnique({
-    where: { id: userId },
-  });
-};
+        if(!user) return null;
+        
+        return {
+            id: user.id,
+            email: user.email,
+            createdAt: user.createdAt,
+            provider: user.auths?.[0]?.provider,
+            username: user.auths?.[0]?.username
+        };
+    } catch (err) {
+        throw new Error(err);
+    }
+}
 
-// User 데이터 삽입
-export const addUser = async (data) => {
-  const user = await prisma.user.findFirst({ where: { email: data.email } });
-  if (user) {
-    return null;
-  }
+export const findUserById = async (id) => {
+    try{
+        const user = await prisma.user.findFirst({ 
+            where: { 
+                id: id, 
+                isDeleted: false 
+            },
+            select: {
+                id: true,
+                email: true,
+                auths: {
+                    select: {
+                        provider: true,
+                        username: true
+                    }
+                }
+            }
+        });
+        
+        if(!user) return null;
 
-  const created= await prisma.user.create({ data: data});
-  return created.id;
-};
+        return {
+            id: user.id,
+            email: user.email,
+            createdAt: user.createdAt,
+            provider: user.auths?.[0]?.provider,
+            username: user.auths?.[0]?.username
+        };
+    } catch (err) {
+        throw new Error(err);
+    }
+}
 
-// 사용자 정보 얻기
-export const getUser = async (userId) => {
-  const user = await prisma.user.findFirstOrThrow({ where: { id: userId } });
-  return user;
-};
+export const findUserByUsername = async (username) => {
+    try{
+        const user = await prisma.user.findFirst({
+            where: { 
+                auths: { 
+                    some: { 
+                        username: username 
+                    } 
+                } 
+            },
+            select: {
+                id: true,
+                email: true,
+                auths: {
+                    select: {
+                        provider: true,
+                        username: true
+                    }
+                }
+            }
+        });
+        
+        if(!user) return null;
 
-// 음식 선호 카테고리 매핑
-export const setPreference = async (userId, foodCategoryId) => {
-  await prisma.userFavorCategory.create({
-    data: {
-      userId: userId,
-      foodCategoryId: foodCategoryId,
-    },
-  });
-};
+        return {
+            id: user.id,
+            email: user.email,
+            createdAt: user.createdAt,
+            provider: user.auths?.[0]?.provider,
+            username: user.auths?.[0]?.username
+        };
+    } catch (err) {
+        throw new Error(err);
+    }
+}
 
-// 사용자 선호 카테고리 반환
-export const getUserPreferencesByUserId = async (userId) => {
-  const preferences = await prisma.userFavorCategory.findMany({
-    select: {
-      id: true,
-      userId: true,
-      foodCategoryId: true,
-      foodCategory: true,
-    },
-    where: { userId: userId },
-    orderBy: { foodCategoryId: "asc" },
-  });
+export const createUserAndAuth = async ({user, auth}, tx = prisma) => {
+    try{
+        const newUser = await tx.user.create({ 
+            data: {
+                email: user.email,
+                name: user.name,
+                phoneNumber: user.phoneNumber,
+                auths: {
+                    create: {
+                        username: user.username,
+                        email: user.email,
+                        ...auth
+                    }
+                }  
+            },
+            select: {
+                id: true,
+                email: true,
+                auths: {
+                    select: {
+                        provider: true
+                    }
+                }
+            }
+        });
 
-  return preferences;
-};
+        return {
+            id: newUser.id,
+            email: newUser.email,
+            provider: newUser.auths?.[0]?.provider
+        };
+    } catch(err) {
+        throw new Error(err);
+    }
+}
+
+export const createUserAgreement = async (data, tx = prisma) => {
+    try{
+        await tx.userAgreement.create({
+            data: data
+        });
+    } catch(err) {
+        throw new Error(err);
+    }
+}
+
+export const softDeleteUser = async (id) => {
+    try{
+        await prisma.user.update({
+            data: {
+                isDeleted: true,
+                deletedAt: new Date()
+            },
+            where: { id: id }
+        })
+    } catch(err) {
+        if(err.code === 'P2025') {
+            throw new Error("존재하지 않는 유저입니다.");   // 이런 에러처리는 MVP까지 한 뒤에 적용
+        }
+        throw new Error(err);
+    }
+}

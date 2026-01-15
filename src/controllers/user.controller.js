@@ -1,11 +1,19 @@
-import { StatusCodes } from "http-status-codes";
-import { bodyToUser } from "../dtos/user.dto.js";
-import { userSignUp } from "../services/user.service.js";
+import { updateOnboardingStep1 } from "../services/user.service.js";
 
-export const handleUserSignUp = async (req, res) => {
-  console.log("회원가입 요청 데이터:", req.body);
+export const handlePatchOnboardingStep1 = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).error({ errorCode: "AUTH_401", reason: "Unauthorized" });
+    }
 
-  const user = await userSignUp(bodyToUser(req.body));
+    // 화면/기획 기준: gender, job만 받음 (ageRange는 받지 않음)
+    const { gender, job } = req.body;
 
-  return res.status(StatusCodes.OK).success(user);
+    const result = await updateOnboardingStep1({ userId, gender, job });
+
+    return res.status(200).success(result);
+  } catch (err) {
+    next(err);
+  }
 };

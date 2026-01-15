@@ -1,4 +1,6 @@
-// errors/post.error.js
+// errors/friend.error.js
+
+// 기본 에러 클래스
 class BaseError extends Error {
   constructor(message, status, errorCode, data = null) {
     super(message);
@@ -9,16 +11,12 @@ class BaseError extends Error {
   }
 }
 
-// 400: 유효하지 않은 userId (P001)
-export class InvalidUserIdError extends BaseError {
-  constructor(data, message = "유효하지 않은 유저 ID 입니다.") {
-    super(message, 400, "P001", data);
-  }
-}
-
-// 404: user 없음 (P002)
-export class UserNotFoundError extends BaseError {
-  constructor(data, message = "일치하는 유저가 없습니다.") {
-    super(message, 404, "P002", data);
+/**
+ * 404: 유저 없음 (FRIEND_404_01)
+ * - userId 또는 targetUserId가 존재하지 않을 때
+ */
+export class InvalidUserError extends BaseError {
+  constructor(data, message = "잘못된 유저 정보 입력입니다.") {
+    super(message, 404, "FRIEND_404_01", data);
   }
 }
