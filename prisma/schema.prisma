@@ -523,13 +523,16 @@ model Restriction {
 model Notice {
   id        Int      @id @default(autoincrement()) @map("id")
   title     String   @map("title")
+  summary   String?  @db.VarChar(255) @map("summary") // 목록용 요약(선택)
   content   String   @db.Text @map("content")
-  pinned    Boolean  @map("pinned")
+  pinned    Boolean  @default(false) @map("pinned")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
+  @@index([createdAt])
   @@map("notice")
 }
+
 
 model PolicyDocument {
   key         String   @id @map("key")
@@ -540,3 +543,5 @@ model PolicyDocument {
 
   @@map("policy_document")
 }
+
+
