@@ -69,7 +69,7 @@ model UserNotificationSetting {
 
 model UserDeviceToken {
   id          Int      @id @default(autoincrement()) @map("id")
-  userId      Int      @map("user_id")
+  userId      Int      @unique @map("user_id")  
   deviceType  String   @map("device_type")
   deviceToken String   @map("device_token")
   lastSeenAt  DateTime @default(now()) @map("last_seen_at")
@@ -77,13 +77,13 @@ model UserDeviceToken {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  @@index([userId]) 
   @@map("user_device_token")
 }
 
 model UserAgreement {
   id              Int      @id @default(autoincrement()) @map("id")
-  userId          Int      @map("user_id")
+  userId          Int      @unique @map("user_id")   // ✅ 여기에 @unique 추가
   termsAgreed     Boolean  @map("terms_agreed")
   privacyAgreed   Boolean  @map("privacy_agreed")
   ageOver14Agreed Boolean  @map("age_over_14_agreed")
