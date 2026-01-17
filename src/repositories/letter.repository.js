@@ -164,7 +164,11 @@ export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDet
                     },
                 }
             }
-        }
+        },
+        orderBy: {
+            deliveredAt: 'desc'
+        },
+        take: isDetail ? undefined : 3
     })
 
     return letters.map(letter => ({ 
