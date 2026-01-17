@@ -109,3 +109,14 @@ export const getPublicLetterFromOther = async (userId, isDetail) => {
 
     return letters;
 }
+
+export const getPublicLetterFromFriend = async (userId, isDetail) => {
+    const friends = await selectAllFriendsByUserId(userId);
+    const friendIds = friends.map(f => {
+        return f.userAId === userId ? f.userBId : f.userAId;
+    });
+
+    const letters = await getPublicLetters({ids: [...friendIds], userId, isFriendOnly: true, isDetail});
+
+    return letters;
+}

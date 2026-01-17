@@ -131,6 +131,7 @@ export const getFriendLetters = async ({userId, friendId}) => {
 }
 
 export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDetail = false}) => {
+    console.log(isFriendOnly);
     const letters = await prisma.letter.findMany({
         where: {
             senderUserId: isFriendOnly
