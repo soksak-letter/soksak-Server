@@ -21,6 +21,13 @@ import { handlePatchOnboardingStep1 } from "./controllers/user.controller.js";
 import {handleGetAllInterests,handleGetMyInterests,handleUpdateMyOnboardingInterests,} from "./controllers/interest.controller.js";
 import { handleGetMyNotificationSettings, handleUpdateMyNotificationSettings } from "./controllers/notification.controller.js";
 import { handleGetTodayQuestion } from "./controllers/question.controller.js";
+import {handleGetCommunityGuidelines,handleGetTerms,handleGetPrivacy,} from "./controllers/policy.controller.js";
+import {handleGetNotices,handleGetNoticeDetail,} from "./controllers/notice.controller.js";
+import { handlePutMyDeviceToken } from "./controllers/deviceToken.controller.js";
+import { handleGetMyConsents, handlePatchMyConsents } from "./controllers/consent.controller.js";
+
+
+
 
 dotenv.config();
 
@@ -208,6 +215,21 @@ app.use((err, req, res, next) => {
     success: null,
   });
 });
+
+// 정책, 공지사항
+app.get("/policies/community-guidelines", handleGetCommunityGuidelines);
+app.get("/policies/terms", handleGetTerms);
+app.get("/policies/privacy", handleGetPrivacy);
+
+app.get("/notices", handleGetNotices);
+app.get("/notices/:noticeId", handleGetNoticeDetail);
+
+// 동의 설정
+app.get("/users/me/consents", isLogin, handleGetMyConsents);
+app.patch("/users/me/consents", isLogin, handlePatchMyConsents);
+
+// 디바이스 토큰
+app.put("/users/me/device-tokens", isLogin, handlePutMyDeviceToken);
 
 // 서버 실행
 app.listen(port, async () => {
