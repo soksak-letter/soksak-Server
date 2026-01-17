@@ -13,13 +13,14 @@ import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
 import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
 import { validateAuthParameterType, validateEmail, validatePassword } from "./validators/auth.validation.js";
 import { handleGetLetterAssets } from "./controllers/asset.controller.js";
-import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleGetLetterFromFriend, handleRemoveLetterLike, handleAddLetterLike } from "./controllers/letter.controller.js";
+import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleGetLetterFromFriend, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther } from "./controllers/letter.controller.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser } from "./controllers/auth.controller.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriend } from "./controllers/friend.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
 import { handlePatchOnboardingStep1 } from "./controllers/user.controller.js";
 import {handleGetAllInterests,handleGetMyInterests,handleUpdateMyOnboardingInterests,} from "./controllers/interest.controller.js";
 import { handleGetMyNotificationSettings, handleUpdateMyNotificationSettings } from "./controllers/notification.controller.js";
+import { handleGetTodayQuestion } from "./controllers/question.controller.js";
 
 dotenv.config();
 
@@ -175,12 +176,16 @@ app.get("/friends/:friendId/conversations", isLogin, handleGetLetterFromFriend);
 app.post("/letters/:letterId/like", isLogin, handleAddLetterLike);                // 편지 좋아요 추가
 app.delete("/letters/:letterId/like", isLogin, handleRemoveLetterLike);           // 편지 좋아요 삭제
 
-app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1); // 온보딩 설정 
+app.get("/questions/today", handleGetTodayQuestion);       // 오늘의 질문 조회
+app.get("/letters/others/public", isLogin, handleGetPublicLetterFromOther);               // 공개 편지 캐러셀 목록 조회
+
+// 온보딩 설정
+app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1); 
+app.put("/users/me/onboarding/interests", isLogin, handleUpdateMyOnboardingInterests);
 
 // 관심사
 app.get("/interests/all", handleGetAllInterests); // 전체 목록 (로그인 불필요)
 app.get("/interests", isLogin, handleGetMyInterests); // 내 선택 목록 (로그인 필요)
-app.put("/users/me/onboarding/interests", isLogin, handleUpdateMyOnboardingInterests);
 
 // 알람 설정
 app.patch("/users/me/notification-settings", isLogin, handleUpdateMyNotificationSettings);

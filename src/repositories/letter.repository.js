@@ -129,3 +129,59 @@ export const getFriendLetters = async ({userId, friendId}) => {
         question 
     };
 }
+
+export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDetail = false}) => {
+    console.log(isDetail);
+    const letters = await prisma.letter.findMany({
+        where: {
+            senderUserId: isFriendOnly
+                ? { in: ids }
+                : { notIn: ids },
+            isPublic: true
+        },
+        select: {
+            id: true,
+            title: true,
+            content: isDetail ? true : false,
+            _count: isDetail ? {select: { likes: true }} : false,
+            likes: {
+                where: {
+                    userId: userId
+                },
+                select: {
+                    letterId: true
+                }
+            },
+            deliveredAt: true,
+            design: {
+                select: {
+                    paper: {
+                        select: {
+                            id: true,
+                            name: true,
+                            envelopeAssetUrl: true
+                        }
+                    },
+                }
+            }
+        }
+    })
+
+    console.log(letters);
+
+    return letters.map(letter => ({ 
+        id: letter?.id,
+        title: letter?.title,
+        deliveredAt: letter?.deliveredAt,
+        content: letter?.content,
+        likes: letter?._count?.likes,
+        isLiked: letter?.likes.length === 0 ? false : true,
+        design: {
+            paper: {
+                id: letter?.design?.paper?.id,
+                name: letter?.design?.paper?.name,
+                assetUrl: letter?.design?.paper?.envelopeAssetUrl
+            }
+        }
+    }));
+}

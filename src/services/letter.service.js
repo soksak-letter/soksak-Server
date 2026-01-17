@@ -1,5 +1,5 @@
-import { findFriendById } from "../repositories/friend.repository.js";
-import { createLetter, getFriendLetters, getLetterDetail } from "../repositories/letter.repository.js"
+import { findFriendById, selectAllFriendsByUserId } from "../repositories/friend.repository.js";
+import { createLetter, getFriendLetters, getLetterDetail, getPublicLetters } from "../repositories/letter.repository.js"
 import { createLetterLike, deleteLetterLike, findLetterLike } from "../repositories/like.repository.js";
 
 export const getLetter = async (id) => {
@@ -97,4 +97,15 @@ export const removeLetterLike = async ({userId, letterId}) => {
         letterId,
         isLiked: false
     }
+}
+
+export const getPublicLetterFromOther = async (userId, isDetail) => {
+    const friends = await selectAllFriendsByUserId(userId);
+    const friendIds = friends.map(f => {
+        return f.userAId === userId ? f.userBId : f.userAId;
+    });
+
+    const letters = await getPublicLetters({ids: [...friendIds, userId], userId, isDetail});
+
+    return letters;
 }
