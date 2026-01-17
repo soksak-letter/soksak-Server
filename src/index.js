@@ -25,6 +25,7 @@ import {handleGetCommunityGuidelines,handleGetTerms,handleGetPrivacy,} from "./c
 import {handleGetNotices,handleGetNoticeDetail,} from "./controllers/notice.controller.js";
 import { handlePutMyDeviceToken } from "./controllers/deviceToken.controller.js";
 import { handleGetMyConsents, handlePatchMyConsents } from "./controllers/consent.controller.js";
+import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
 
 
 
@@ -187,6 +188,8 @@ app.get("/questions/today", handleGetTodayQuestion);       // 오늘의 질문 �
 app.get("/letters/others/public", isLogin, handleGetPublicLetterFromOther);       // 공개 편지 캐러셀 목록 조회
 app.get("/letters/friends/public", isLogin, handleGetPublicLetterFromFriend);     // 친구 편지 캐러셀 목록 조회
 app.get("/users/me/letters/stats", isLogin, handleGetUserLetterStats)  // 편지 여행 카드 데이터 조회
+
+app.get("/home/summary", isLogin, HandleGetHomeDashboard);  // 홈 대시보드 조회
 
 // 온보딩 설정
 app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1); 
