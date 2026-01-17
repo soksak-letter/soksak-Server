@@ -131,7 +131,6 @@ export const getFriendLetters = async ({userId, friendId}) => {
 }
 
 export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDetail = false}) => {
-    console.log(isDetail);
     const letters = await prisma.letter.findMany({
         where: {
             senderUserId: isFriendOnly
@@ -144,14 +143,14 @@ export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDet
             title: true,
             content: isDetail ? true : false,
             _count: isDetail ? {select: { likes: true }} : false,
-            likes: {
+            likes: isDetail ? {
                 where: {
                     userId: userId
                 },
                 select: {
                     letterId: true
                 }
-            },
+            } : false,
             deliveredAt: true,
             design: {
                 select: {
@@ -167,15 +166,15 @@ export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDet
         }
     })
 
-    console.log(letters);
-
     return letters.map(letter => ({ 
         id: letter?.id,
         title: letter?.title,
         deliveredAt: letter?.deliveredAt,
-        content: letter?.content,
-        likes: letter?._count?.likes,
-        isLiked: letter?.likes.length === 0 ? false : true,
+        ...(isDetail && {
+            content: letter?.content,
+            likes: letter?._count?.likes,
+            isLiked: (letter?.likes?.length ?? 0) > 0,
+        }),
         design: {
             paper: {
                 id: letter?.design?.paper?.id,

@@ -177,7 +177,7 @@ app.post("/letters/:letterId/like", isLogin, handleAddLetterLike);              
 app.delete("/letters/:letterId/like", isLogin, handleRemoveLetterLike);           // 편지 좋아요 삭제
 
 app.get("/questions/today", handleGetTodayQuestion);       // 오늘의 질문 조회
-app.get("/letters/others/public", isLogin, handleGetPublicLetterFromOther);               // 공개 편지 캐러셀 목록 조회
+app.get("/letters/others/public", isLogin, handleGetPublicLetterFromOther);       // 공개 편지 캐러셀 목록 조회
 
 // 온보딩 설정
 app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1); 
