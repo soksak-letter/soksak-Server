@@ -17,7 +17,7 @@ import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handl
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser } from "./controllers/auth.controller.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriend } from "./controllers/friend.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
-import { handlePatchOnboardingStep1 } from "./controllers/user.controller.js";
+import { handleCreateUserAgreements, handlePatchOnboardingStep1 } from "./controllers/user.controller.js";
 import {handleGetAllInterests,handleGetMyInterests,handleUpdateMyOnboardingInterests,} from "./controllers/interest.controller.js";
 import { handleGetMyNotificationSettings, handleUpdateMyNotificationSettings } from "./controllers/notification.controller.js";
 import { handleGetTodayQuestion } from "./controllers/question.controller.js";
@@ -175,6 +175,7 @@ app.get("/auth/find-id", validateEmail, handleGetAccountInfo);              // �
 app.patch("/auth/reset-password", isLogin, validatePassword, handleResetPassword);    // 비밀번호 찾기
 app.post("/auth/logout", isLogin, handleLogout);                            // 로그아웃
 app.delete("/users", isLogin, handleWithdrawUser);                          // 탈퇴
+app.post("/users/me/agreements", isLogin, handleCreateUserAgreements)    // 이용약관 동의
 
 app.get("/letter-assets", isLogin, handleGetLetterAssets);        // 편지 꾸미기 리소스 목록 조회
 app.post("/letter/me", isLogin, handleSendMyLetter);              // 나에게 편지 전송
