@@ -185,3 +185,38 @@ export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDet
         }
     }));
 }
+
+export const countLetterStatsForWeek = async ({userId, weekStart, weekEnd}) => {
+    const counts = await prisma.user.findUnique({
+        where: {
+            id: userId,
+        },
+        select: {
+            _count: {
+                select: {
+                    sentLetters: {
+                        where: { createdAt: { gte: weekStart, lte: weekEnd } }
+                    },
+                    receivedLetters: {
+                        where: { createdAt: { gte: weekStart, lte: weekEnd } }
+                    }
+                }
+            }
+        }
+    })
+    
+    return {
+        "receivedCount": counts?._count?.receivedLetters ?? 0,
+        "sentCount": counts?._count?.sentLetters ?? 0,
+    }
+}
+
+export const countTotalSentLetter = async (userId) => {
+    const totalCount = await prisma.letter.count({
+        where: {
+            senderUserId: userId
+        }
+    })
+
+    return totalCount;
+}

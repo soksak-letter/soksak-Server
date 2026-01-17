@@ -1,4 +1,4 @@
-import { addLetterLike, getLetter, getLetterFromFriend, getPublicLetterFromFriend, getPublicLetterFromOther, removeLetterLike } from "../services/letter.service.js";
+import { addLetterLike, getLetter, getLetterFromFriend, getPublicLetterFromFriend, getPublicLetterFromOther, getUserLetterStats, removeLetterLike } from "../services/letter.service.js";
 import { LetterToMeValidator, LetterToOtherValidator } from "../validators/letter.validation.js";
 import { sendLetterToMe, sendLetterToOther } from "../services/letter.service.js";
 
@@ -97,6 +97,17 @@ export const handleGetPublicLetterFromFriend = async (req, res, next) => {
 
         res.status(200).success( letters );
     } catch(err) {
+        next(err);
+    }
+}
+
+export const handleGetUserLetterStats = async (req, res, next) => {
+    const userId = req.user.id;
+    try{
+        const data = await getUserLetterStats(userId);
+
+        res.status(200).success( data );
+    } catch(err) { 
         next(err);
     }
 }

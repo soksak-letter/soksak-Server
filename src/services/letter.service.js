@@ -1,6 +1,8 @@
 import { findFriendById, selectAllFriendsByUserId } from "../repositories/friend.repository.js";
-import { createLetter, getFriendLetters, getLetterDetail, getPublicLetters } from "../repositories/letter.repository.js"
+import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getFriendLetters, getLetterDetail, getPublicLetters } from "../repositories/letter.repository.js"
 import { createLetterLike, deleteLetterLike, findLetterLike } from "../repositories/like.repository.js";
+import { getMonthAndWeek, getWeekStartAndEnd } from "../utils/day.util.js";
+import { getLevelInfo } from "../utils/planetConstants.js";
 
 export const getLetter = async (id) => {
     const letter = await getLetterDetail(id);
@@ -119,4 +121,26 @@ export const getPublicLetterFromFriend = async (userId, isDetail) => {
     const letters = await getPublicLetters({ids: [...friendIds], userId, isFriendOnly: true, isDetail});
 
     return letters;
+}
+
+export const getUserLetterStats = async (userId) => {
+    const today = new Date();
+
+    const {weekStart, weekEnd} = getWeekStartAndEnd(today);
+    const counts = await countLetterStatsForWeek({userId, weekStart, weekEnd});
+    const totalSentCount = await countTotalSentLetter(userId);
+
+    const {month, week} = getMonthAndWeek(today);
+
+    const info = getLevelInfo(totalSentCount);
+
+    return {
+        "reportPeriod": `${month}월 ${week}주차`,
+        "stats": {
+            "receivedCount": counts.receivedCount,
+            "sentCount": counts.sentCount,
+            "totalSentCount": totalSentCount
+        },
+        message: info.fullMessage
+    }
 }
