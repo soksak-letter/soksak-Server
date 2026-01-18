@@ -19,6 +19,9 @@ import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, h
 import { handleCreateUserAgreements, handlePatchOnboardingStep1 } from "./controllers/user.controller.js";
 import {handleGetAllInterests,handleGetMyInterests,handleUpdateMyOnboardingInterests,} from "./controllers/interest.controller.js";
 import { handleGetMyNotificationSettings, handleUpdateMyNotificationSettings } from "./controllers/notification.controller.js";
+import { bootstrapWeeklyReports } from "./jobs/weeklyReport.bootstrap.js";
+import { startWeeklyReportCron } from "./jobs/weeklyReport.cron.js";
+import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js";
 import { handleGetTodayQuestion } from "./controllers/question.controller.js";
 import {handleGetCommunityGuidelines,handleGetTerms,handleGetPrivacy,} from "./controllers/policy.controller.js";
 import {handleGetNotices,handleGetNoticeDetail,} from "./controllers/notice.controller.js";
@@ -95,6 +98,12 @@ app.use((req, res, next) => {
   next();
 });
 
+await bootstrapWeeklyReports();
+startWeeklyReportCron();
+
+// 로그인 확인 미들웨어
+export const isLogin = passport.authenticate('jwt', { session: false });
+
 // 비동기 에러 래퍼
 const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
@@ -165,6 +174,8 @@ app.post("/matching/sessions/:questionId", isLogin, asyncHandler(handlePostMatch
 app.patch("/matching/sessions/:sessionId/friends", isLogin, asyncHandler(handlePatchMatchingSessionStatusFriends)); //세션 친구됨으로 변경
 app.patch("/matching/sessions/:sessionId/discards", isLogin, asyncHandler(handlePatchMatchingSessionStatusDiscarded)); //세션 삭제됨으로 변경
 app.post("/matching/sessions/:sessionId/reviews", isLogin, asyncHandler(handlePostSessionReview)); //세션 리뷰 작성
+
+app.get("/reports/weekly/:year/:week", isLogin, asyncHandler(handleGetWeeklyReport));
 
 app.post("/auth/signup", validate(SignUpSchema), handleSignUp);                     // 회원가입
 app.post("/auth/login", validate(loginSchema), handleLogin);                        // 로그인
