@@ -1,12 +1,16 @@
+import { NotFriendError } from "../errors/friend.error.js";
+import { UserNotFoundError } from "../errors/user.error.js";
+import { DuplicatedValueError } from "../errors/base.error.js";
 import { findFriendById, selectAllFriendsByUserId } from "../repositories/friend.repository.js";
 import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getFriendLetters, getLetterDetail, getPublicLetters } from "../repositories/letter.repository.js"
 import { createLetterLike, deleteLetterLike, findLetterLike } from "../repositories/like.repository.js";
+import { findUserById } from "../repositories/user.repository.js";
 import { getMonthAndWeek, getWeekStartAndEnd } from "../utils/day.util.js";
 import { getLevelInfo } from "../utils/planetConstants.js";
 
 export const getLetter = async (id) => {
     const letter = await getLetterDetail(id);
-    if(!letter) throw new Error("작성되지 않은 편지입니다.");
+    if(!letter) throw new LetterBadRequest("LETTER_400_01", "작성되지 않은 편지입니다.");
     
     return letter;
 }
@@ -37,8 +41,8 @@ export const sendLetterToMe = async (userId, data) => {
 
 export const sendLetterToOther = async (userId, data) => {
     const receiver = await findUserById(data.receiverUserId);
-    if(!receiver) throw new Error("존재하지 않는 유저입니다.");
-    if(userId === receiver.id) throw new Error("전송하는 유저와 전달받는 유저의 id가 같습니다");
+    if(!receiver) throw new UserNotFoundError("USER_404_02", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
+    if(userId === receiver.id) throw new DuplicatedValueError("USER_409_04", "전송하는 유저와 전달받는 유저의 id가 같습니다", "id");
 
     await createLetter({
         letter: {
@@ -66,7 +70,7 @@ export const sendLetterToOther = async (userId, data) => {
 
 export const getLetterFromFriend = async ({userId, friendId}) => {
     const friend = await findFriendById(userId, friendId);
-    if(!friend) throw new Error("친구가 아닙니다.");
+    if(!friend) throw new NotFriendError("FRIEND_403_01", "친구가 아닙니다.");
 
     const {letters, question} = await getFriendLetters({userId, friendId});
 
@@ -79,7 +83,7 @@ export const getLetterFromFriend = async ({userId, friendId}) => {
 
 export const addLetterLike = async ({userId, letterId}) => {
     const isLiked = await findLetterLike({userId, letterId});
-    if(isLiked) throw new Error("이미 좋아요를 눌렀습니다."); 
+    if(isLiked) throw new DuplicatedValueError("LIKE_409_01", "이미 좋아요를 눌렀습니다."); 
 
     await createLetterLike({userId, letterId});
 
@@ -91,7 +95,7 @@ export const addLetterLike = async ({userId, letterId}) => {
 
 export const removeLetterLike = async ({userId, letterId}) => {
     const isLiked = await findLetterLike({userId, letterId});
-    if(!isLiked) throw new Error("이미 좋아요를 누르지 않았습니다."); 
+    if(!isLiked) throw new DuplicatedValueError("LIKE_409_02", "이미 좋아요를 누르지 않았습니다."); 
 
     await deleteLetterLike({userId, letterId});
 

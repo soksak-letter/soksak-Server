@@ -1,3 +1,4 @@
+import { RequiredTermAgreementError } from "../errors/auth.error.js";
 import { getUserForOnboarding, updateUserOnboardingStep1 } from "../repositories/onboarding.repository.js";
 import { createUserAgreement, findUserById } from "../repositories/user.repository.js";
 
@@ -45,7 +46,7 @@ export const createUserAgreements = async (data) => {
   const user = await findUserById(data.userId);
   if(!user) throw new Error("존재하지 않는 사용자입니다.");
 
-  if(!data?.body?.termsAgreed || !data?.body?.privacyAgreed || !data?.body?.ageOver14Agreed) throw new Error("필수 약관에 모두 동의해주세요.");
+  if(!data?.body?.termsAgreed || !data?.body?.privacyAgreed || !data?.body?.ageOver14Agreed) throw new RequiredTermAgreementError("TERM_400_01", "필수 약관에 모두 동의해주세요.");
 
   await createUserAgreement({
       userId: data.userId,
