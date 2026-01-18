@@ -1,4 +1,4 @@
-import { updateOnboardingStep1 } from "../services/user.service.js";
+import { createUserAgreements, updateOnboardingStep1 } from "../services/user.service.js";
 
 export const handlePatchOnboardingStep1 = async (req, res, next) => {
   try {
@@ -17,3 +17,15 @@ export const handlePatchOnboardingStep1 = async (req, res, next) => {
     next(err);
   }
 };
+
+export const handleCreateUserAgreements = async (req, res, next) => {
+  const userId = req.user.id;
+  
+  try{
+    await createUserAgreements({userId, body: req.body});
+
+    res.status(200).success({ message: "약관 동의가 완료되었습니다." });
+  } catch(err) {
+    next(err);
+  }
+}

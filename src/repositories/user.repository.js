@@ -1,5 +1,5 @@
 import { prisma } from "../configs/db.config.js";
-import { DuplicatedValueError } from "../errors/user.error.js";
+import { DuplicatedValueError } from "../errors/base.error.js";
 
 export const findUserByEmail = async (email) => {
     try{

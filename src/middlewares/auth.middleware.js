@@ -26,7 +26,7 @@ export const isLogin = (req, res, next) => {
         return next(new AuthError("AUTH_401_05", "액세스 토큰이 유효하지 않습니다."));
       }
       
-      return next(new AuthError("AUTH_404_01", "인증 토큰이 없습니다."));
+      return next(new AuthError("AUTH_404_06", "인증 토큰이 없습니다."));
     }
 
     req.user = user;

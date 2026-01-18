@@ -5,8 +5,9 @@ import { generateAccessToken, generateRefreshToken, verifyToken } from "../Auths
 import { checkEmailRateLimit, createEmailVerifiedKey, getEmailVerifiedKey, getEmailVerifyCode, getHashedPassword, getRefreshToken, revokeToken, saveEmailVerifyCode, saveRefreshToken, updatePassword } from "../repositories/auth.repository.js";
 import { createRandomNumber } from "../utils/random.util.js";
 import { transporter } from "../configs/mailer.config.js";
-import { DuplicatedValueError, UserNotFoundError } from "../errors/user.error.js";
-import { AuthError, InvalidVerificationCodeError, VerificationRateLimitError } from "../errors/auth.error.js";
+import { UserNotFoundError } from "../errors/user.error.js";
+import { DuplicatedValueError } from "../errors/base.error.js";
+import { AuthError, InvalidVerificationCodeError, NotRefreshTokenError, RequiredTermAgreementError, VerificationRateLimitError } from "../errors/auth.error.js";
 
 /**
  * 유저가 서비스에 가입했는지 확인하고 JWT를 반환하는 함수
@@ -56,7 +57,7 @@ export const updateRefreshToken = async (token) => {
     const payload = verifyToken(token);
     const savedRefreshToken = await getRefreshToken(payload.id);
 
-    if(savedRefreshToken !== token) throw new Error("유효하지 않은 토큰입니다.");
+    if(savedRefreshToken !== token) throw new NotRefreshTokenError("AUTH_401_8", "리프레시 토큰이 아니거나 유효하지 않습니다.");
     const jwtAccessToken = generateAccessToken(payload, "1h");
 
     return jwtAccessToken;
@@ -65,7 +66,7 @@ export const updateRefreshToken = async (token) => {
 export const signUpUser = async (data) => {
     const passwordHash = await bcrypt.hash(data.password, 10);
 
-    if(!data.termsAgreed || !data.privacyAgreed || !data.ageOver14Agreed) throw new Error("필수 약관에 모두 동의해주세요.");
+    if(!data.termsAgreed || !data.privacyAgreed || !data.ageOver14Agreed) throw new RequiredTermAgreementError("TERM_400_01", "필수 약관에 모두 동의해주세요.");
 
     const newUser = await prisma.$transaction(async (tx) => {
         const user = await createUserAndAuth({
@@ -86,7 +87,7 @@ export const signUpUser = async (data) => {
             termsAgreed: data.termsAgreed,
             privacyAgreed: data.privacyAgreed,
             ageOver14Agreed: data.ageOver14Agreed,
-            marketingAgreed: data.marketingAgreed
+            marketingAgreed: data.marketingAgreed || false
         }, tx);
 
         return user;

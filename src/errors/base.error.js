@@ -15,10 +15,17 @@ export class BadRequestError extends BaseError {
   }
 }
 
-// 401: unauthorized
+// 401: Unauthorized
 export class unauthorizedError extends BaseError {
   constructor(errorCode, message, data = null) {
     super(message, 401, errorCode, data);
+  }
+}
+
+// 403: Forbidden
+export class ForbiddenError extends BaseError {
+  constructor(errorCode, message, data = null) {
+    super(message, 403, errorCode, data);
   }
 }
 
@@ -47,5 +54,17 @@ export class InternalServerError extends BaseError {
 export class TooManyRequests extends BaseError {
   constructor(errorCode, message, data = null) {
     super(message, 429, errorCode, data);
+  }
+}
+
+export class ReferenceNotFoundError extends NotFoundError {
+  constructor(code, message, data = null) {
+      super(code, message, data);
+  }
+}
+
+export class DuplicatedValueError extends ConflictError {
+  constructor(code, message, data = null){
+    super(code, message, data);
   }
 }

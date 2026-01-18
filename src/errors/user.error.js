@@ -23,12 +23,6 @@ export class InvalidUserError extends BaseError {
   }
 }
 
-export class DuplicatedValueError extends ConflictError {
-  constructor(code, message, data = null){
-    super(code, message, data);
-  }
-}
-
 export class UserNotFoundError extends NotFoundError {
   constructor(code, message, data = null){
     super(code, message, data);

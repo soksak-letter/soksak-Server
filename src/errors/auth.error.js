@@ -35,3 +35,9 @@ export class InvalidVerificationCodeError extends BadRequestError {
         super(code, message, data);
     }
 }
+
+export class RequiredTermAgreementError extends BadRequestError {
+    constructor(code, message, data = null) {
+        super(code, message, data);
+    }
+}
