@@ -1,4 +1,3 @@
-import e from "cors";
 import { BadRequestError } from "../errors/base.error.js";
 import { z } from "zod";
 
@@ -13,7 +12,6 @@ export const validate = (schema) => (req, res, next) => {
         next();
     } catch(err) {
         if(err instanceof z.ZodError){
-            console.log(err);
             const errorDetails = err.issues.map((e) => ({
                 field: e.path.join('.'),
                 message: e.message
