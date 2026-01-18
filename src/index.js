@@ -26,7 +26,7 @@ import {handleGetNotices,handleGetNoticeDetail,} from "./controllers/notice.cont
 import { handlePutMyDeviceToken } from "./controllers/deviceToken.controller.js";
 import { handleGetMyConsents, handlePatchMyConsents } from "./controllers/consent.controller.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
-
+import {handleGetAnonymousThreads,handleGetAnonymousThreadLetters,handleGetSelfMailbox,} from "./controllers/mailbox.controller.js";
 
 
 
@@ -234,6 +234,12 @@ app.patch("/users/me/consents", isLogin, handlePatchMyConsents);
 
 // 디바이스 토큰
 app.put("/users/me/device-tokens", isLogin, handlePutMyDeviceToken);
+
+// / 편지함
+app.get("/mailbox/anonymous", isLogin, handleGetAnonymousThreads);
+app.get("/mailbox/anonymous/threads/:threadId/letters", isLogin, handleGetAnonymousThreadLetters);
+app.get("/mailbox/self", isLogin, handleGetSelfMailbox);
+
 
 // 서버 실행
 app.listen(port, async () => {
