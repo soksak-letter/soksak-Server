@@ -129,3 +129,98 @@ export const getFriendLetters = async ({userId, friendId}) => {
         question 
     };
 }
+
+export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDetail = false}) => {
+    console.log(isFriendOnly);
+    const letters = await prisma.letter.findMany({
+        where: {
+            senderUserId: isFriendOnly
+                ? { in: ids }
+                : { notIn: ids },
+            isPublic: true
+        },
+        select: {
+            id: true,
+            title: true,
+            content: isDetail ? true : false,
+            _count: isDetail ? {select: { likes: true }} : false,
+            likes: isDetail ? {
+                where: {
+                    userId: userId
+                },
+                select: {
+                    letterId: true
+                }
+            } : false,
+            deliveredAt: true,
+            design: {
+                select: {
+                    paper: {
+                        select: {
+                            id: true,
+                            name: true,
+                            envelopeAssetUrl: true
+                        }
+                    },
+                }
+            }
+        },
+        orderBy: {
+            deliveredAt: 'desc'
+        },
+        take: isDetail ? undefined : 3
+    })
+
+    return letters.map(letter => ({ 
+        id: letter?.id,
+        title: letter?.title,
+        deliveredAt: letter?.deliveredAt,
+        ...(isDetail && {
+            content: letter?.content,
+            likes: letter?._count?.likes,
+            isLiked: (letter?.likes?.length ?? 0) > 0,
+        }),
+        design: {
+            paper: {
+                id: letter?.design?.paper?.id,
+                name: letter?.design?.paper?.name,
+                assetUrl: letter?.design?.paper?.envelopeAssetUrl
+            }
+        }
+    }));
+}
+
+export const countLetterStatsForWeek = async ({userId, weekStart, weekEnd}) => {
+    const counts = await prisma.user.findUnique({
+        where: {
+            id: userId,
+        },
+        select: {
+            _count: {
+                select: {
+                    sentLetters: {
+                        where: { createdAt: { gte: weekStart, lte: weekEnd } }
+                    },
+                    receivedLetters: {
+                        where: { createdAt: { gte: weekStart, lte: weekEnd } }
+                    }
+                }
+            }
+        }
+    })
+    
+    return {
+        "receivedCount": counts?._count?.receivedLetters ?? 0,
+        "sentCount": counts?._count?.sentLetters ?? 0,
+    }
+}
+
+export const countTotalSentLetter = async (userId) => {
+    const totalCount = await prisma.letter.count({
+        where: {
+            senderUserId: userId
+        }
+    })
+
+    return totalCount;
+}

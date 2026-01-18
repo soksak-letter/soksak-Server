@@ -1,4 +1,5 @@
 import { getUserForOnboarding, updateUserOnboardingStep1 } from "../repositories/onboarding.repository.js";
+import { createUserAgreement, findUserById } from "../repositories/user.repository.js";
 
 const ALLOWED_GENDERS = new Set(["MALE", "FEMALE", "UNKNOWN"]); // UNKNOWN = 비공개
 const ALLOWED_JOBS = new Set(["WORKER", "STUDENT", "HOUSEWIFE", "FREELANCER", "UNEMPLOYED", "OTHER"]);
@@ -39,3 +40,18 @@ export const updateOnboardingStep1 = async ({ userId, gender, job }) => {
 
   return { updated: true };
 };
+
+export const createUserAgreements = async (data) => {
+  const user = await findUserById(data.userId);
+  if(!user) throw new Error("존재하지 않는 사용자입니다.");
+
+  if(!data?.body?.termsAgreed || !data?.body?.privacyAgreed || !data?.body?.ageOver14Agreed) throw new Error("필수 약관에 모두 동의해주세요.");
+
+  await createUserAgreement({
+      userId: data.userId,
+      termsAgreed: data.body.termsAgreed,
+      privacyAgreed: data.body.privacyAgreed,
+      ageOver14Agreed: data.body.ageOver14Agreed,
+      marketingAgreed: data.body.marketingAgreed || false
+  });
+}
