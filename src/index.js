@@ -6,6 +6,7 @@ import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
 import session from "express-session";
 import passport from "passport";
+import multer from "multer";
 import { specs } from "./configs/swagger.config.js";
 import { jwtStrategy } from "./Auths/strategies/jwt.strategy.js";
 import { googleStrategy } from "./Auths/strategies/google.strategy.js";
@@ -22,7 +23,7 @@ import {handleGetAllInterests,handleGetMyInterests,handleUpdateMyOnboardingInter
 import { handleGetMyNotificationSettings, handleUpdateMyNotificationSettings } from "./controllers/notification.controller.js";
 import {handleGetCommunityGuidelines,handleGetTerms,handleGetPrivacy,} from "./controllers/policy.controller.js";
 import {handleGetNotices,handleGetNoticeDetail,} from "./controllers/notice.controller.js";
-
+import {handleGetMyProfile,handlePatchMyProfile,handlePostMyProfileImage,} from "./controllers/profile.controller.js";
 
 
 
@@ -30,6 +31,13 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+app.use((req, res, next) => {
+  console.log("[REQ]", req.method, req.originalUrl);
+  next();
+});
+
+
 
 // 미들웨어 설정
 app.use(morgan("dev"));
@@ -94,6 +102,9 @@ export const isLogin = passport.authenticate('jwt', { session: false });
 const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };
+
+// 프로필 이미지 업로드
+const upload = multer({ storage: multer.memoryStorage() });
 
 // 테스트 라우트
 app.get("/", (req, res) => {
@@ -215,6 +226,16 @@ app.get("/policies/privacy", handleGetPrivacy);
 app.get("/notices", handleGetNotices);
 app.get("/notices/:noticeId", handleGetNoticeDetail);
 
+
+
+
+
+// 프로필
+app.get("/users/me/profile", isLogin, handleGetMyProfile);
+app.patch("/users/me/profile", isLogin, handlePatchMyProfile);
+
+// multipart/form-data, field name = "image"
+app.post("/users/me/profile/image", isLogin, upload.single("image"), handlePostMyProfileImage);
 
 
 // 서버 실행
