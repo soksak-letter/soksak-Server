@@ -25,11 +25,10 @@ export const jwtStrategy = new JwtStrategy(jwtOptions, async (req, payload, done
 
         const token = req.headers.authorization?.split(' ')[1];
         const isBlackListed = await getBlackListToken(token);
-        
+
         if (isBlackListed) {
             return done(null, false, { reason: "TOKEN_BLACKLISTED" });
         }
-
         user.token = token;
         
         if(user) {

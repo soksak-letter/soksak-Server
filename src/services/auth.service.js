@@ -5,6 +5,7 @@ import { generateAccessToken, generateRefreshToken, verifyToken } from "../Auths
 import { checkEmailRateLimit, createEmailVerifiedKey, getEmailVerifiedKey, getEmailVerifyCode, getHashedPassword, getRefreshToken, revokeToken, saveEmailVerifyCode, saveRefreshToken, updatePassword } from "../repositories/auth.repository.js";
 import { createRandomNumber } from "../utils/random.util.js";
 import { transporter } from "../configs/mailer.config.js";
+import { DuplicatedValueError } from "../errors/user.error.js";
 
 /**
  * 유저가 서비스에 가입했는지 확인하고 JWT를 반환하는 함수
@@ -35,6 +36,7 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
             }
         });
     }
+
     const payload = { id: user.id, email: user.email, provider: user.provider };
     const jwtAccessToken = generateAccessToken(payload, "1h");
     const jwtRefreshToken = generateRefreshToken(payload, "14d");
@@ -42,9 +44,10 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
     await saveRefreshToken({id: user.id, jwtRefreshToken});
     
     return {
-        user: payload,
-        jwtAccessToken,
-        jwtRefreshToken
+        tokens: {
+            jwtAccessToken,
+            jwtRefreshToken
+        }
     };
 };
 
@@ -87,8 +90,19 @@ export const signUpUser = async (data) => {
 
         return user;
     }) 
+    const payload = { id: newUser.id, email: newUser.email, provider: newUser.provider};
+    const jwtAccessToken = generateAccessToken(payload, "1h");
+    const jwtRefreshToken = generateRefreshToken(payload, "14d");
 
-    return { newUser };
+    return { 
+        id: payload.id,
+        email: payload.email,
+        name: newUser.name,
+        tokens: {
+            jwtAccessToken,
+            jwtRefreshToken
+        }
+    };
 }
 
 export const loginUser = async ({username, password}) => {
@@ -130,7 +144,7 @@ export const checkDuplicatedEmail = async (email) => {
     const user = await findUserByEmail(email);
     
     if(user) {
-        throw new Error(`이미 ${user.provider}에서 가입한 이메일입니다`);
+        throw new DuplicatedValueError("USER_409_01", `이미 ${user.provider}에서 가입한 이메일입니다`, "email");
     }
 
     return { exists: false }
@@ -140,7 +154,7 @@ export const checkDuplicatedUsername = async (username) => {
     const user = await findUserByUsername(username);
 
     if(user) {
-        throw new Error(`이미 존재하는 아이디입니다.`);
+        throw new DuplicatedValueError("USER_409_02", `이미 존재하는 아이디입니다.`, "username");
     }
     
     return { exists: false }

@@ -1,4 +1,5 @@
 import { prisma } from "../configs/db.config.js";
+import { DuplicatedValueError } from "../errors/user.error.js";
 
 export const findUserByEmail = async (email) => {
     try{
@@ -134,7 +135,14 @@ export const createUserAndAuth = async ({user, auth}, tx = prisma) => {
             provider: newUser.auths?.[0]?.provider
         };
     } catch(err) {
-        throw new Error(err);
+        if(err.code === "P2002"){
+            const target = err.meta?.target || "";
+
+            if(target.includes("phone_number")){
+                throw new DuplicatedValueError("USER_409_03", "이미 사용 중인 전화번호입니다.", "phoneNumber");
+            }
+        }
+        throw err;
     }
 }
 
