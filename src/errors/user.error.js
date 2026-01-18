@@ -1,6 +1,6 @@
 // errors/friend.error.js
 
-import { ConflictError } from "./base.error.js";
+import { ConflictError, NotFoundError } from "./base.error.js";
 
 // 기본 에러 클래스
 class BaseError extends Error {
@@ -24,6 +24,12 @@ export class InvalidUserError extends BaseError {
 }
 
 export class DuplicatedValueError extends ConflictError {
+  constructor(code, message, data = null){
+    super(code, message, data);
+  }
+}
+
+export class UserNotFoundError extends NotFoundError {
   constructor(code, message, data = null){
     super(code, message, data);
   }

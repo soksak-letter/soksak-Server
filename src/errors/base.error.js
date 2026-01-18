@@ -42,3 +42,10 @@ export class InternalServerError extends BaseError {
     super(message, 500, errorCode, data);
   }
 }
+
+// 429: Too Many Requests
+export class TooManyRequests extends BaseError {
+  constructor(errorCode, message, data = null) {
+    super(message, 429, errorCode, data);
+  }
+}
