@@ -82,7 +82,7 @@ export const signUpUser = async (data) => {
             termsAgreed: data.termsAgreed,
             privacyAgreed: data.privacyAgreed,
             ageOver14Agreed: data.ageOver14Agreed,
-            marketingAgreed: data.marketingAgreed
+            marketingAgreed: data.marketingAgreed || false
         }, tx);
 
         return user;

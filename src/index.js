@@ -13,20 +13,22 @@ import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
 import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
 import { validateAuthParameterType, validateEmail, validatePassword } from "./validators/auth.validation.js";
 import { handleGetLetterAssets } from "./controllers/asset.controller.js";
-import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleGetLetterFromFriend, handleRemoveLetterLike, handleAddLetterLike } from "./controllers/letter.controller.js";
+import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleGetLetterFromFriend, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats } from "./controllers/letter.controller.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser } from "./controllers/auth.controller.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriend } from "./controllers/friend.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
-import { handlePatchOnboardingStep1 } from "./controllers/user.controller.js";
+import { handleCreateUserAgreements, handlePatchOnboardingStep1 } from "./controllers/user.controller.js";
 import {handleGetAllInterests,handleGetMyInterests,handleUpdateMyOnboardingInterests,} from "./controllers/interest.controller.js";
 import { handleGetMyNotificationSettings, handleUpdateMyNotificationSettings } from "./controllers/notification.controller.js";
 import { bootstrapWeeklyReports } from "./jobs/weeklyReport.bootstrap.js";
 import { startWeeklyReportCron } from "./jobs/weeklyReport.cron.js";
 import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js";
+import { handleGetTodayQuestion } from "./controllers/question.controller.js";
 import {handleGetCommunityGuidelines,handleGetTerms,handleGetPrivacy,} from "./controllers/policy.controller.js";
 import {handleGetNotices,handleGetNoticeDetail,} from "./controllers/notice.controller.js";
 import { handlePutMyDeviceToken } from "./controllers/deviceToken.controller.js";
 import { handleGetMyConsents, handlePatchMyConsents } from "./controllers/consent.controller.js";
+import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
 
 
 
@@ -181,6 +183,7 @@ app.get("/auth/find-id", validateEmail, handleGetAccountInfo);              // �
 app.patch("/auth/reset-password", isLogin, validatePassword, handleResetPassword);    // 비밀번호 찾기
 app.post("/auth/logout", isLogin, handleLogout);                            // 로그아웃
 app.delete("/users", isLogin, handleWithdrawUser);                          // 탈퇴
+app.post("/users/me/agreements", isLogin, handleCreateUserAgreements)    // 이용약관 동의
 
 app.get("/letter-assets", isLogin, handleGetLetterAssets);        // 편지 꾸미기 리소스 목록 조회
 app.post("/letter/me", isLogin, handleSendMyLetter);              // 나에게 편지 전송
@@ -190,12 +193,20 @@ app.get("/friends/:friendId/conversations", isLogin, handleGetLetterFromFriend);
 app.post("/letters/:letterId/like", isLogin, handleAddLetterLike);                // 편지 좋아요 추가
 app.delete("/letters/:letterId/like", isLogin, handleRemoveLetterLike);           // 편지 좋아요 삭제
 
-app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1); // 온보딩 설정 
+app.get("/questions/today", handleGetTodayQuestion);       // 오늘의 질문 조회
+app.get("/letters/others/public", isLogin, handleGetPublicLetterFromOther);       // 공개 편지 캐러셀 목록 조회
+app.get("/letters/friends/public", isLogin, handleGetPublicLetterFromFriend);     // 친구 편지 캐러셀 목록 조회
+app.get("/users/me/letters/stats", isLogin, handleGetUserLetterStats)  // 편지 여행 카드 데이터 조회
+
+app.get("/home/summary", isLogin, HandleGetHomeDashboard);  // 홈 대시보드 조회
+
+// 온보딩 설정
+app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1); 
+app.put("/users/me/onboarding/interests", isLogin, handleUpdateMyOnboardingInterests);
 
 // 관심사
 app.get("/interests/all", handleGetAllInterests); // 전체 목록 (로그인 불필요)
 app.get("/interests", isLogin, handleGetMyInterests); // 내 선택 목록 (로그인 필요)
-app.put("/users/me/onboarding/interests", isLogin, handleUpdateMyOnboardingInterests);
 
 // 알람 설정
 app.patch("/users/me/notification-settings", isLogin, handleUpdateMyNotificationSettings);

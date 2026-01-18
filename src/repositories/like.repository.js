@@ -30,3 +30,13 @@ export const findLetterLike = async ({userId, letterId}) => {
 
     return isLiked;
 }
+
+export const countLetterLike = async (letterId) => {
+    const likes = await prisma.letterLike.count({
+        where: {
+            letterId: letterId
+        }
+    })
+
+    return likes;
+}
