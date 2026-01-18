@@ -14,11 +14,21 @@ const jwtOptions = {
  */
 export const jwtStrategy = new JwtStrategy(jwtOptions, async (req, payload, done) => {
     try {
+        if (payload.type !== "ACCESS") {
+            return done(null, false, { reason: "NOT_ACCESS_TOKEN" });
+        }
+
         const user = await findUserById(payload.id);
+        if (!user) {
+            return done(null, false, { reason: "USER_NOT_FOUND" });
+        }
+
         const token = req.headers.authorization?.split(' ')[1];
-        
         const isBlackListed = await getBlackListToken(token);
-        if(isBlackListed) return done(null, false, { message: "로그아웃된 토큰입니다." });
+        
+        if (isBlackListed) {
+            return done(null, false, { reason: "TOKEN_BLACKLISTED" });
+        }
 
         user.token = token;
         

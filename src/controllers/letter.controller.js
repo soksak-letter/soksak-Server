@@ -1,5 +1,5 @@
 import { addLetterLike, getLetter, getLetterFromFriend, removeLetterLike } from "../services/letter.service.js";
-import { LetterToMeValidator, LetterToOtherValidator } from "../validators/letter.validation.js";
+import { LetterToMeValidator, LetterToOtherValidator } from "../middlewares/letter.validation.js";
 import { sendLetterToMe, sendLetterToOther } from "../services/letter.service.js";
 
 export const handleGetLetterDetail = async (req, res, next) => {
