@@ -1,5 +1,4 @@
 import { addLetterLike, getLetter, getLetterFromFriend, getPublicLetterFromFriend, getPublicLetterFromOther, getUserLetterStats, removeLetterLike } from "../services/letter.service.js";
-import { LetterToMeValidator, LetterToOtherValidator } from "../validators/letter.validation.js";
 import { sendLetterToMe, sendLetterToOther } from "../services/letter.service.js";
 
 export const handleGetLetterDetail = async (req, res, next) => {
@@ -16,8 +15,7 @@ export const handleSendMyLetter = async (req, res, next) => {
     const userId = req.user.id;
     
     try{
-        const {errors, ...data} = new LetterToMeValidator(req.body);
-        const result = await sendLetterToMe(userId, data);
+        const result = await sendLetterToMe(userId, req.body);
 
         res.status(200).success( result );
     } catch(err) {
@@ -29,8 +27,7 @@ export const handleSendOtherLetter = async (req, res, next) => {
     const userId = req.user.id;
 
     try{
-        const {errors, ...data} = new LetterToOtherValidator(req.body);
-        const result = await sendLetterToOther(userId, data);
+        const result = await sendLetterToOther(userId, req.body);
 
         res.status(200).success( result );
     } catch(err) {

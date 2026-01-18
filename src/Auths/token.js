@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken"
 
 export const generateAccessToken = (user, duration) => {
     return jwt.sign(
-        { id: user.id, email: user.email, provider: user.provider },
+        { id: user.id, email: user.email, provider: user.provider, type: "ACCESS" },
         process.env.JWT_ACCESS_SECREAT,
         { expiresIn: duration }
     );
@@ -10,7 +10,7 @@ export const generateAccessToken = (user, duration) => {
 
 export const generateRefreshToken = (user, duration) => {
     return jwt.sign(
-        { id: user.id, email: user.email, provider: user.provider},
+        { id: user.id, email: user.email, provider: user.provider, type: "REFRESH" },
         process.env.JWT_REFRESH_SECREAT,
         { expiresIn: duration }
     );

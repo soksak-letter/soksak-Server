@@ -1,5 +1,7 @@
 // errors/friend.error.js
 
+import { ConflictError, NotFoundError } from "./base.error.js";
+
 // 기본 에러 클래스
 class BaseError extends Error {
   constructor(message, status, errorCode, data = null) {
@@ -18,5 +20,11 @@ class BaseError extends Error {
 export class InvalidUserError extends BaseError {
   constructor(data, message = "잘못된 유저 정보 입력입니다.") {
     super(message, 404, "FRIEND_404_01", data);
+  }
+}
+
+export class UserNotFoundError extends NotFoundError {
+  constructor(code, message, data = null){
+    super(code, message, data);
   }
 }

@@ -1,4 +1,5 @@
 import { prisma } from "../configs/db.config.js"
+import { ReferenceNotFoundError } from "../errors/base.error.js";
 
 export const getLetterDetail = async (id) => {
     const letter = await prisma.letter.findFirst({
@@ -73,14 +74,31 @@ export const getLetterDetail = async (id) => {
 
 // senderUserId = receiverUserId, letterType, questionId, title, content, isPublic, status, scheduledAt 필수 deliveredAt, readAt은 scheduledAt에 따라서
 export const createLetter = async ({letter, design}) => {
-    await prisma.letter.create({
-        data: {
-            ...letter,
-            design: {
-                ...design
+    try{
+        await prisma.letter.create({
+            data: {
+                ...letter,
+                design: {
+                    ...design
+                }
             }
+        });
+    } catch(err) {
+        const fieldNameMap = {
+            "question_id": "questionId",
+            "paper_id": "paperId",
+            "stamp_id": "stampId",
+            "font_id": "fontId"
+        };
+        if(err.code === "P2003"){
+            const target = err.meta?.constraint[0] || "";
+            const displayName = fieldNameMap[target] || "참조 데이터";
+    
+            throw new ReferenceNotFoundError("REF_404", `${target} 정보를 찾을 수 없습니다.`, displayName);
+
         }
-    });
+        throw err;
+    }
 }
 
 export const getFriendLetters = async ({userId, friendId}) => {
