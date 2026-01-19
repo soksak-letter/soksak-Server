@@ -1,12 +1,12 @@
 // jobs/weeklyReport.bootstrap.js
 import { prisma } from "../db.config.js";
-import { getCurrentISOYear, getCurrentISOWeek } from "../jobs/date.js";
+// import { getCurrentISOYear, getCurrentISOWeek } from "../jobs/date.js";
 import { createWeeklyReport } from "../services/weeklyReport.service.js"; 
 // ↑ 너가 올린 createWeeklyReport(서비스) 함수 이름을 이렇게 바꾸는 걸 추천
 
 export const bootstrapWeeklyReports = async () => {
-  const year = getCurrentISOYear();
-  const week = getCurrentISOWeek();
+  // const year = getCurrentISOYear();
+  // const week = getCurrentISOWeek();
 
   const users = await prisma.User.findMany({
     where: { isDeleted: false },
