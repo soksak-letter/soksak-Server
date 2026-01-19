@@ -242,3 +242,27 @@ export const countTotalSentLetter = async (userId) => {
 
     return totalCount;
 }
+
+export const selectLetterByUserIds = async (userId, targetUserId) => {
+  const count = await prisma.letter.count({
+    where: {
+      OR: [
+        { senderUserId: userId, receiverUserId: targetUserId },
+        { senderUserId: targetUserId, receiverUserId: userId },
+      ],
+    },
+  });
+  return count; 
+};
+
+export const selectRecentLetterByUserIds = async (userId, targetUserId) => {
+  return await prisma.letter.findFirst({
+    where: {
+      OR: [
+        { senderUserId: userId, receiverUserId: targetUserId },
+        { senderUserId: targetUserId, receiverUserId: userId },
+      ],
+    },
+    orderBy: { createdAt: "desc" }, // 최신 1개
+  });
+};
