@@ -1,12 +1,5 @@
 /**
  * @swagger
- * tags:
- *   name: Notice
- *   description: Notice Management
- */
-
-/**
- * @swagger
  * /notices:
  *   get:
  *     summary: 공지사항 목록

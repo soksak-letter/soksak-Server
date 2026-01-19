@@ -1,12 +1,5 @@
 /**
  * @swagger
- * tags:
- *   name: Notification
- *   description: Notification Settings Management
- */
-
-/**
- * @swagger
  * /users/me/notification-settings:
  *   get:
  *     summary: 알림 설정 조회

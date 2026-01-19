@@ -1,12 +1,5 @@
 /**
  * @swagger
- * tags:
- *   name: User
- *   description: User Management
- */
-
-/**
- * @swagger
  * /users/me/onboarding:
  *   patch:
  *     summary: 기본정보 저장

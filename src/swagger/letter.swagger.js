@@ -1,16 +1,9 @@
 /**
  * @swagger
- * tags:
- *   name: Letter
- *   description: Letter Management and Assets
- */
-
-/**
- * @swagger
  * /letter-assets:
  *   get:
  *     summary: 편지 꾸미기 리소스 목록 조회
- *     tags: [Letter]
+ *     tags: [편지]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -50,7 +43,7 @@
  * /letter/me:
  *   post:
  *     summary: 나에게 편지 전송
- *     tags: [Letter]
+ *     tags: [편지]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -137,7 +130,7 @@
  * /letter/other:
  *   post:
  *     summary: 타인/친구에게 편지 전송
- *     tags: [Letter]
+ *     tags: [편지]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -231,7 +224,7 @@
  * /letters/{letterId}:
  *   get:
  *     summary: 편지 상세 조회
- *     tags: [Letter]
+ *     tags: [편지]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -279,7 +272,7 @@
  * /friends/{friendId}/conversations:
  *   get:
  *     summary: 친구 대화 목록 화면 조회
- *     tags: [Letter]
+ *     tags: [편지]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -335,7 +328,7 @@
  * /letters/{letterId}/like:
  *   post:
  *     summary: 편지 좋아요 추가
- *     tags: [Letter]
+ *     tags: [편지]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -383,7 +376,7 @@
  *                           example: "이미 좋아요를 눌렀습니다."
  *   delete:
  *     summary: 편지 좋아요 삭제
- *     tags: [Letter]
+ *     tags: [편지]
  *     security:
  *       - bearerAuth: []
  *     parameters:

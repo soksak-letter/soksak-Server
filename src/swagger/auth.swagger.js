@@ -1,16 +1,9 @@
 /**
  * @swagger
- * tags:
- *   name: Auth
- *   description: Authentication and User Management
- */
-
-/**
- * @swagger
  * /auth/signup:
  *   post:
  *     summary: 회원가입
- *     tags: [Auth]
+ *     tags: [로그인]
  *     requestBody:
  *       required: true
  *       content:
@@ -120,7 +113,7 @@
  * /auth/login:
  *   post:
  *     summary: 로그인
- *     tags: [Auth]
+ *     tags: [로그인]
  *     requestBody:
  *       required: true
  *       content:
@@ -178,7 +171,7 @@
  *   post:
  *     summary: 이메일 중복 확인
  *     description: "이메일이 사용 가능하면 200 OK, 중복이면 409 Conflict 에러를 반환합니다."
- *     tags: [Auth]
+ *     tags: [로그인]
  *     requestBody:
  *       required: true
  *       content:
@@ -228,7 +221,7 @@
  * /auth/refresh:
  *   get:
  *     summary: 액세스 토큰 재발급
- *     tags: [Auth]
+ *     tags: [로그인]
  *     parameters:
  *       - in: header
  *         name: Authorization
@@ -271,7 +264,7 @@
  * /auth/{type}/verification-codes:
  *   post:
  *     summary: 이메일 인증번호 전송
- *     tags: [Auth]
+ *     tags: [로그인]
  *     parameters:
  *       - in: path
  *         name: type
@@ -344,7 +337,7 @@
  * /auth/{type}/verification-codes/confirm:
  *   post:
  *     summary: 이메일 인증번호 확인
- *     tags: [Auth]
+ *     tags: [로그인]
  *     parameters:
  *       - in: path
  *         name: type
@@ -407,7 +400,7 @@
  * /auth/find-id:
  *   get:
  *     summary: 아이디 찾기
- *     tags: [Auth]
+ *     tags: [로그인]
  *     requestBody:
  *       required: true
  *       content:
@@ -474,7 +467,7 @@
  *   patch:
  *     summary: 비밀번호 재설정
  *     description: "/auth/reset-password/confirm 에서 발급받은 임시 AccessToken이 필요합니다."
- *     tags: [Auth]
+ *     tags: [로그인]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -517,7 +510,7 @@
  * /auth/logout:
  *   post:
  *     summary: 로그아웃
- *     tags: [Auth]
+ *     tags: [로그인]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -551,7 +544,7 @@
  * /users:
  *   delete:
  *     summary: 회원 탈퇴
- *     tags: [Auth]
+ *     tags: [로그인]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -585,7 +578,7 @@
  * /users/me/agreements:
  *   post:
  *     summary: 이용약관 동의
- *     tags: [Auth]
+ *     tags: [로그인]
  *     security:
  *       - bearerAuth: []
  *     requestBody:

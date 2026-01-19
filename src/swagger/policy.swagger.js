@@ -1,12 +1,5 @@
 /**
  * @swagger
- * tags:
- *   name: Policy
- *   description: Policy Management
- */
-
-/**
- * @swagger
  * /policies/community-guidelines:
  *   get:
  *     summary: 커뮤니티 가이드라인 조회

@@ -1,12 +1,5 @@
 /**
  * @swagger
- * tags:
- *   name: Mailbox
- *   description: Mailbox Management
- */
-
-/**
- * @swagger
  * /mailbox/anonymous:
  *   get:
  *     summary: 익명 탭 목록 조회

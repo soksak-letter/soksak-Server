@@ -1,12 +1,5 @@
 /**
  * @swagger
- * tags:
- *   name: Consent
- *   description: Information Consent Management
- */
-
-/**
- * @swagger
  * /users/me/consents:
  *   get:
  *     summary: 정보 동의 설정 조회

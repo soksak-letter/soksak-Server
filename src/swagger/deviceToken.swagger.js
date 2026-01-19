@@ -1,12 +1,5 @@
 /**
  * @swagger
- * tags:
- *   name: DeviceToken
- *   description: Device Token Management
- */
-
-/**
- * @swagger
  * /users/me/device-tokens:
  *   put:
  *     summary: 디바이스 토큰 갱신

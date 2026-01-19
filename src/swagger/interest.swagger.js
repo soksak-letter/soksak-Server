@@ -1,12 +1,5 @@
 /**
  * @swagger
- * tags:
- *   name: Interest
- *   description: Interest Management
- */
-
-/**
- * @swagger
  * /interests/all:
  *   get:
  *     summary: 관심사 조회
