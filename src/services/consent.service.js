@@ -15,6 +15,8 @@ export const getMyConsents = async ({ userId }) => {
   return {
     termsAgreed: safe.termsAgreed,
     privacyAgreed: safe.privacyAgreed,
+    ageOver14Agreed: safe.ageOver14Agreed,
+    marketingAgreed: safe.marketingAgreed,
   };
 };
 

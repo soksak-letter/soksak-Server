@@ -14,17 +14,16 @@ const options = {
       }
     ],
 
-    // components: {
-    //   securitySchemes: {
-    //     cookieAuth: {
-    //       type: "apiKey",
-    //       in: "cookie",
-    //       name: "connect.sid",
-    //       description:
-    //         "세션 기반 인증. 먼저 /api/auth/login 성공 후 발급되는 connect.sid가 필요합니다.",
-    //     },
-    //   },
-    // },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+          description: "JWT 토큰을 사용한 인증. Authorization 헤더에 'Bearer {token}' 형식으로 전달합니다.",
+        },
+      },
+    },
   },
   apis: ["./src/routes/*.js", "./src/**/*.js"],
 };
