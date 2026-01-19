@@ -1,16 +1,9 @@
 /**
  * @swagger
- * tags:
- *   name: Home
- *   description: Home Dashboard and Public Feeds
- */
-
-/**
- * @swagger
  * /home/summary:
  *   get:
  *     summary: 홈 대시보드 조회
- *     tags: [Home]
+ *     tags: [홈]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -71,7 +64,7 @@
  * /questions/today:
  *   get:
  *     summary: 오늘의 질문 조회
- *     tags: [Home]
+ *     tags: [홈]
  *     responses:
  *       200:
  *         description: 조회 성공
@@ -115,7 +108,7 @@
  *   get:
  *     summary: 공개 편지 캐러셀 목록 조회 (다른 사람)
  *     description: "query string의 detail 값에 따라 응답 필드가 달라집니다."
- *     tags: [Home]
+ *     tags: [홈]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -181,7 +174,7 @@
  *   get:
  *     summary: 친구 편지 캐러셀 목록 조회
  *     description: "query string의 detail 값에 따라 응답 필드가 달라집니다."
- *     tags: [Home]
+ *     tags: [홈]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -249,7 +242,7 @@
  * /users/me/letters/stats:
  *   get:
  *     summary: 편지 여행 카드 데이터 조회
- *     tags: [Home]
+ *     tags: [홈]
  *     security:
  *       - bearerAuth: []
  *     responses:

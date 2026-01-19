@@ -6,7 +6,7 @@ import {
   import { MAILBOX_ERROR, throwMailboxError } from "../errors/mailbox.error.js";
   
   const getAuthUserId = (req) => req.user?.id ?? req.userId ?? req.user?.userId ?? null;
-  
+
   export const handleGetAnonymousThreads = async (req, res, next) => {
     try {
       const userId = getAuthUserId(req);
