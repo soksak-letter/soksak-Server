@@ -271,6 +271,7 @@ model FriendRequest {
   @@index([receiverUserId])
   @@index([sessionId])
   @@map("friend_request")
+  @@unique([requesterUserId, receiverUserId], name: "requesterUserId_receiverUserId")
 }
 
 model Friend {
@@ -285,6 +286,7 @@ model Friend {
   @@index([userAId])
   @@index([userBId])
   @@map("friend")
+  @@unique([userAId, userBId], name: "userAId_userBId_unique")
 }
 
 model Block {
@@ -358,7 +360,7 @@ model WeeklyReportEmotion {
 
   report WeeklyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
-  @@id([reportId, emotion])
+  @@id([reportId, emotion, count])
   @@map("weekly_report_emotion")
 }
 
@@ -439,7 +441,7 @@ model DailyQuestion {
 model MatchingSession {
   id         Int       @id @default(autoincrement()) @map("id")
   questionId Int       @map("question_id")
-  status     String    @map("status")
+  status     String    @map("status") 
   maxTurns   Int       @default(10) @map("max_turns")
   startedAt  DateTime  @default(now()) @map("started_at")
   endedAt    DateTime? @map("ended_at")
