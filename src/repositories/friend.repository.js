@@ -150,12 +150,45 @@ export async function updateFriendRequestReject(userId, targetUserId) {
 } // 친구 신청 거절
 
 export async function selectAllFriendsByUserId(userId) {
-  return await xprisma.Friend.findMany({
+  const rows = await xprisma.Friend.findMany({
     where: {
       OR: [{ userAId: userId }, { userBId: userId }],
     },
+    select: {
+      id: true,
+      userAId: true,
+      userBId: true,
+    },
+  });
+
+  // 1) 상대방 ID만 추출
+  const friendIds = rows.map((r) =>
+    r.userAId === userId ? r.userBId : r.userAId
+  );
+
+  // (옵션) 중복 제거해서 유저 조회 비용 절감
+  const uniqueFriendIds = [...new Set(friendIds)];
+
+  // 2) 상대방 유저들 닉네임 한 번에 조회
+  const users = await prisma.user.findMany({
+    where: { id: { in: uniqueFriendIds } },
+    select: { id: true, nickname: true },
+  });
+
+  // 3) { userId -> nickname } 맵 만들기
+  const nicknameById = new Map(users.map((u) => [u.id, u.nickname]));
+
+  // 4) friend row id + 상대 id + nickname 묶어서 반환
+  return rows.map((r) => {
+    const friendUserId = r.userAId === userId ? r.userBId : r.userAId;
+    return {
+      id: r.id,                 // Friend 테이블 row id
+      friendUserId,             // userAId/userBId 중 내 거 아닌 쪽
+      nickname: nicknameById.get(friendUserId) ?? null,
+    };
   });
 } // 유저의 모든 친구 목록 조회
+
 
 export async function deleteFriendRequest(userId, targetUserId) {
   return await prisma.FriendRequest.deleteMany({
