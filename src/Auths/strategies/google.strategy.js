@@ -16,11 +16,11 @@ export const googleStrategy = new GoogleStrategy(
 
     async (accessToken, refreshToken, profile, cb) => {
         try{
-            const {jwtAccessToken, jwtRefreshToken} = await verifySocialAccount(createSocialUserDTO(profile));
+            const {tokens} = await verifySocialAccount(createSocialUserDTO(profile));
 
             return cb(null, {
-                jwtAccessToken,
-                jwtRefreshToken
+                jwtAccessToken: tokens.jwtAccessToken,
+                jwtRefreshToken: tokens.jwtRefreshToken
             });
         } catch (err) {
             return cb(err);

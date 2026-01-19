@@ -101,9 +101,6 @@ app.use((req, res, next) => {
 await bootstrapWeeklyReports();
 startWeeklyReportCron();
 
-// 로그인 확인 미들웨어
-export const isLogin = passport.authenticate('jwt', { session: false });
-
 // 비동기 에러 래퍼
 const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
