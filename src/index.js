@@ -12,18 +12,31 @@ import { jwtStrategy } from "./Auths/strategies/jwt.strategy.js";
 import { googleStrategy } from "./Auths/strategies/google.strategy.js";
 import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
 import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
-import { validateAuthParameterType, validateEmail, validatePassword } from "./validators/auth.validation.js";
 import { handleGetLetterAssets } from "./controllers/asset.controller.js";
-import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleGetLetterFromFriend, handleRemoveLetterLike, handleAddLetterLike } from "./controllers/letter.controller.js";
+import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleGetLetterFromFriend, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats } from "./controllers/letter.controller.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser } from "./controllers/auth.controller.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriend } from "./controllers/friend.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
-import { handlePatchOnboardingStep1 } from "./controllers/user.controller.js";
+import { handleCreateUserAgreements, handlePatchOnboardingStep1 } from "./controllers/user.controller.js";
 import {handleGetAllInterests,handleGetMyInterests,handleUpdateMyOnboardingInterests,} from "./controllers/interest.controller.js";
 import { handleGetMyNotificationSettings, handleUpdateMyNotificationSettings } from "./controllers/notification.controller.js";
+import { bootstrapWeeklyReports } from "./jobs/weeklyReport.bootstrap.js";
+import { startWeeklyReportCron } from "./jobs/weeklyReport.cron.js";
+import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js";
+import { handleGetTodayQuestion } from "./controllers/question.controller.js";
 import {handleGetCommunityGuidelines,handleGetTerms,handleGetPrivacy,} from "./controllers/policy.controller.js";
 import {handleGetNotices,handleGetNoticeDetail,} from "./controllers/notice.controller.js";
 import {handleGetMyProfile,handlePatchMyProfile,handlePostMyProfileImage,} from "./controllers/profile.controller.js";
+import { handlePutMyDeviceToken } from "./controllers/deviceToken.controller.js";
+import { handleGetMyConsents, handlePatchMyConsents } from "./controllers/consent.controller.js";
+import { validate } from "./middlewares/validate.middleware.js";
+import { emailSchema, loginSchema, passwordSchema, SignUpSchema, verificationConfirmCodeSchema, verificationSendCodeSchema } from "./schemas/auth.schema.js";
+import { isLogin } from "./middlewares/auth.middleware.js";
+import { letterToMeSchema, letterToOtherSchema } from "./schemas/letter.schema.js";
+import { idParamSchema } from "./schemas/common.schema.js";
+import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
+import {handleGetAnonymousThreads,handleGetAnonymousThreadLetters,handleGetSelfMailbox,} from "./controllers/mailbox.controller.js";
+
 
 
 
@@ -95,8 +108,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// 로그인 확인 미들웨어
-export const isLogin = passport.authenticate('jwt', { session: false });
+await bootstrapWeeklyReports();
+startWeeklyReportCron();
 
 // 비동기 에러 래퍼
 const asyncHandler = (fn) => (req, res, next) => {
@@ -172,31 +185,42 @@ app.patch("/matching/sessions/:sessionId/friends", isLogin, asyncHandler(handleP
 app.patch("/matching/sessions/:sessionId/discards", isLogin, asyncHandler(handlePatchMatchingSessionStatusDiscarded)); //세션 삭제됨으로 변경
 app.post("/matching/sessions/:sessionId/reviews", isLogin, asyncHandler(handlePostSessionReview)); //세션 리뷰 작성
 
-app.post("/auth/signup", validateEmail, validatePassword, handleSignUp);    // 회원가입
-app.post("/auth/login", validatePassword, handleLogin);                     // 로그인
-app.post("/auth/email/exists", validateEmail, handleCheckDuplicatedEmail);  // 이메일 중복 확인
-app.get("/auth/refresh", handleRefreshToken);                               // 액세스 토큰 재발급
-app.post("/auth/:type/verification-codes", validateAuthParameterType, validateEmail, handleSendVerifyEmailCode);    // 이메일 인증번호 전송
-app.post("/auth/:type/verification-codes/confirm", validateAuthParameterType, validateEmail, handleCheckEmailCode); // 이메일 인증번호 확인
-app.get("/auth/find-id", validateEmail, handleGetAccountInfo);              // 아이디 찾기
-app.patch("/auth/reset-password", isLogin, validatePassword, handleResetPassword);    // 비밀번호 찾기
+app.get("/reports/weekly/:year/:week", isLogin, asyncHandler(handleGetWeeklyReport));
+
+app.post("/auth/signup", validate(SignUpSchema), handleSignUp);                     // 회원가입
+app.post("/auth/login", validate(loginSchema), handleLogin);                        // 로그인
+app.post("/auth/email/exists", validate(emailSchema), handleCheckDuplicatedEmail);  // 이메일 중복 확인
+app.get("/auth/refresh", handleRefreshToken);                                       // 액세스 토큰 재발급
+app.post("/auth/:type/verification-codes", validate(verificationSendCodeSchema), handleSendVerifyEmailCode);       // 이메일 인증번호 전송
+app.post("/auth/:type/verification-codes/confirm", validate(verificationConfirmCodeSchema), handleCheckEmailCode); // 이메일 인증번호 확인
+app.get("/auth/find-id", validate(emailSchema), handleGetAccountInfo);                        // 아이디 찾기
+app.patch("/auth/reset-password", isLogin, validate(passwordSchema), handleResetPassword);    // 비밀번호 찾기
 app.post("/auth/logout", isLogin, handleLogout);                            // 로그아웃
 app.delete("/users", isLogin, handleWithdrawUser);                          // 탈퇴
+app.post("/users/me/agreements", isLogin, handleCreateUserAgreements)    // 이용약관 동의
 
 app.get("/letter-assets", isLogin, handleGetLetterAssets);        // 편지 꾸미기 리소스 목록 조회
-app.post("/letter/me", isLogin, handleSendMyLetter);              // 나에게 편지 전송
-app.post("/letter/other", isLogin, handleSendOtherLetter);        // 타인/친구에게 편지 전송
-app.get("/letters/:letterId", isLogin, handleGetLetterDetail);    // 편지 상세 조회
-app.get("/friends/:friendId/conversations", isLogin, handleGetLetterFromFriend);  // 친구 대화 목록 화면 조회
-app.post("/letters/:letterId/like", isLogin, handleAddLetterLike);                // 편지 좋아요 추가
-app.delete("/letters/:letterId/like", isLogin, handleRemoveLetterLike);           // 편지 좋아요 삭제
+app.post("/letter/me", isLogin, validate(letterToMeSchema), handleSendMyLetter);                      // 나에게 편지 전송
+app.post("/letter/other", isLogin, validate(letterToOtherSchema),handleSendOtherLetter);              // 타인/친구에게 편지 전송
+app.get("/letters/:letterId", isLogin, validate(idParamSchema("letterId")),handleGetLetterDetail);    // 편지 상세 조회
+app.get("/friends/:friendId/conversations", isLogin, validate(idParamSchema("friendId")), handleGetLetterFromFriend);  // 친구 대화 목록 화면 조회
+app.post("/letters/:letterId/like", isLogin, validate(idParamSchema("letterId")), handleAddLetterLike);                // 편지 좋아요 추가
+app.delete("/letters/:letterId/like", isLogin, validate(idParamSchema("letterId")), handleRemoveLetterLike);           // 편지 좋아요 삭제
 
-app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1); // 온보딩 설정 
+app.get("/questions/today", handleGetTodayQuestion);       // 오늘의 질문 조회
+app.get("/letters/others/public", isLogin, handleGetPublicLetterFromOther);       // 공개 편지 캐러셀 목록 조회
+app.get("/letters/friends/public", isLogin, handleGetPublicLetterFromFriend);     // 친구 편지 캐러셀 목록 조회
+app.get("/users/me/letters/stats", isLogin, handleGetUserLetterStats)  // 편지 여행 카드 데이터 조회
+
+app.get("/home/summary", isLogin, HandleGetHomeDashboard);  // 홈 대시보드 조회
+
+// 온보딩 설정
+app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1); 
+app.put("/users/me/onboarding/interests", isLogin, handleUpdateMyOnboardingInterests);
 
 // 관심사
 app.get("/interests/all", handleGetAllInterests); // 전체 목록 (로그인 불필요)
 app.get("/interests", isLogin, handleGetMyInterests); // 내 선택 목록 (로그인 필요)
-app.put("/users/me/onboarding/interests", isLogin, handleUpdateMyOnboardingInterests);
 
 // 알람 설정
 app.patch("/users/me/notification-settings", isLogin, handleUpdateMyNotificationSettings);
@@ -226,6 +250,17 @@ app.get("/policies/privacy", handleGetPrivacy);
 app.get("/notices", handleGetNotices);
 app.get("/notices/:noticeId", handleGetNoticeDetail);
 
+// 동의 설정
+app.get("/users/me/consents", isLogin, handleGetMyConsents);
+app.patch("/users/me/consents", isLogin, handlePatchMyConsents);
+
+// 디바이스 토큰
+app.put("/users/me/device-tokens", isLogin, handlePutMyDeviceToken);
+
+// / 편지함
+app.get("/mailbox/anonymous", isLogin, handleGetAnonymousThreads);
+app.get("/mailbox/anonymous/threads/:threadId/letters", isLogin, handleGetAnonymousThreadLetters);
+app.get("/mailbox/self", isLogin, handleGetSelfMailbox);
 
 
 

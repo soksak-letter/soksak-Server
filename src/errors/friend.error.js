@@ -1,5 +1,7 @@
 // errors/friend.error.js
 
+import { ForbiddenError } from "./base.error.js";
+
 // 기본 에러 클래스
 export class BaseError extends Error {
   constructor(message, status, errorCode, data = null) {
@@ -67,5 +69,11 @@ export class FriendNotFoundError extends BaseError {
 export class FriendInternalError extends BaseError {
   constructor(data = null, message = "친구 처리 중 서버 오류가 발생했습니다.") {
     super(message, 500, "FRIEND_500_01", data);
+  }
+}
+
+export class NotFriendError extends ForbiddenError {
+  constructor(code, message, data = null) {
+      super(code, message, data);
   }
 }
