@@ -24,37 +24,33 @@ const getObjectStorageClient = () => {
   const userId = requiredEnv("OCI_USER_OCID");
   const fingerprint = requiredEnv("OCI_FINGERPRINT");
   const privateKeyPath = requiredEnv("OCI_PRIVATE_KEY_PATH");
-  const passphrase = process.env.OCI_PRIVATE_KEY_PASSPHRASE || undefined;
-  const regionId = requiredEnv("OCI_REGION");
+  const passphrase = process.env.OCI_PRIVATE_KEY_PASSPHRASE || null;
+  const regionId = requiredEnv("OCI_REGION"); // 예: 'ap-seoul-1'
 
-  const privateKey = fs.readFileSync(privateKeyPath, "utf8").trim();
-  if (
-    !privateKey.includes("BEGIN PRIVATE KEY") &&
-    !privateKey.includes("BEGIN RSA PRIVATE KEY")
-  ) {
-    throw new Error("Invalid private key format (BEGIN PRIVATE KEY / BEGIN RSA PRIVATE KEY 필요)");
-  }
+  // Windows 줄바꿈(\r\n) 및 공백 제거
+  const privateKey = fs.readFileSync(privateKeyPath, "utf8")
+  .replace(/\r/g, "") // 모든 \r 문자를 제거하여 \n으로 통일
+  .trim();
+  
+  // 리전 문자열을 OCI 리전 객체로 변환
+  const regionObj = common.Region.fromRegionId(regionId);
 
-  // Provider 생성 (여기서는 region을 provider에 굳이 억지로 넣지 않아도 됨)
+  // 1. Provider 생성 (인자 5개 또는 6개 가능)
   const provider = new common.SimpleAuthenticationDetailsProvider(
     tenancyId,
     userId,
     fingerprint,
     privateKey,
-    passphrase
+    passphrase,
+    regionObj // Provider에도 리전 객체 전달
   );
 
+  // 2. ✅ 핵심: 생성자 옵션에서 모든 설정을 끝내야 함
+  // 생성 후 client.endpoint나 client.regionId를 수동으로 수정하면 주소 파싱 에러가 날 수 있음
   const client = new objectstorage.ObjectStorageClient({
-    authenticationDetailsProvider: provider
+    authenticationDetailsProvider: provider,
+    region: regionObj // 문자열 대신 객체 전달 권장
   });
-
-  // ✅ 핵심: regionId 세팅이 endpoint까지 만들어줌 :contentReference[oaicite:1]{index=1}
-  try {
-    client.regionId = regionId;
-  } catch {
-    // regionId 매핑이 깨지면 endpoint 직접 세팅으로 우회
-    client.endpoint = `https://objectstorage.${regionId}.oraclecloud.com`;
-  }
 
   cachedClient = client;
   return client;
@@ -73,11 +69,13 @@ export const uploadUserProfileImage = async ({ userId, fileBuffer, mimeType }) =
     err.statusCode = 400;
     throw err;
   }
-
+  console.log("파일은 받음");
   const namespaceName = requiredEnv("OCI_NAMESPACE");
   const bucketName = requiredEnv("OCI_BUCKET_NAME");
   const regionId = requiredEnv("OCI_REGION");
-
+  console.log(namespaceName);
+  console.log(bucketName);
+  console.log(regionId);
   const ext = mimeToExt(mimeType);
   if (!ext) {
     const err = new Error("지원하지 않는 이미지 형식입니다. (jpg/png/webp 허용)");
@@ -85,22 +83,30 @@ export const uploadUserProfileImage = async ({ userId, fileBuffer, mimeType }) =
     err.statusCode = 400;
     throw err;
   }
-
+  console.log("여기까지");
   const objectName = `profiles/${userId}/profile${ext}`;
 
   const client = getObjectStorageClient();
 
   // (선택) 연결 확인용. 문제 생기면 여기서 바로 터짐.
   // await client.getNamespace({});
-
-  await client.putObject({
-    namespaceName,
-    bucketName,
-    objectName,
-    contentType: mimeType,
-    contentLength: fileBuffer.length,
-    putObjectBody: fileBuffer
-  });
+  try {
+    await client.putObject({
+      namespaceName,
+      bucketName,
+      objectName,
+      contentType: mimeType,
+      contentLength: fileBuffer.length,
+      putObjectBody: fileBuffer
+    });
+  } catch (error) {
+    console.error("❌ OCI 상세 에러 발생:");
+    console.error("상태 코드:", error.statusCode);
+    console.error("에러 코드:", error.code);
+    console.error("메시지:", error.message);
+    console.error("요청 ID:", error.opcRequestId);
+    throw error;
+  }
 
   // 주의: 버킷이 private면 이 URL은 "형식"만 맞고 접근은 막힐 수 있음 (PAR 권장)
   const publicUrl =
