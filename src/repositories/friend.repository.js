@@ -1,7 +1,7 @@
 import { xprisma } from "../xprisma.js";
 import { prisma } from "../db.config.js";
 import { FriendRequestNotFoundError } from "../errors/friend.error.js";
-import { selectLetterByUserIds, selectRecentLetterByUserIds } from "./letter.repository.js";
+import { selectLetterByUserIds, selectRecentLetterByUserIds, selectLetterDesignByLetterId } from "./letter.repository.js";
 
 export async function userExistsFriendRequest(receiverUserId, requesterUserId) {
   return await prisma.FriendRequest.findFirst({
@@ -152,45 +152,48 @@ export async function updateFriendRequestReject(userId, targetUserId) {
 
 export async function selectAllFriendsByUserId(userId) {
   const rows = await xprisma.Friend.findMany({
-    where: {
-      OR: [{ userAId: userId }, { userBId: userId }],
-    },
-    select: {
-      id: true,
-      userAId: true,
-      userBId: true,
-    },
+    where: { OR: [{ userAId: userId }, { userBId: userId }] },
+    select: { id: true, userAId: true, userBId: true },
   });
 
-  // 1) 상대방 ID만 추출
-  const friendIds = rows.map((r) =>
-    r.userAId === userId ? r.userBId : r.userAId
-  );
-
-  // 중복 제거
+  const friendIds = rows.map((r) => (r.userAId === userId ? r.userBId : r.userAId));
   const uniqueFriendIds = [...new Set(friendIds)];
 
-  // 2) 상대방 유저들 닉네임 한 번에 조회
   const users = await prisma.user.findMany({
     where: { id: { in: uniqueFriendIds } },
     select: { id: true, nickname: true },
   });
-
   const nicknameById = new Map(users.map((u) => [u.id, u.nickname]));
 
-  // 3) (추가) 친구별 편지 개수 + 최신 편지 id를 한 번씩만 조회해서 맵으로 캐싱
+  // 친구별 메타(편지수 + 최근편지 + 디자인) 캐싱
   const letterMetaEntries = await Promise.all(
     uniqueFriendIds.map(async (fid) => {
       const [letterCount, recentLetter] = await Promise.all([
-        selectLetterByUserIds(userId, fid),
-        selectRecentLetterByUserIds(userId, fid),
+        selectLetterByUserIds(userId, fid),        // letterCount 반환한다고 가정
+        selectRecentLetterByUserIds(userId, fid),  // { id, createdAt } 반환한다고 가정
       ]);
+
+      if (!recentLetter) {
+        return [
+          fid,
+          {
+            letterCount,
+            recentLetter: null,
+          },
+        ];
+      }
+
+      const design = await selectLetterDesignByLetterId(recentLetter.id);
 
       return [
         fid,
         {
           letterCount,
-          recentLetterId: recentLetter?.id ?? null,
+          recentLetter: {
+            createdAt: recentLetter.createdAt ?? null,
+            letterPaperDesign: design.paperUrl,
+            letterStampDesign: design.stampUrl,
+          },
         },
       ];
     })
@@ -198,24 +201,22 @@ export async function selectAllFriendsByUserId(userId) {
 
   const letterMetaByFriendId = new Map(letterMetaEntries);
 
-  // 4) friend row id + 상대 id + nickname + letter meta 묶어서 반환
   return rows.map((r) => {
     const friendUserId = r.userAId === userId ? r.userBId : r.userAId;
     const letterMeta = letterMetaByFriendId.get(friendUserId) ?? {
       letterCount: 0,
-      recentLetterId: null,
+      recentLetter: null,
     };
 
     return {
-      id: r.id, // Friend 테이블 row id
+      id: r.id,
       friendUserId,
       nickname: nicknameById.get(friendUserId) ?? null,
       letterCount: letterMeta.letterCount,
-      recentLetterId: letterMeta.recentLetterId,
+      recentLetter: letterMeta.recentLetter, // null | { createdAt, letterPaperDesign, letterStampDesign }
     };
   });
-} // 유저의 모든 친구 목록 조회
-
+}
 
 export async function deleteFriendRequest(userId, targetUserId) {
   return await prisma.FriendRequest.deleteMany({

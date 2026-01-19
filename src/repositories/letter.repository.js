@@ -264,5 +264,36 @@ export const selectRecentLetterByUserIds = async (userId, targetUserId) => {
       ],
     },
     orderBy: { createdAt: "desc" }, // 최신 1개
+    select: {
+        id: true,
+        createdAt: true
+    }
   });
+};
+
+export const selectLetterDesignByLetterId = async (lId) => {
+  const letterDesign = await prisma.letterDesign.findFirst({
+    where: { letterId: lId },
+    select: { paperId: true, stampId: true },
+  });
+
+  if (!letterDesign) {
+    return { paperUrl: null, stampUrl: null };
+  }
+
+  const [letterPaper, letterStamp] = await Promise.all([
+    prisma.letterAssetPaper.findFirst({
+      where: { id: letterDesign.paperId },
+      select: { paperAssetUrl: true },
+    }),
+    prisma.letterAssetStamp.findFirst({
+      where: { id: letterDesign.stampId },
+      select: { assetUrl: true },
+    }),
+  ]);
+
+  return {
+    paperUrl: letterPaper?.paperAssetUrl ?? null,
+    stampUrl: letterStamp?.assetUrl ?? null,
+  };
 };
