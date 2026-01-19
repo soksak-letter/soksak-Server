@@ -50,3 +50,11 @@ export const replaceUserInterests = async ({ userId, interestIds }) => {
     return true;
   });
 };
+
+export const updateUserPoolByUserId = async ({ userId, userPoolId }) => {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { userPoolId },
+    select: { id: true, userPoolId: true },
+  });
+};
