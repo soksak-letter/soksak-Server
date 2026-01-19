@@ -1,6 +1,7 @@
 import { updateMyNotificationSettings } from "../services/notification.service.js";
 import { getMyNotificationSettings } from "../services/notification.service.js";
 
+// 알람 설정 조회
 export const handleUpdateMyNotificationSettings = async (req, res, next) => {
   try {
     const userId = req.user?.id;
@@ -15,8 +16,6 @@ export const handleUpdateMyNotificationSettings = async (req, res, next) => {
     next(err);
   }
 };
-
-// 알람 설정 조회
 
 export const handleGetMyNotificationSettings = async (req, res, next) => {
   try {
