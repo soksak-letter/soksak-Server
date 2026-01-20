@@ -34,7 +34,7 @@ import { letterToMeSchema, letterToOtherSchema } from "./schemas/letter.schema.j
 import { idParamSchema } from "./schemas/common.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
 import {handleGetAnonymousThreads,handleGetAnonymousThreadLetters,handleGetSelfMailbox,} from "./controllers/mailbox.controller.js";
-
+import { handleInsertUserReport, handleGetUserReports } from "./controllers/report.controller.js";
 
 
 dotenv.config();
@@ -171,6 +171,9 @@ app.post("/matching/sessions/:questionId", isLogin, asyncHandler(handlePostMatch
 app.patch("/matching/sessions/:sessionId/friends", isLogin, asyncHandler(handlePatchMatchingSessionStatusFriends)); //세션 친구됨으로 변경
 app.patch("/matching/sessions/:sessionId/discards", isLogin, asyncHandler(handlePatchMatchingSessionStatusDiscarded)); //세션 삭제됨으로 변경
 app.post("/matching/sessions/:sessionId/reviews", isLogin, asyncHandler(handlePostSessionReview)); //세션 리뷰 작성
+
+app.post("/reports", isLogin, asyncHandler(handleInsertUserReport));
+app.get("/reports", isLogin, asyncHandler(handleGetUserReports));
 
 app.get("/reports/weekly/:year/:week", isLogin, asyncHandler(handleGetWeeklyReport));
 
