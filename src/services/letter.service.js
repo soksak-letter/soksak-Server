@@ -5,7 +5,7 @@ import { findFriendById, selectAllFriendsByUserId } from "../repositories/friend
 import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getFriendLetters, getLetterDetail, getPublicLetters } from "../repositories/letter.repository.js"
 import { createLetterLike, deleteLetterLike, findLetterLike } from "../repositories/like.repository.js";
 import { findUserById } from "../repositories/user.repository.js";
-import { getMonthAndWeek, getWeekStartAndEnd } from "../utils/day.util.js";
+import { getMonthAndWeek, getWeekStartAndEnd } from "../utils/date.util.js";
 import { getLevelInfo } from "../utils/planetConstants.js";
 
 export const getLetter = async (id) => {
