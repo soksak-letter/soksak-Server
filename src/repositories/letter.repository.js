@@ -322,16 +322,22 @@ export const selectLetterDesignByLetterId = async (lId) => {
   const [letterPaper, letterStamp] = await Promise.all([
     prisma.letterAssetPaper.findFirst({
       where: { id: letterDesign.paperId },
-      select: { paperAssetUrl: true },
+      select: { color: true, assetUrl: true },
     }),
     prisma.letterAssetStamp.findFirst({
       where: { id: letterDesign.stampId },
-      select: { assetUrl: true },
+      select: { name: true, assetUrl: true },
     }),
   ]);
 
   return {
-    paperUrl: letterPaper?.paperAssetUrl ?? null,
-    stampUrl: letterStamp?.assetUrl ?? null,
+    paper: {
+        color: letterPaper.color,
+        assetUrl: letterPaper.assetUrl
+    },
+    stamp: {
+        name: letterStamp.name,
+        assetUrl: letterStamp.assetUrl
+    },
   };
 };
