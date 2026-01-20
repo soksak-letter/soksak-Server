@@ -1,4 +1,4 @@
-import { getMyConsents, patchMyConsents } from "../services/consent.service.js";
+import { getMyConsents, patchMyConsents } from "../services/user.service.js";
 
 export const handleGetMyConsents = async (req, res) => {
   try {

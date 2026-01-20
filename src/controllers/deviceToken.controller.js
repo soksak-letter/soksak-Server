@@ -1,4 +1,4 @@
-import { updateMyDeviceToken } from "../services/deviceToken.service.js";
+import { updateMyDeviceToken } from "../services/user.service.js";
 
 export const handlePutMyDeviceToken = async (req, res) => {
   try {

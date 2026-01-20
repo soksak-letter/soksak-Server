@@ -1,5 +1,4 @@
-import { updateMyNotificationSettings } from "../services/notification.service.js";
-import { getMyNotificationSettings } from "../services/notification.service.js";
+import { updateMyNotificationSettings, getMyNotificationSettings } from "../services/user.service.js";
 
 // 알람 설정 조회
 export const handleUpdateMyNotificationSettings = async (req, res, next) => {

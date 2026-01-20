@@ -1,4 +1,4 @@
-import { getMyProfile, updateMyNickname, updateMyProfileImage } from "../services/profile.service.js";
+import { getMyProfile, updateMyNickname, updateMyProfileImage } from "../services/user.service.js";
 import { ProfileError } from "../errors/profile.error.js";
 
 const ok = (res, success) => {

@@ -1,8 +1,4 @@
-import {
-    getAnonymousThreads,
-    getAnonymousThreadLetters,
-    getSelfMailbox,
-  } from "../services/mailbox.service.js";
+import { getAnonymousThreads, getAnonymousThreadLetters, getSelfMailbox } from "../services/user.service.js";
   import { MAILBOX_ERROR, throwMailboxError } from "../errors/mailbox.error.js";
   
   const getAuthUserId = (req) => req.user?.id ?? req.userId ?? req.user?.userId ?? null;

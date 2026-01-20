@@ -1,4 +1,4 @@
-import { getCommunityGuidelines, getPrivacy, getTerms } from "../services/policy.service.js";
+import { getCommunityGuidelines, getPrivacy, getTerms } from "../services/user.service.js";
 
 export const handleGetCommunityGuidelines = async (req, res, next) => {
   try {

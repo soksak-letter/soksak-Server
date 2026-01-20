@@ -1,4 +1,4 @@
-import { getNoticeDetail, getNotices } from "../services/notice.service.js";
+import { getNoticeDetail, getNotices } from "../services/user.service.js";
 
 export const handleGetNotices = async (req, res, next) => {
   try {

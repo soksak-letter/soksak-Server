@@ -1,8 +1,4 @@
-import {
-    getAllInterests,
-    getMyInterests,
-    updateMyOnboardingInterests,
-  } from "../services/interest.service.js";
+import { getAllInterests, getMyInterests, updateMyOnboardingInterests } from "../services/user.service.js";
 
   // 전체 관심사(로그인 불필요)
   export const handleGetAllInterests = async (req, res, next) => {
