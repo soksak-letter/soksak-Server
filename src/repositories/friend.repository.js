@@ -155,7 +155,6 @@ export async function selectAllFriendsByUserId(userId) {
     where: { OR: [{ userAId: userId }, { userBId: userId }] },
     select: { id: true, userAId: true, userBId: true },
   });
-
   const friendIds = rows.map((r) => (r.userAId === userId ? r.userBId : r.userAId));
   const uniqueFriendIds = [...new Set(friendIds)];
 
@@ -191,8 +190,7 @@ export async function selectAllFriendsByUserId(userId) {
           letterCount,
           recentLetter: {
             createdAt: recentLetter.createdAt ?? null,
-            letterPaperDesign: design.paperUrl,
-            letterStampDesign: design.stampUrl,
+            design
           },
         },
       ];

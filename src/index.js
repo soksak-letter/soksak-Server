@@ -12,7 +12,7 @@ import { googleStrategy } from "./Auths/strategies/google.strategy.js";
 import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
 import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
 import { handleGetLetterAssets } from "./controllers/asset.controller.js";
-import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleGetLetterFromFriend, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats } from "./controllers/letter.controller.js";
+import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats } from "./controllers/letter.controller.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser } from "./controllers/auth.controller.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriend } from "./controllers/friend.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
@@ -33,8 +33,9 @@ import { isLogin } from "./middlewares/auth.middleware.js";
 import { letterToMeSchema, letterToOtherSchema } from "./schemas/letter.schema.js";
 import { idParamSchema } from "./schemas/common.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
-import {handleGetAnonymousThreads,handleGetAnonymousThreadLetters,handleGetSelfMailbox,} from "./controllers/mailbox.controller.js";
 import { handleInsertUserReport, handleGetUserReports } from "./controllers/report.controller.js";
+import {handleGetAnonymousThreads,handleGetAnonymousThreadLetters,handleGetSelfMailbox, handleGetLetterFromFriend,} from "./controllers/mailbox.controller.js";
+
 
 
 dotenv.config();
@@ -193,7 +194,6 @@ app.get("/letter-assets", isLogin, handleGetLetterAssets);        // 편지 꾸�
 app.post("/letter/me", isLogin, validate(letterToMeSchema), handleSendMyLetter);                      // 나에게 편지 전송
 app.post("/letter/other", isLogin, validate(letterToOtherSchema),handleSendOtherLetter);              // 타인/친구에게 편지 전송
 app.get("/letters/:letterId", isLogin, validate(idParamSchema("letterId")),handleGetLetterDetail);    // 편지 상세 조회
-app.get("/friends/:friendId/conversations", isLogin, validate(idParamSchema("friendId")), handleGetLetterFromFriend);  // 친구 대화 목록 화면 조회
 app.post("/letters/:letterId/like", isLogin, validate(idParamSchema("letterId")), handleAddLetterLike);                // 편지 좋아요 추가
 app.delete("/letters/:letterId/like", isLogin, validate(idParamSchema("letterId")), handleRemoveLetterLike);           // 편지 좋아요 삭제
 
@@ -250,6 +250,7 @@ app.put("/users/me/device-tokens", isLogin, handlePutMyDeviceToken);
 // / 편지함
 app.get("/mailbox/anonymous", isLogin, handleGetAnonymousThreads);
 app.get("/mailbox/anonymous/threads/:threadId/letters", isLogin, handleGetAnonymousThreadLetters);
+app.get("/mailbox/friends/threads/:friendId/letters", isLogin, validate(idParamSchema("friendId")), handleGetLetterFromFriend);  // 친구 대화 목록 화면 조회
 app.get("/mailbox/self", isLogin, handleGetSelfMailbox);
 
 
