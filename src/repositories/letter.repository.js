@@ -242,3 +242,58 @@ export const countTotalSentLetter = async (userId) => {
 
     return totalCount;
 }
+
+export const selectLetterByUserIds = async (userId, targetUserId) => {
+  const count = await prisma.letter.count({
+    where: {
+      OR: [
+        { senderUserId: userId, receiverUserId: targetUserId },
+        { senderUserId: targetUserId, receiverUserId: userId },
+      ],
+    },
+  });
+  return count; 
+};
+
+export const selectRecentLetterByUserIds = async (userId, targetUserId) => {
+  return await prisma.letter.findFirst({
+    where: {
+      OR: [
+        { senderUserId: userId, receiverUserId: targetUserId },
+        { senderUserId: targetUserId, receiverUserId: userId },
+      ],
+    },
+    orderBy: { createdAt: "desc" }, // 최신 1개
+    select: {
+        id: true,
+        createdAt: true
+    }
+  });
+};
+
+export const selectLetterDesignByLetterId = async (lId) => {
+  const letterDesign = await prisma.letterDesign.findFirst({
+    where: { letterId: lId },
+    select: { paperId: true, stampId: true },
+  });
+
+  if (!letterDesign) {
+    return { paperUrl: null, stampUrl: null };
+  }
+
+  const [letterPaper, letterStamp] = await Promise.all([
+    prisma.letterAssetPaper.findFirst({
+      where: { id: letterDesign.paperId },
+      select: { paperAssetUrl: true },
+    }),
+    prisma.letterAssetStamp.findFirst({
+      where: { id: letterDesign.stampId },
+      select: { assetUrl: true },
+    }),
+  ]);
+
+  return {
+    paperUrl: letterPaper?.paperAssetUrl ?? null,
+    stampUrl: letterStamp?.assetUrl ?? null,
+  };
+};
