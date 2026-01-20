@@ -6,6 +6,8 @@ import { createLetterLike, deleteLetterLike, findLetterLike } from "../repositor
 import { findUserById } from "../repositories/user.repository.js";
 import { getMonthAndWeek, getWeekStartAndEnd } from "../utils/day.util.js";
 import { getLevelInfo } from "../utils/planetConstants.js";
+import { blockBadWordsInText } from "../utils/profanity.util.js";
+import { LetterBadRequest } from "../errors/letter.error.js";
 
 export const getLetter = async (id) => {
     const letter = await getLetterDetail(id);
@@ -15,7 +17,7 @@ export const getLetter = async (id) => {
 }
 
 export const sendLetterToMe = async (userId, data) => {
-    await createLetter({
+    const letterId = await createLetter({
         letter: {
             senderUserId: userId,
             letterType: "TO_ME",
@@ -35,7 +37,8 @@ export const sendLetterToMe = async (userId, data) => {
         }
     });
 
-    return { status: "success" };
+    const letter = await getLetterDetail(letterId);
+    return { letter };
 }
 
 export const sendLetterToOther = async (userId, data) => {
@@ -43,7 +46,10 @@ export const sendLetterToOther = async (userId, data) => {
     if(!receiver) throw new UserNotFoundError("USER_404_02", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
     if(userId === receiver.id) throw new DuplicatedValueError("USER_409_04", "전송하는 유저와 전달받는 유저의 id가 같습니다", "id");
 
-    await createLetter({
+    const isProfane = blockBadWordsInText(data.content);
+    if(isProfane) throw new LetterBadRequest("LETTER_400_02", "부적절한 단어가 포함되어있습니다.");
+    
+    const letterId = await createLetter({
         letter: {
             senderUserId: userId,
             receiverUserId: data.receiverUserId,
@@ -64,7 +70,8 @@ export const sendLetterToOther = async (userId, data) => {
         }
     });
 
-    return { status: "success" };
+    const letter = await getLetterDetail(letterId);
+    return { letter };
 }
 
 export const addLetterLike = async ({userId, letterId}) => {

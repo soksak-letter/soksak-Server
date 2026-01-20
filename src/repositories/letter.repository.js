@@ -18,8 +18,8 @@ export const getLetterDetail = async (id) => {
                     paper: {
                         select: {
                             id: true,
-                            name: true,
-                            paperAssetUrl: true
+                            color: true,
+                            assetUrl: true
                         }
                     },
                     stamp: {
@@ -32,8 +32,8 @@ export const getLetterDetail = async (id) => {
                     font: {
                         select: {
                             id: true,
-                            name: true,
-                            assetUrl: true   
+                            font: true,
+                            fontFamily: true,
                         }
                     }
                 }
@@ -55,8 +55,8 @@ export const getLetterDetail = async (id) => {
         design: {
             paper: {
                 id: letter?.design?.paper?.id,
-                name: letter?.design?.paper?.name,
-                assetUrl: letter?.design?.paper?.paperAssetUrl
+                color: letter?.design?.paper?.color,
+                assetUrl: letter?.design?.paper?.assetUrl
             },
             stamp: {
                 id: letter?.design?.stamp?.id,
@@ -65,8 +65,8 @@ export const getLetterDetail = async (id) => {
             },
             font: {
                 id: letter?.design?.font?.id,
-                name: letter?.design?.font?.name,
-                assetUrl: letter?.design?.font?.assetUrl
+                font: letter?.design?.font?.font,
+                fontFamily: letter?.design?.font?.fontFamily,
             }
         }
     }
@@ -75,7 +75,7 @@ export const getLetterDetail = async (id) => {
 // senderUserId = receiverUserId, letterType, questionId, title, content, isPublic, status, scheduledAt 필수 deliveredAt, readAt은 scheduledAt에 따라서
 export const createLetter = async ({letter, design}) => {
     try{
-        await prisma.letter.create({
+        const newLetter = await prisma.letter.create({
             data: {
                 ...letter,
                 design: {
@@ -83,6 +83,8 @@ export const createLetter = async ({letter, design}) => {
                 }
             }
         });
+
+        return newLetter.id;
     } catch(err) {
         const fieldNameMap = {
             "question_id": "questionId",
@@ -122,8 +124,8 @@ export const getFriendLetters = async ({userId, friendId}) => {
                     paper: {
                         select: {
                             id: true,
-                            name: true,
-                            paperAssetUrl: true
+                            color: true,
+                            assetUrl: true
                         }
                     },
                     stamp: {
@@ -167,8 +169,8 @@ export const getMyLettersWithFriend = async ({userId, friendId}) => {
                     paper: {
                         select: {
                             id: true,
-                            name: true,
-                            paperAssetUrl: true
+                            color: true,
+                            assetUrl: true
                         }
                     },
                     stamp: {
@@ -214,8 +216,8 @@ export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDet
                     paper: {
                         select: {
                             id: true,
-                            name: true,
-                            envelopeAssetUrl: true
+                            color: true,
+                            assetUrl: true
                         }
                     },
                 }
@@ -239,8 +241,8 @@ export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDet
         design: {
             paper: {
                 id: letter?.design?.paper?.id,
-                name: letter?.design?.paper?.name,
-                assetUrl: letter?.design?.paper?.envelopeAssetUrl
+                color: letter?.design?.paper?.color,
+                assetUrl: letter?.design?.paper?.assetUrl
             }
         }
     }));
