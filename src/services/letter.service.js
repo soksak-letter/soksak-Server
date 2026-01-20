@@ -17,6 +17,9 @@ export const getLetter = async (id) => {
 }
 
 export const sendLetterToMe = async (userId, data) => {
+    const isProfane = blockBadWordsInText(data.content);
+    if(isProfane) throw new LetterBadRequest("LETTER_400_02", "부적절한 단어가 포함되어있습니다.");
+
     const letterId = await createLetter({
         letter: {
             senderUserId: userId,
@@ -48,7 +51,7 @@ export const sendLetterToOther = async (userId, data) => {
 
     const isProfane = blockBadWordsInText(data.content);
     if(isProfane) throw new LetterBadRequest("LETTER_400_02", "부적절한 단어가 포함되어있습니다.");
-    
+
     const letterId = await createLetter({
         letter: {
             senderUserId: userId,
