@@ -176,7 +176,7 @@ model LetterDesign {
 
 model LetterAssetPaper {
   id       Int            @id @default(autoincrement()) @map("id")
-  color    String         @map("name")
+  color    String         @map("color")
   assetUrl String         @map("asset_url")
   isActive Boolean        @map("is_active")
   designs  LetterDesign[]
