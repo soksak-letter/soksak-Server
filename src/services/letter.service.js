@@ -1,8 +1,7 @@
-import { NotFriendError } from "../errors/friend.error.js";
 import { UserNotFoundError } from "../errors/user.error.js";
 import { DuplicatedValueError } from "../errors/base.error.js";
-import { findFriendById, selectAllFriendsByUserId } from "../repositories/friend.repository.js";
-import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getFriendLetters, getLetterDetail, getPublicLetters } from "../repositories/letter.repository.js"
+import { selectAllFriendsByUserId } from "../repositories/friend.repository.js";
+import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getFriendLetters, getLetterDetail, getMyLettersWithFriend, getPublicLetters } from "../repositories/letter.repository.js"
 import { createLetterLike, deleteLetterLike, findLetterLike } from "../repositories/like.repository.js";
 import { findUserById } from "../repositories/user.repository.js";
 import { getMonthAndWeek, getWeekStartAndEnd } from "../utils/day.util.js";
@@ -68,19 +67,6 @@ export const sendLetterToOther = async (userId, data) => {
     return { status: "success" };
 }
 
-export const getLetterFromFriend = async ({userId, friendId}) => {
-    const friend = await findFriendById(userId, friendId);
-    if(!friend) throw new NotFriendError("FRIEND_403_01", "친구가 아닙니다.");
-
-    const {letters, question} = await getFriendLetters({userId, friendId});
-
-    return {
-        friendName: friend.nickname,
-        firstQuestion: question, 
-        letters
-    };
-}
-
 export const addLetterLike = async ({userId, letterId}) => {
     const isLiked = await findLetterLike({userId, letterId});
     if(isLiked) throw new DuplicatedValueError("LIKE_409_01", "이미 좋아요를 눌렀습니다."); 
@@ -118,9 +104,7 @@ export const getPublicLetterFromOther = async (userId, isDetail) => {
 
 export const getPublicLetterFromFriend = async (userId, isDetail) => {
     const friends = await selectAllFriendsByUserId(userId);
-    const friendIds = friends.map(f => {
-        return f.userAId === userId ? f.userBId : f.userAId;
-    });
+    const friendIds = friends.map(friend => friend.friendUserId);
 
     const letters = await getPublicLetters({ids: [...friendIds], userId, isFriendOnly: true, isDetail});
 

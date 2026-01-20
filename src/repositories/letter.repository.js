@@ -104,10 +104,8 @@ export const createLetter = async ({letter, design}) => {
 export const getFriendLetters = async ({userId, friendId}) => {
     const letters = await prisma.letter.findMany({
         where: {
-            OR:[
-                { senderUserId: userId, receiverUserId: friendId },
-                { senderUserId: friendId, receiverUserId: userId }
-            ]
+            senderUserId: friendId, 
+            receiverUserId: userId
         },
         select: {
             id: true,
@@ -143,9 +141,49 @@ export const getFriendLetters = async ({userId, friendId}) => {
     const question = letters[0]?.question?.content;
 
     return { 
-        letters: letters.map(({ question, ...rest }) => rest), 
+        friendLetters: letters.map(({ question, ...rest }) => rest), 
         question 
     };
+}
+
+export const getMyLettersWithFriend = async ({userId, friendId}) => {
+    const myLetters = await prisma.letter.findMany({
+        where: {
+            senderUserId: userId, 
+            receiverUserId: friendId
+        },
+        select: {
+            id: true,
+            title: true,
+            deliveredAt: true,
+            readAt: true,
+            question: {
+                select: {
+                    content: true
+                }
+            },
+            design: {
+                select: {
+                    paper: {
+                        select: {
+                            id: true,
+                            name: true,
+                            paperAssetUrl: true
+                        }
+                    },
+                    stamp: {
+                        select: {
+                            id: true,
+                            name: true,
+                            assetUrl: true
+                        }
+                    },
+                }
+            }
+        }
+    })
+
+    return myLetters;
 }
 
 export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDetail = false}) => {
