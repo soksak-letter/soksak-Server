@@ -1,13 +1,14 @@
 import { UserNotFoundError } from "../errors/user.error.js";
 import { DuplicatedValueError } from "../errors/base.error.js";
 import { selectAllFriendsByUserId } from "../repositories/friend.repository.js";
-import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getFriendLetters, getLetterDetail, getMyLettersWithFriend, getPublicLetters } from "../repositories/letter.repository.js"
+import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getLetterDetail, getPublicLetters } from "../repositories/letter.repository.js"
 import { createLetterLike, deleteLetterLike, findLetterLike } from "../repositories/like.repository.js";
 import { findUserById } from "../repositories/user.repository.js";
 import { getMonthAndWeek, getWeekStartAndEnd } from "../utils/day.util.js";
 import { getLevelInfo } from "../utils/planetConstants.js";
 import { blockBadWordsInText } from "../utils/profanity.util.js";
 import { LetterBadRequest, LetterNotFound } from "../errors/letter.error.js";
+import { findLetterAssets } from "../repositories/asset.repository.js";
 
 export const getLetter = async (id) => {
     const letter = await getLetterDetail(id);
@@ -141,4 +142,10 @@ export const getUserLetterStats = async (userId) => {
         },
         message: info.fullMessage
     }
+}
+
+export const getLetterAssets = async () => {
+    const assets = await findLetterAssets();
+
+    return assets;
 }
