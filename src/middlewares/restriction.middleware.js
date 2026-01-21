@@ -1,10 +1,9 @@
 import { prisma } from "../configs/db.config.js";
 import { RestrictedUserError } from "../errors/user.error.js";
 
-export const isRestriced = async (req, res, next) => {
+export const isRestricted = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    console.log("여기야!!!!!!!!!!!!!!!!!!!!!!!!!" + userId);
     const now = new Date();
 
     const restriction = await prisma.restriction.findFirst({
@@ -19,7 +18,7 @@ export const isRestriced = async (req, res, next) => {
     if (!restriction) return next();
 
     return next(
-      new RestrictedUserError(`${restriction.reason}라는 이유로 인해 제재되었습니다.`)
+      new RestrictedUserError(`${restriction.reason} 을(를) 이유로 하여 제재되었습니다.`)
     );
   } catch (err) {
     return next(err);
