@@ -331,280 +331,6 @@
 
 /**
  * @swagger
- * /mailbox/anonymous:
- *   get:
- *     summary: 익명 탭 목록 조회
- *     description: 익명으로 받은 편지의 스레드 목록을 조회합니다. senderUserId별 최신 편지 1개씩 반환됩니다.
- *     tags: [편지함]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: 성공
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 resultType:
- *                   type: string
- *                   example: SUCCESS
- *                 error:
- *                   type: object
- *                   nullable: true
- *                   example: null
- *                 success:
- *                   type: object
- *                   properties:
- *                     items:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           threadId:
- *                             type: integer
- *                             description: 스레드 ID (senderUserId)
- *                           sender:
- *                             type: object
- *                             properties:
- *                               id:
- *                                 type: integer
- *                               nickname:
- *                                 type: string
- *                                 nullable: true
- *                           lastLetterId:
- *                             type: integer
- *                           lastLetterTitle:
- *                             type: string
- *                           lastLetterPreview:
- *                             type: string
- *                           updatedAt:
- *                             type: string
- *                             format: date-time
- *                             nullable: true
- *                           paperId:
- *                             type: integer
- *                             nullable: true
- *                             description: 편지통 색상
- *       401:
- *         description: 인증 실패
- */
-
-/**
- * @swagger
- * /mailbox/anonymous/threads/{threadId}/letters:
- *   get:
- *     summary: 익명 스레드 편지 목록 조회
- *     description: 특정 익명 스레드의 편지 목록을 조회합니다.
- *     tags: [편지함]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: threadId
- *         required: true
- *         schema:
- *           type: integer
- *         description: 스레드 ID (senderUserId)
- *     responses:
- *       200:
- *         description: 성공
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 resultType:
- *                   type: string
- *                   example: SUCCESS
- *                 error:
- *                   type: object
- *                   nullable: true
- *                   example: null
- *                 success:
- *                   type: object
- *                   properties:
- *                     items:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: integer
- *                           title:
- *                             type: string
- *                           content:
- *                             type: string
- *                           deliveredAt:
- *                             type: string
- *                             format: date-time
- *                             nullable: true
- *                           createdAt:
- *                             type: string
- *                             format: date-time
- *                             nullable: true
- *                           design:
- *                             type: object
- *                             properties:
- *                               paperId:
- *                                 type: integer
- *                                 nullable: true
- *                               stampId:
- *                                 type: integer
- *                                 nullable: true
- *                               fontId:
- *                                 type: integer
- *                                 nullable: true
- *       400:
- *         description: 잘못된 threadId
- *       401:
- *         description: 인증 실패
- */
-
-/**
- * @swagger
- * /mailbox/self:
- *   get:
- *     summary: 나에게 탭 목록 조회
- *     description: 나에게 보낸 편지 목록을 조회합니다.
- *     tags: [편지함]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: 성공
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 resultType:
- *                   type: string
- *                   example: SUCCESS
- *                 error:
- *                   type: object
- *                   nullable: true
- *                   example: null
- *                 success:
- *                   type: object
- *                   properties:
- *                     items:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: integer
- *                           title:
- *                             type: string
- *                           createdAt:
- *                             type: string
- *                             format: date-time
- *                             nullable: true
- *                           paperId:
- *                             type: integer
- *                             nullable: true
- *                             description: 편지통 색상
- *       401:
- *         description: 인증 실패
- */
-
-/**
- * @swagger
- * /notices:
- *   get:
- *     summary: 공지사항 목록
- *     description: 활성화된 공지사항 목록을 조회합니다.
- *     tags: [공지/정책]
- *     responses:
- *       200:
- *         description: 성공
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 resultType:
- *                   type: string
- *                   example: SUCCESS
- *                 error:
- *                   type: object
- *                   nullable: true
- *                   example: null
- *                 success:
- *                   type: object
- *                   properties:
- *                     items:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: integer
- *                           title:
- *                             type: string
- *                           content:
- *                             type: string
- *                           createdAt:
- *                             type: string
- *                             format: date-time
- *                           updatedAt:
- *                             type: string
- *                             format: date-time
- */
-
-/**
- * @swagger
- * /notices/{noticeId}:
- *   get:
- *     summary: 공지사항 상세 조회
- *     description: 특정 공지사항의 상세 내용을 조회합니다.
- *     tags: [공지/정책]
- *     parameters:
- *       - in: path
- *         name: noticeId
- *         required: true
- *         schema:
- *           type: integer
- *         description: 공지사항 ID
- *     responses:
- *       200:
- *         description: 성공
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 resultType:
- *                   type: string
- *                   example: SUCCESS
- *                 error:
- *                   type: object
- *                   nullable: true
- *                   example: null
- *                 success:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                     title:
- *                       type: string
- *                     content:
- *                       type: string
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                     updatedAt:
- *                       type: string
- *                       format: date-time
- *       400:
- *         description: 잘못된 noticeId
- *       404:
- *         description: 공지사항을 찾을 수 없음
- */
-
-/**
- * @swagger
  * /users/me/notification-settings:
  *   get:
  *     summary: 알림 설정 조회
@@ -691,11 +417,13 @@
 
 /**
  * @swagger
- * /policies/community-guidelines:
+ * /users/me/profile:
  *   get:
- *     summary: 커뮤니티 가이드라인 조회
- *     description: 커뮤니티 가이드라인 문서를 조회합니다.
- *     tags: [공지/정책]
+ *     summary: 프로필 조회
+ *     description: 사용자의 프로필 정보를 조회합니다.
+ *     tags: [프로필]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: 성공
@@ -714,23 +442,71 @@
  *                 success:
  *                   type: object
  *                   properties:
- *                     title:
+ *                     id:
+ *                       type: integer
+ *                       description: 사용자 ID
+ *                     nickname:
  *                       type: string
- *                       example: 커뮤니티 가이드라인
- *                     content:
+ *                       description: 닉네임
+ *                     email:
  *                       type: string
- *                       description: 가이드라인 내용
+ *                       description: 이메일
+ *                     profileImageUrl:
+ *                       type: string
+ *                       nullable: true
+ *                       description: 프로필 이미지 URL
+ *                     interests:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           name:
+ *                             type: string
+ *                       description: 관심사 목록
+ *                     sentLettersCount:
+ *                       type: integer
+ *                       description: 보낸 편지 수
+ *                     receivedLettersCount:
+ *                       type: integer
+ *                       description: 받은 편지 수
+ *                     temperatureAvg:
+ *                       type: number
+ *                       nullable: true
+ *                       description: 평균 온도 점수
+ *                     totalUsageMinutes:
+ *                       type: integer
+ *                       description: 총 사용 시간 (분)
+ *       401:
+ *         description: 인증 실패
  *       404:
- *         description: 문서를 찾을 수 없음
+ *         description: 유저를 찾을 수 없음
  */
 
 /**
  * @swagger
- * /policies/terms:
- *   get:
- *     summary: 서비스 이용약관 조회
- *     description: 서비스 이용약관 문서를 조회합니다.
- *     tags: [공지/정책]
+ * /users/me/profile:
+ *   patch:
+ *     summary: 프로필 닉네임 수정
+ *     description: 사용자의 닉네임을 수정합니다. (2-20자)
+ *     tags: [프로필]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - nickname
+ *             properties:
+ *               nickname:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 20
+ *                 description: 닉네임
  *     responses:
  *       200:
  *         description: 성공
@@ -749,23 +525,37 @@
  *                 success:
  *                   type: object
  *                   properties:
- *                     title:
- *                       type: string
- *                       example: 서비스 이용약관
- *                     content:
- *                       type: string
- *                       description: 이용약관 내용
- *       404:
- *         description: 문서를 찾을 수 없음
+ *                     updated:
+ *                       type: boolean
+ *                       example: true
+ *       400:
+ *         description: 잘못된 요청 (닉네임 형식이 올바르지 않음)
+ *       401:
+ *         description: 인증 실패
  */
 
 /**
  * @swagger
- * /policies/privacy:
- *   get:
- *     summary: 개인정보 처리방침 조회
- *     description: 개인정보 처리방침 문서를 조회합니다.
- *     tags: [공지/정책]
+ * /users/me/profile/image:
+ *   post:
+ *     summary: 프로필 이미지 업로드
+ *     description: 사용자의 프로필 이미지를 업로드합니다. (multipart/form-data, field name: "image")
+ *     tags: [프로필]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - image
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: 이미지 파일 (jpg/png/webp, 최대 5MB)
  *     responses:
  *       200:
  *         description: 성공
@@ -784,12 +574,14 @@
  *                 success:
  *                   type: object
  *                   properties:
- *                     title:
+ *                     updated:
+ *                       type: boolean
+ *                       example: true
+ *                     profileImageUrl:
  *                       type: string
- *                       example: 개인정보 처리방침
- *                     content:
- *                       type: string
- *                       description: 개인정보 처리방침 내용
- *       404:
- *         description: 문서를 찾을 수 없음
+ *                       description: 업로드된 프로필 이미지 URL
+ *       400:
+ *         description: 잘못된 요청 (파일이 없거나 지원하지 않는 형식, 파일 크기 초과)
+ *       401:
+ *         description: 인증 실패
  */
