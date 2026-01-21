@@ -4,15 +4,21 @@ import * as objectstorage from "oci-objectstorage";
 
 import { RequiredTermAgreementError } from "../errors/auth.error.js";
 import {
-  CONSENT_ERRORS,
-  DEVICE_TOKEN_ERRORS,
-  MAILBOX_ERROR,
-  throwMailboxError,
+  ConsentUnauthorizedError,
+  ConsentInvalidBodyError,
+  DeviceTokenUnauthorizedError,
+  DeviceTokenInvalidBodyError,
+  MailboxUnauthorizedError,
+  MailboxInvalidThreadIdError,
   InvalidNoticeIdError,
   NoticeNotFoundError,
   PolicyNotFoundError,
-  ProfileErrors,
-  ProfileError,
+  ProfileUnauthorizedError,
+  ProfileUserNotFoundError,
+  ProfileInvalidNicknameError,
+  ProfileFileRequiredError,
+  ProfileUnsupportedImageTypeError,
+  ProfileInvalidImageUrlError,
 } from "../errors/user.error.js";
 
 import {
@@ -59,7 +65,7 @@ import {
 } from "../utils/user.util.js";
 
 // ------------------------------
-// Onboarding / Agreements (기존 user.service.js)
+// Onboarding / Agreements
 // ------------------------------
 
 export const updateOnboardingStep1 = async ({ userId, gender, job }) => {
@@ -120,7 +126,7 @@ export const createUserAgreements = async (data) => {
 // ------------------------------
 
 export const getMyConsents = async ({ userId }) => {
-  if (!userId) throw CONSENT_ERRORS.UNAUTHORIZED;
+  if (!userId) throw new ConsentUnauthorizedError();
 
   const agreement = await findUserAgreementByUserId(userId);
   const safe = agreement ?? (await upsertUserAgreement({ userId, data: {} }));
@@ -134,7 +140,7 @@ export const getMyConsents = async ({ userId }) => {
 };
 
 export const patchMyConsents = async ({ userId, payload }) => {
-  if (!userId) throw CONSENT_ERRORS.UNAUTHORIZED;
+  if (!userId) throw new ConsentUnauthorizedError();
 
   const { termsAgreed, privacyAgreed, marketingAgreed, ageOver14Agreed } = payload ?? {};
 
@@ -144,7 +150,7 @@ export const patchMyConsents = async ({ userId, payload }) => {
     !isBooleanOrUndefined(marketingAgreed) ||
     !isBooleanOrUndefined(ageOver14Agreed)
   ) {
-    throw CONSENT_ERRORS.INVALID_BODY;
+    throw new ConsentInvalidBodyError();
   }
 
   const updateData = {};
@@ -162,9 +168,9 @@ export const patchMyConsents = async ({ userId, payload }) => {
 // DeviceToken 
 // ------------------------------
 export const updateMyDeviceToken = async ({ userId, deviceToken }) => {
-  if (!userId) throw DEVICE_TOKEN_ERRORS.UNAUTHORIZED;
+  if (!userId) throw new DeviceTokenUnauthorizedError();
   if (typeof deviceToken !== "string" || deviceToken.trim().length === 0) {
-    throw DEVICE_TOKEN_ERRORS.INVALID_BODY;
+    throw new DeviceTokenInvalidBodyError();
   }
 
   await upsertUserDeviceToken({
@@ -272,7 +278,7 @@ export const getAnonymousThreads = async (userId) => {
 export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
   const threadId = Number(threadIdRaw);
   if (!Number.isFinite(threadId) || threadId <= 0) {
-    throwMailboxError(MAILBOX_ERROR.INVALID_THREAD_ID, { threadId: threadIdRaw });
+    throw new MailboxInvalidThreadIdError("USER_400_03", "threadId가 올바르지 않습니다.", { threadId: threadIdRaw });
   }
 
   const letters = await findReceivedLettersBySender({
@@ -325,10 +331,14 @@ export const getNotices = async () => {
 
 export const getNoticeDetail = async (noticeId) => {
   const id = Number(noticeId);
-  if (!Number.isInteger(id) || id <= 0) throw new InvalidNoticeIdError(noticeId);
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new InvalidNoticeIdError("USER_400_04", `noticeId는 양의 정수여야 합니다. noticeId=${noticeId}`, { noticeId });
+  }
 
   const notice = await findNoticeById(id);
-  if (!notice) throw new NoticeNotFoundError(id);
+  if (!notice) {
+    throw new NoticeNotFoundError("USER_404_02", `해당 공지사항을 찾을 수 없습니다. noticeId=${id}`, { noticeId: id });
+  }
 
   return notice;
 };
@@ -473,7 +483,9 @@ const POLICY_KEYS = {
 
 export const getCommunityGuidelines = async () => {
   const doc = await findPolicyDocumentByKey(POLICY_KEYS.COMMUNITY_GUIDELINES);
-  if (!doc) throw new PolicyNotFoundError(POLICY_KEYS.COMMUNITY_GUIDELINES);
+  if (!doc) {
+    throw new PolicyNotFoundError("USER_404_03", `해당 정책 문서를 찾을 수 없습니다. key=${POLICY_KEYS.COMMUNITY_GUIDELINES}`, { key: POLICY_KEYS.COMMUNITY_GUIDELINES });
+  }
 
   return {
     title: "커뮤니티 가이드라인",
@@ -483,7 +495,9 @@ export const getCommunityGuidelines = async () => {
 
 export const getTerms = async () => {
   const doc = await findPolicyDocumentByKey(POLICY_KEYS.TERMS);
-  if (!doc) throw new PolicyNotFoundError(POLICY_KEYS.TERMS);
+  if (!doc) {
+    throw new PolicyNotFoundError("USER_404_03", `해당 정책 문서를 찾을 수 없습니다. key=${POLICY_KEYS.TERMS}`, { key: POLICY_KEYS.TERMS });
+  }
 
   return {
     title: "서비스 이용약관",
@@ -493,7 +507,9 @@ export const getTerms = async () => {
 
 export const getPrivacy = async () => {
   const doc = await findPolicyDocumentByKey(POLICY_KEYS.PRIVACY);
-  if (!doc) throw new PolicyNotFoundError(POLICY_KEYS.PRIVACY);
+  if (!doc) {
+    throw new PolicyNotFoundError("USER_404_03", `해당 정책 문서를 찾을 수 없습니다. key=${POLICY_KEYS.PRIVACY}`, { key: POLICY_KEYS.PRIVACY });
+  }
 
   return {
     title: "개인정보 처리방침",
@@ -506,7 +522,7 @@ export const getPrivacy = async () => {
 // ------------------------------
 export const getMyProfile = async ({ userId }) => {
   const user = await findUserByIdForProfile(userId);
-  if (!user) throw new ProfileError("유저를 찾을 수 없습니다.", 404, "USER_NOT_FOUND");
+  if (!user) throw new ProfileUserNotFoundError();
 
   const interests = await findUserInterestsByUserId(userId);
 
@@ -531,18 +547,23 @@ export const getMyProfile = async ({ userId }) => {
 };
 
 export const updateMyNickname = async ({ userId, nickname }) => {
-  if (typeof nickname !== "string") throw ProfileErrors.INVALID_NICKNAME();
+  if (typeof nickname !== "string") throw new ProfileInvalidNicknameError();
   const trimmed = nickname.trim();
-  if (trimmed.length < 2 || trimmed.length > 20) throw ProfileErrors.INVALID_NICKNAME();
+  if (trimmed.length < 2 || trimmed.length > 20) throw new ProfileInvalidNicknameError();
 
   await updateUserNicknameById({ userId, nickname: trimmed });
   return { updated: true };
 };
 
 export const updateMyProfileImage = async ({ userId, file }) => {
-  if (!file) throw ProfileErrors.FILE_REQUIRED();
+  if (!file) throw new ProfileFileRequiredError();
 
-  if (!file.buffer) throw new ProfileError("파일 버퍼를 찾을 수 없습니다.", 400, "FILE_BUFFER_MISSING");
+  if (!file.buffer) {
+    const err = new Error("파일 버퍼를 찾을 수 없습니다.");
+    err.status = 400;
+    err.errorCode = "FILE_BUFFER_MISSING";
+    throw err;
+  }
 
   const { publicUrl } = await uploadUserProfileImage({
     userId,

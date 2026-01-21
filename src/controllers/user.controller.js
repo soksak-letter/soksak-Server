@@ -21,8 +21,10 @@ import {
   updateMyNickname,
   updateMyProfileImage,
 } from "../services/user.service.js";
-import { MAILBOX_ERROR, throwMailboxError } from "../errors/user.error.js";
-import { ProfileError } from "../errors/user.error.js";
+import {
+  MailboxUnauthorizedError,
+  ProfileUnauthorizedError,
+} from "../errors/user.error.js";
 
 // ========== Onboarding Controllers ==========
 export const handlePatchOnboardingStep1 = async (req, res, next) => {
@@ -171,7 +173,7 @@ const getAuthUserId = (req) => req.user?.id ?? req.userId ?? req.user?.userId ??
 export const handleGetAnonymousThreads = async (req, res, next) => {
   try {
     const userId = getAuthUserId(req);
-    if (!userId) throwMailboxError(MAILBOX_ERROR.UNAUTHORIZED);
+    if (!userId) throw new MailboxUnauthorizedError();
 
     const result = await getAnonymousThreads(userId);
     return res.status(200).json({
@@ -187,7 +189,7 @@ export const handleGetAnonymousThreads = async (req, res, next) => {
 export const handleGetAnonymousThreadLetters = async (req, res, next) => {
   try {
     const userId = getAuthUserId(req);
-    if (!userId) throwMailboxError(MAILBOX_ERROR.UNAUTHORIZED);
+    if (!userId) throw new MailboxUnauthorizedError();
 
     const { threadId } = req.params;
     const result = await getAnonymousThreadLetters(userId, threadId);
@@ -205,7 +207,7 @@ export const handleGetAnonymousThreadLetters = async (req, res, next) => {
 export const handleGetSelfMailbox = async (req, res, next) => {
   try {
     const userId = getAuthUserId(req);
-    if (!userId) throwMailboxError(MAILBOX_ERROR.UNAUTHORIZED);
+    if (!userId) throw new MailboxUnauthorizedError();
 
     const result = await getSelfMailbox(userId);
     return res.status(200).json({
@@ -316,7 +318,7 @@ const fail = (res, err) => {
 export const handleGetMyProfile = async (req, res) => {
   try {
     const userId = req?.user?.id;
-    if (!userId) throw new ProfileError("인증이 필요합니다.", 401, "UNAUTHORIZED");
+    if (!userId) throw new ProfileUnauthorizedError();
 
     const data = await getMyProfile({ userId });
     return ok(res, data);
@@ -329,7 +331,7 @@ export const handleGetMyProfile = async (req, res) => {
 export const handlePatchMyProfile = async (req, res) => {
   try {
     const userId = req?.user?.id;
-    if (!userId) throw new ProfileError("인증이 필요합니다.", 401, "UNAUTHORIZED");
+    if (!userId) throw new ProfileUnauthorizedError();
 
     const { nickname } = req.body || {};
     const result = await updateMyNickname({ userId, nickname });
@@ -344,7 +346,7 @@ export const handlePatchMyProfile = async (req, res) => {
 export const handlePostMyProfileImage = async (req, res) => {
   try {
     const userId = req?.user?.id;
-    if (!userId) throw new ProfileError("인증이 필요합니다.", 401, "UNAUTHORIZED");
+    if (!userId) throw new ProfileUnauthorizedError();
 
     const file = req.file; // multer single("image")
     const result = await updateMyProfileImage({ userId, file });
