@@ -1,5 +1,6 @@
 import { prisma } from "../configs/db.config.js";
 import { DuplicatedValueError } from "../errors/base.error.js";
+import { UserNotFoundError } from "../errors/user.error.js";
 
 export const findUserByEmail = async (email) => {
     try{
@@ -135,14 +136,7 @@ export const createUserAndAuth = async ({user, auth}, tx = prisma) => {
             provider: newUser.auths?.[0]?.provider
         };
     } catch(err) {
-        if(err.code === "P2002"){
-            const target = err.meta?.target || "";
-
-            if(target.includes("phone_number")){
-                throw new DuplicatedValueError("USER_409_03", "이미 사용 중인 전화번호입니다.", "phoneNumber");
-            }
-        }
-        throw err;
+        throw new Error(err);
     }
 }
 
@@ -167,7 +161,7 @@ export const softDeleteUser = async (id) => {
         })
     } catch(err) {
         if(err.code === 'P2025') {
-            throw new Error("존재하지 않는 유저입니다.");   // 이런 에러처리는 MVP까지 한 뒤에 적용
+            throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "email");
         }
         throw new Error(err);
     }

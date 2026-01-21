@@ -32,6 +32,12 @@ export const emailSchema = z.object({
     })
 })
 
+export const usernameSchema = z.object({
+    body: z.object({
+        username: usernamePart
+    })
+})
+
 export const passwordSchema = z.object({
     body: z.object({
         password: passwordPart
