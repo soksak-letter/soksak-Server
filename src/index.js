@@ -33,11 +33,18 @@ import { isLogin } from "./middlewares/auth.middleware.js";
 import { isRestricted } from "./middlewares/restriction.middleware.js";
 import { letterToMeSchema, letterToOtherSchema } from "./schemas/letter.schema.js";
 import { idParamSchema } from "./schemas/common.schema.js";
-import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";import {handleGetAnonymousThreads,handleGetAnonymousThreadLetters,handleGetSelfMailbox, handleGetLetterFromFriend,} from "./controllers/mailbox.controller.js";
-import { handleInsertUserReport, handleGetUserReports } from "./controllers/report.controller.js";
-import { handleGetUserAsTest } from "./controllers/test.controller.js";
-
-
+import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
+import {
+  handleGetAnonymousThreads,
+  handleGetAnonymousThreadLetters,
+  handleGetSelfMailbox,
+  handleGetLetterFromFriend,
+} from "./controllers/mailbox.controller.js";
+import {
+  handleInsertUserReport,
+  handleGetUserReports,
+} from "./controllers/report.controller.js";
+import { handleInsertInquiryAsAdmin, handleInsertInquiryAsUser, handleGetInquiry } from "./controllers/inquiry.controller.js";
 
 dotenv.config();
 
@@ -177,7 +184,16 @@ app.post("/matching/sessions/:sessionId/reviews", isLogin, isRestricted, asyncHa
 app.post("/reports", isLogin, isRestricted, asyncHandler(handleInsertUserReport));
 app.get("/reports", isLogin, isRestricted, asyncHandler(handleGetUserReports));
 
-app.get("/reports/weekly/:year/:week", isLogin, isRestricted, asyncHandler(handleGetWeeklyReport));
+app.get(
+  "/reports/weekly/:year/:week",
+  isLogin,
+  isRestricted,
+  asyncHandler(handleGetWeeklyReport)
+);
+
+app.post("/inquiries", isLogin, asyncHandler(handleInsertInquiryAsUser));
+app.post("/inquiries/admin", isLogin, asyncHandler(handleInsertInquiryAsAdmin));
+app.get("/inquiries", isLogin, asyncHandler(handleGetInquiry));
 
 app.post("/auth/signup", validate(SignUpSchema), handleSignUp);                     // 회원가입
 app.post("/auth/login", validate(loginSchema), handleLogin);                        // 로그인
@@ -203,7 +219,7 @@ app.get("/letters/others/public", isLogin, isRestricted, handleGetPublicLetterFr
 app.get("/letters/friends/public", isLogin, isRestricted, handleGetPublicLetterFromFriend);     // 친구 편지 캐러셀 목록 조회
 app.get("/users/me/letters/stats", isLogin, isRestricted, handleGetUserLetterStats)  // 편지 여행 카드 데이터 조회
 
-app.get("/home/summary", isLogin, isRestriced, HandleGetHomeDashboard);  // 홈 대시보드 조회
+app.get("/home/summary", isLogin, isRestricted, HandleGetHomeDashboard);  // 홈 대시보드 조회
 
 // 온보딩 설정
 app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1); 
