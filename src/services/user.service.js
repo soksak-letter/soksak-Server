@@ -44,9 +44,9 @@ export const updateOnboardingStep1 = async ({ userId, gender, job }) => {
 
 export const createUserAgreements = async (data) => {
   const user = await findUserById(data.userId);
-  if(!user) throw new Error("존재하지 않는 사용자입니다.");
+  if(!user) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
 
-  if(!data?.body?.termsAgreed || !data?.body?.privacyAgreed || !data?.body?.ageOver14Agreed) throw new RequiredTermAgreementError("TERM_400_01", "필수 약관에 모두 동의해주세요.");
+  if(!data?.body?.termsAgreed || !data?.body?.privacyAgreed || !data?.body?.ageOver14Agreed) throw new RequiredTermAgreementError("TERM_BAD_REQUEST", "필수 약관에 모두 동의해주세요.");
 
   await createUserAgreement({
       userId: data.userId,
