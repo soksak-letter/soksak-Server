@@ -11,6 +11,11 @@ const options = {
     servers: [
       {
         url: "http://localhost:3000",
+        description: "로컬 서버"
+      },
+      {
+        url: "https://api.soksak-letter.com",
+        description: "배포 서버"
       }
     ],
 

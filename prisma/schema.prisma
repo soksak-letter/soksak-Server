@@ -29,6 +29,7 @@ model User {
   deletedAt       DateTime? @map("deleted_at")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+  pool            Int?
 
   notificationSetting UserNotificationSetting?
   deviceTokens        UserDeviceToken[]
@@ -175,9 +176,8 @@ model LetterDesign {
 
 model LetterAssetPaper {
   id       Int            @id @default(autoincrement()) @map("id")
-  name     String         @map("name")
-  paperAssetUrl String    @map("paper_asset_url")
-  envelopeAssetUrl String @map("envelope_asset_url")
+  color    String         @map("color")
+  assetUrl String         @map("asset_url")
   isActive Boolean        @map("is_active")
   designs  LetterDesign[]
 
@@ -196,9 +196,8 @@ model LetterAssetStamp {
 
 model LetterAssetFont {
   id         Int            @id @default(autoincrement()) @map("id")
-  name       String         @map("name")
+  font       String         @map("font")
   fontFamily String         @map("font_family")
-  assetUrl   String         @map("asset_url")
   isActive   Boolean        @map("is_active")
   designs    LetterDesign[]
 
