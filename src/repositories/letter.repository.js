@@ -343,3 +343,16 @@ export const selectLetterDesignByLetterId = async (lId) => {
     },
   };
 };
+
+
+export const selectSenderUserIdByLetterIdAndReceiverUserId = async(letterId, userId) => {
+    const result = await prisma.letter.findFirst({
+        where: {
+            id: letterId,
+            receiverUserId: userId,
+        },
+        select: 
+        { senderUserId: true }
+    })
+    return result?.senderUserId ?? null;
+}

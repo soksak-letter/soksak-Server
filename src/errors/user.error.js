@@ -1,23 +1,17 @@
 // errors/friend.error.js
 
-import { ConflictError, NotFoundError } from "./base.error.js";
+import { ConflictError, NotFoundError, unauthorizedError } from "./base.error.js";
 
-// 기본 에러 클래스
-class BaseError extends Error {
-  constructor(message, status, errorCode, data = null) {
-    super(message);
-    this.status = status;
-    this.errorCode = errorCode;
-    this.reason = message;
-    this.data = data;
-  }
+export class RestrictedUserError extends unauthorizedError {
+    constructor(message = "해당 유저는 차단된 유저입니다.") {
+        super(message, "USER_401_02", null)
+    }
 }
-
 /**
  * 404: 유저 없음 (FRIEND_404_01)
  * - userId 또는 targetUserId가 존재하지 않을 때
  */
-export class InvalidUserError extends BaseError {
+export class InvalidUserError extends NotFoundError {
   constructor(data, message = "잘못된 유저 정보 입력입니다.") {
     super(message, 404, "FRIEND_404_01", data);
   }
