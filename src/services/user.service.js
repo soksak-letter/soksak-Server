@@ -8,11 +8,6 @@ import {
   ConsentInvalidBodyError,
   DeviceTokenUnauthorizedError,
   DeviceTokenInvalidBodyError,
-  MailboxUnauthorizedError,
-  MailboxInvalidThreadIdError,
-  InvalidNoticeIdError,
-  NoticeNotFoundError,
-  PolicyNotFoundError,
   ProfileUnauthorizedError,
   ProfileUserNotFoundError,
   ProfileInvalidNicknameError,
@@ -27,17 +22,10 @@ import {
   findMyActiveInterests,
   findActiveInterestsByIds,
   replaceUserInterests,
-  findReceivedLettersForThreads,
-  findReceivedLettersBySender,
-  findSelfLetters,
-  findUsersNicknameByIds,
-  findActiveNotices,
-  findNoticeById,
   findOrCreateNotificationSetting,
   upsertNotificationSetting,
   findUserAgreementByUserId,
   upsertUserAgreement,
-  findPolicyDocumentByKey,
   getUserForOnboarding,
   updateUserOnboardingStep1,
   createUserAgreement,
@@ -55,9 +43,6 @@ import {
   ALLOWED_GENDERS,
   ALLOWED_JOBS,
   isBooleanOrUndefined,
-  LETTER_TYPE_ANON,
-  LETTER_TYPE_SELF,
-  makePreview,
   mimeToExt,
   requiredEnv,
   toIntArray,
@@ -226,124 +211,6 @@ export const updateMyOnboardingInterests = async ({ userId, interestIds }) => {
 };
 
 // ------------------------------
-// Mailbox 
-// ------------------------------
-
-export const getAnonymousThreads = async (userId) => {
-  const letters = await findReceivedLettersForThreads({
-    userId,
-    letterType: LETTER_TYPE_ANON,
-  });
-
-  const latestBySender = new Map(); // senderUserId -> letter
-  for (const l of letters) {
-    if (!l.senderUserId) continue;
-    if (!latestBySender.has(l.senderUserId)) {
-      latestBySender.set(l.senderUserId, l);
-    }
-  }
-
-  const senderIds = Array.from(latestBySender.keys());
-  const nicknameMap = senderIds.length ? await findUsersNicknameByIds(senderIds) : new Map();
-
-  const items = senderIds.map((senderId) => {
-    const l = latestBySender.get(senderId);
-    const updatedAt = l.deliveredAt ?? l.createdAt ?? null;
-
-    return {
-      threadId: senderId, // threadId = senderUserId
-      lastLetterId: l.id,
-      lastLetterTitle: l.title,
-      lastLetterPreview: makePreview(l.content, 30),
-      updatedAt,
-
-      sender: {
-        id: senderId,
-        nickname: nicknameMap.get(senderId) ?? null,
-      },
-
-      paperId: l.design?.paperId ?? null,
-    };
-  });
-
-  items.sort((a, b) => {
-    const ta = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-    const tb = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-    return tb - ta;
-  });
-
-  return { items };
-};
-
-export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
-  const threadId = Number(threadIdRaw);
-  if (!Number.isFinite(threadId) || threadId <= 0) {
-    throw new MailboxInvalidThreadIdError("USER_400_03", "threadId가 올바르지 않습니다.", { threadId: threadIdRaw });
-  }
-
-  const letters = await findReceivedLettersBySender({
-    userId,
-    senderUserId: threadId,
-    letterType: LETTER_TYPE_ANON,
-  });
-
-  const items = letters.map((l) => ({
-    id: l.id,
-    title: l.title,
-    content: l.content,
-    deliveredAt: l.deliveredAt ?? null,
-    createdAt: l.createdAt ?? null,
-    design: l.design
-      ? {
-          paperId: l.design.paperId ?? null,
-          stampId: l.design.stampId ?? null,
-          fontId: l.design.fontId ?? null,
-        }
-      : { paperId: null, stampId: null, fontId: null },
-  }));
-
-  return { items };
-};
-
-export const getSelfMailbox = async (userId) => {
-  const letters = await findSelfLetters({
-    userId,
-    letterType: LETTER_TYPE_SELF,
-  });
-
-  const items = letters.map((l) => ({
-    id: l.id,
-    title: l.title,
-    createdAt: l.createdAt ?? null,
-    paperId: l.design?.paperId ?? null,
-  }));
-
-  return { items };
-};
-
-// ------------------------------
-// Notice 
-// ------------------------------
-export const getNotices = async () => {
-  const items = await findActiveNotices();
-  return { items };
-};
-
-export const getNoticeDetail = async (noticeId) => {
-  const id = Number(noticeId);
-  if (!Number.isInteger(id) || id <= 0) {
-    throw new InvalidNoticeIdError("USER_400_04", `noticeId는 양의 정수여야 합니다. noticeId=${noticeId}`, { noticeId });
-  }
-
-  const notice = await findNoticeById(id);
-  if (!notice) {
-    throw new NoticeNotFoundError("USER_404_02", `해당 공지사항을 찾을 수 없습니다. noticeId=${id}`, { noticeId: id });
-  }
-
-  return notice;
-};
-
-// ------------------------------
 // Notification
 // ------------------------------
 export const updateMyNotificationSettings = async ({ userId, letter, marketing }) => {
@@ -470,51 +337,6 @@ export const uploadUserProfileImage = async ({ userId, fileBuffer, mimeType }) =
     `/n/${namespaceName}/b/${bucketName}/o/${encodeURIComponent(objectName)}`;
 
   return { objectName, publicUrl };
-};
-
-// ------------------------------
-// Policy
-// ------------------------------
-const POLICY_KEYS = {
-  COMMUNITY_GUIDELINES: "COMMUNITY_GUIDELINES",
-  TERMS: "TERMS",
-  PRIVACY: "PRIVACY",
-};
-
-export const getCommunityGuidelines = async () => {
-  const doc = await findPolicyDocumentByKey(POLICY_KEYS.COMMUNITY_GUIDELINES);
-  if (!doc) {
-    throw new PolicyNotFoundError("USER_404_03", `해당 정책 문서를 찾을 수 없습니다. key=${POLICY_KEYS.COMMUNITY_GUIDELINES}`, { key: POLICY_KEYS.COMMUNITY_GUIDELINES });
-  }
-
-  return {
-    title: "커뮤니티 가이드라인",
-    content: doc.content,
-  };
-};
-
-export const getTerms = async () => {
-  const doc = await findPolicyDocumentByKey(POLICY_KEYS.TERMS);
-  if (!doc) {
-    throw new PolicyNotFoundError("USER_404_03", `해당 정책 문서를 찾을 수 없습니다. key=${POLICY_KEYS.TERMS}`, { key: POLICY_KEYS.TERMS });
-  }
-
-  return {
-    title: "서비스 이용약관",
-    content: doc.content,
-  };
-};
-
-export const getPrivacy = async () => {
-  const doc = await findPolicyDocumentByKey(POLICY_KEYS.PRIVACY);
-  if (!doc) {
-    throw new PolicyNotFoundError("USER_404_03", `해당 정책 문서를 찾을 수 없습니다. key=${POLICY_KEYS.PRIVACY}`, { key: POLICY_KEYS.PRIVACY });
-  }
-
-  return {
-    title: "개인정보 처리방침",
-    content: doc.content,
-  };
 };
 
 // ------------------------------

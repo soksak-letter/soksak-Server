@@ -52,39 +52,6 @@ export class DeviceTokenInvalidBodyError extends BadRequestError {
   }
 }
 
-// ========== Mailbox Errors ==========
-export class MailboxUnauthorizedError extends unauthorizedError {
-  constructor(code = "USER_401_03", message = "인증이 필요합니다.", data = null) {
-    super(code, message, data);
-  }
-}
-
-export class MailboxInvalidThreadIdError extends BadRequestError {
-  constructor(code = "USER_400_03", message = "threadId가 올바르지 않습니다.", data = null) {
-    super(code, message, data);
-  }
-}
-
-// ========== Notice Errors ==========
-export class NoticeNotFoundError extends NotFoundError {
-  constructor(code = "USER_404_02", message = "해당 공지사항을 찾을 수 없습니다.", data = null) {
-    super(code, message, data);
-  }
-}
-
-export class InvalidNoticeIdError extends BadRequestError {
-  constructor(code = "USER_400_04", message = "noticeId는 양의 정수여야 합니다.", data = null) {
-    super(code, message, data);
-  }
-}
-
-// ========== Policy Errors ==========
-export class PolicyNotFoundError extends NotFoundError {
-  constructor(code = "USER_404_03", message = "해당 정책 문서를 찾을 수 없습니다.", data = null) {
-    super(code, message, data);
-  }
-}
-
 // ========== Profile Errors ==========
 export class ProfileUnauthorizedError extends unauthorizedError {
   constructor(code = "USER_401_04", message = "인증이 필요합니다.", data = null) {

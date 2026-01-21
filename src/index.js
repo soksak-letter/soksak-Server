@@ -25,21 +25,27 @@ import {
   handleUpdateMyOnboardingInterests,
   handleGetMyNotificationSettings,
   handleUpdateMyNotificationSettings,
-  handleGetCommunityGuidelines,
-  handleGetTerms,
-  handleGetPrivacy,
-  handleGetNotices,
-  handleGetNoticeDetail,
   handleGetMyProfile,
   handlePatchMyProfile,
   handlePostMyProfileImage,
   handlePutMyDeviceToken,
   handleGetMyConsents,
   handlePatchMyConsents,
+} from "./controllers/user.controller.js";
+import {
   handleGetAnonymousThreads,
   handleGetAnonymousThreadLetters,
   handleGetSelfMailbox,
-} from "./controllers/user.controller.js";
+} from "./controllers/mailbox.controller.js";
+import {
+  handleGetNotices,
+  handleGetNoticeDetail,
+} from "./controllers/notice.controller.js";
+import {
+  handleGetCommunityGuidelines,
+  handleGetTerms,
+  handleGetPrivacy,
+} from "./controllers/policy.controller.js";
 import { bootstrapWeeklyReports } from "./jobs/weeklyReport.bootstrap.js";
 import { startWeeklyReportCron } from "./jobs/weeklyReport.cron.js";
 import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js";
@@ -50,9 +56,11 @@ import { isLogin } from "./middlewares/auth.middleware.js";
 import { isRestricted } from "./middlewares/restriction.middleware.js";
 import { letterToMeSchema, letterToOtherSchema } from "./schemas/letter.schema.js";
 import { idParamSchema } from "./schemas/common.schema.js";
-import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";import {handleGetAnonymousThreads,handleGetAnonymousThreadLetters,handleGetSelfMailbox, handleGetLetterFromFriend,} from "./controllers/mailbox.controller.js";
+import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
+import {handleGetAnonymousThreads,handleGetAnonymousThreadLetters,handleGetSelfMailbox, handleGetLetterFromFriend,} from "./controllers/mailbox.controller.js";
 import { handleInsertUserReport, handleGetUserReports } from "./controllers/report.controller.js";
 import { handleGetUserAsTest } from "./controllers/test.controller.js";
+
 
 
 
@@ -271,7 +279,6 @@ app.put("/users/me/device-tokens", isLogin, handlePutMyDeviceToken);
 // / 편지함
 app.get("/mailbox/anonymous", isLogin, handleGetAnonymousThreads);
 app.get("/mailbox/anonymous/threads/:threadId/letters", isLogin, handleGetAnonymousThreadLetters);
-app.get("/mailbox/friends/threads/:friendId/letters", isLogin, validate(idParamSchema("friendId")), handleGetLetterFromFriend);  // 친구 대화 목록 화면 조회
 app.get("/mailbox/self", isLogin, handleGetSelfMailbox);
 
 

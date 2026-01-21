@@ -7,22 +7,13 @@ import {
   getAllInterests,
   getMyInterests,
   updateMyOnboardingInterests,
-  getAnonymousThreads,
-  getAnonymousThreadLetters,
-  getSelfMailbox,
-  getNotices,
-  getNoticeDetail,
   updateMyNotificationSettings,
   getMyNotificationSettings,
-  getCommunityGuidelines,
-  getTerms,
-  getPrivacy,
   getMyProfile,
   updateMyNickname,
   updateMyProfileImage,
 } from "../services/user.service.js";
 import {
-  MailboxUnauthorizedError,
   ProfileUnauthorizedError,
 } from "../errors/user.error.js";
 
@@ -167,79 +158,6 @@ export const handleUpdateMyOnboardingInterests = async (req, res, next) => {
   }
 };
 
-// ========== Mailbox Controllers ==========
-const getAuthUserId = (req) => req.user?.id ?? req.userId ?? req.user?.userId ?? null;
-
-export const handleGetAnonymousThreads = async (req, res, next) => {
-  try {
-    const userId = getAuthUserId(req);
-    if (!userId) throw new MailboxUnauthorizedError();
-
-    const result = await getAnonymousThreads(userId);
-    return res.status(200).json({
-      resultType: "SUCCESS",
-      error: null,
-      success: result,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const handleGetAnonymousThreadLetters = async (req, res, next) => {
-  try {
-    const userId = getAuthUserId(req);
-    if (!userId) throw new MailboxUnauthorizedError();
-
-    const { threadId } = req.params;
-    const result = await getAnonymousThreadLetters(userId, threadId);
-
-    return res.status(200).json({
-      resultType: "SUCCESS",
-      error: null,
-      success: result,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const handleGetSelfMailbox = async (req, res, next) => {
-  try {
-    const userId = getAuthUserId(req);
-    if (!userId) throw new MailboxUnauthorizedError();
-
-    const result = await getSelfMailbox(userId);
-    return res.status(200).json({
-      resultType: "SUCCESS",
-      error: null,
-      success: result,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-// ========== Notice Controllers ==========
-export const handleGetNotices = async (req, res, next) => {
-  try {
-    const data = await getNotices();
-    return res.status(200).json({ resultType: "SUCCESS", error: null, success: data });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const handleGetNoticeDetail = async (req, res, next) => {
-  try {
-    const { noticeId } = req.params;
-    const data = await getNoticeDetail(noticeId);
-    return res.status(200).json({ resultType: "SUCCESS", error: null, success: data });
-  } catch (err) {
-    next(err);
-  }
-};
-
 // ========== Notification Controllers ==========
 export const handleUpdateMyNotificationSettings = async (req, res, next) => {
   try {
@@ -264,34 +182,6 @@ export const handleGetMyNotificationSettings = async (req, res, next) => {
     const result = await getMyNotificationSettings({ userId });
 
     return res.status(200).success(result); // { letter: true, marketing: false }
-  } catch (err) {
-    next(err);
-  }
-};
-
-// ========== Policy Controllers ==========
-export const handleGetCommunityGuidelines = async (req, res, next) => {
-  try {
-    const data = await getCommunityGuidelines();
-    return res.status(200).json({ resultType: "SUCCESS", error: null, success: data });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const handleGetTerms = async (req, res, next) => {
-  try {
-    const data = await getTerms();
-    return res.status(200).json({ resultType: "SUCCESS", error: null, success: data });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const handleGetPrivacy = async (req, res, next) => {
-  try {
-    const data = await getPrivacy();
-    return res.status(200).json({ resultType: "SUCCESS", error: null, success: data });
   } catch (err) {
     next(err);
   }
