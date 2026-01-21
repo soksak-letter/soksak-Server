@@ -47,7 +47,7 @@
  *             error:
  *               properties:
  *                 errorCode:
- *                   example: "INVALID_TYPE_400"
+ *                   example: "REQ_BAD_REQUEST"
  *                 reason:
  *                   example: "입력값이 잘못되었습니다"
  *                 data:
@@ -67,7 +67,7 @@
  *             error:
  *               properties:
  *                 errorCode:
- *                   example: "AUTH_401_02"
+ *                   example: "AUTH_INVALID_TOKEN"
  *                 reason:
  *                   example: "액세스 토큰이 아니거나 유효하지 않습니다."
  */
