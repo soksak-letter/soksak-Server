@@ -45,15 +45,25 @@ import {
   updateUserNicknameById,
   updateUserProfileImageUrlById,
 } from "../repositories/user.repository.js";
+import {
+  ALLOWED_GENDERS,
+  ALLOWED_JOBS,
+  isBooleanOrUndefined,
+  LETTER_TYPE_ANON,
+  LETTER_TYPE_SELF,
+  makePreview,
+  mimeToExt,
+  requiredEnv,
+  toIntArray,
+  MAX_PROFILE_IMAGE_SIZE,
+} from "../utils/user.util.js";
 
 // ------------------------------
 // Onboarding / Agreements (기존 user.service.js)
 // ------------------------------
-const ALLOWED_GENDERS = new Set(["MALE", "FEMALE", "UNKNOWN"]); // UNKNOWN = 비공개
-const ALLOWED_JOBS = new Set(["WORKER", "STUDENT", "HOUSEWIFE", "FREELANCER", "UNEMPLOYED", "OTHER"]);
 
 export const updateOnboardingStep1 = async ({ userId, gender, job }) => {
-  // validation (요구사항 기준: 둘 다 선택)
+  // validation 
   if (!gender || !ALLOWED_GENDERS.has(gender)) {
     const e = new Error("gender 값이 올바르지 않습니다.");
     e.status = 400;
@@ -75,8 +85,7 @@ export const updateOnboardingStep1 = async ({ userId, gender, job }) => {
     throw e;
   }
 
-  // 온보딩 1회 정책 (스키마 추가 없이)
-  // gender/job이 이미 채워져 있으면 완료로 간주하고 막음
+  // 온보딩 1회 정책 
   if (user.gender != null && user.job != null) {
     const e = new Error("이미 온보딩 1이 완료된 사용자입니다.");
     e.status = 409;
@@ -107,9 +116,8 @@ export const createUserAgreements = async (data) => {
 };
 
 // ------------------------------
-// Consent (기존 consent.service.js)
+// Consent 
 // ------------------------------
-const isBooleanOrUndefined = (v) => typeof v === "boolean" || typeof v === "undefined";
 
 export const getMyConsents = async ({ userId }) => {
   if (!userId) throw CONSENT_ERRORS.UNAUTHORIZED;
@@ -151,7 +159,7 @@ export const patchMyConsents = async ({ userId, payload }) => {
 };
 
 // ------------------------------
-// DeviceToken (기존 deviceToken.service.js)
+// DeviceToken 
 // ------------------------------
 export const updateMyDeviceToken = async ({ userId, deviceToken }) => {
   if (!userId) throw DEVICE_TOKEN_ERRORS.UNAUTHORIZED;
@@ -169,9 +177,8 @@ export const updateMyDeviceToken = async ({ userId, deviceToken }) => {
 };
 
 // ------------------------------
-// Interest (기존 interest.service.js)
+// Interest
 // ------------------------------
-const toIntArray = (arr) => arr.map((v) => Number(v));
 
 export const getAllInterests = async () => {
   const items = await findActiveInterests();
@@ -213,17 +220,8 @@ export const updateMyOnboardingInterests = async ({ userId, interestIds }) => {
 };
 
 // ------------------------------
-// Mailbox (기존 mailbox.service.js)
+// Mailbox 
 // ------------------------------
-const LETTER_TYPE_ANON = "ANON_SESSION";
-const LETTER_TYPE_SELF = "SELF";
-
-const makePreview = (text, maxLen = 30) => {
-  if (!text) return "";
-  const t = String(text);
-  if (t.length <= maxLen) return t;
-  return `${t.slice(0, maxLen)}...`;
-};
 
 export const getAnonymousThreads = async (userId) => {
   const letters = await findReceivedLettersForThreads({
@@ -318,7 +316,7 @@ export const getSelfMailbox = async (userId) => {
 };
 
 // ------------------------------
-// Notice (기존 notice.service.js)
+// Notice 
 // ------------------------------
 export const getNotices = async () => {
   const items = await findActiveNotices();
@@ -336,7 +334,7 @@ export const getNoticeDetail = async (noticeId) => {
 };
 
 // ------------------------------
-// Notification (기존 notification.service.js)
+// Notification
 // ------------------------------
 export const updateMyNotificationSettings = async ({ userId, letter, marketing }) => {
   if (typeof letter !== "boolean" && typeof marketing !== "boolean") {
@@ -368,20 +366,8 @@ export const getMyNotificationSettings = async ({ userId }) => {
 };
 
 // ------------------------------
-// Object Storage (기존 objectStorage.service.js)
+// Object Storage
 // ------------------------------
-const requiredEnv = (key) => {
-  const v = process.env[key];
-  if (!v) throw new Error(`환경변수 ${key} 가(이) 필요합니다.`);
-  return String(v).trim();
-};
-
-const mimeToExt = (mime) => {
-  if (mime === "image/jpeg") return ".jpg";
-  if (mime === "image/png") return ".png";
-  if (mime === "image/webp") return ".webp";
-  return null;
-};
 
 let cachedClient = null;
 
@@ -421,13 +407,12 @@ const getObjectStorageClient = () => {
 };
 
 export const uploadUserProfileImage = async ({ userId, fileBuffer, mimeType }) => {
-  const MAX_FILE_SIZE = 5 * 1024 * 1024;
   if (!fileBuffer || fileBuffer.length === 0) {
     const err = new Error("업로드할 파일이 비어있습니다.");
     err.statusCode = 400;
     throw err;
   }
-  if (fileBuffer.length > MAX_FILE_SIZE) {
+  if (fileBuffer.length > MAX_PROFILE_IMAGE_SIZE) {
     const err = new Error("파일 크기가 너무 큽니다. 최대 5MB까지 업로드 가능합니다.");
     err.code = "FILE_TOO_LARGE";
     err.statusCode = 400;
@@ -478,7 +463,7 @@ export const uploadUserProfileImage = async ({ userId, fileBuffer, mimeType }) =
 };
 
 // ------------------------------
-// Policy (기존 policy.service.js)
+// Policy
 // ------------------------------
 const POLICY_KEYS = {
   COMMUNITY_GUIDELINES: "COMMUNITY_GUIDELINES",
@@ -517,7 +502,7 @@ export const getPrivacy = async () => {
 };
 
 // ------------------------------
-// Profile (기존 profile.service.js)
+// Profile
 // ------------------------------
 export const getMyProfile = async ({ userId }) => {
   const user = await findUserByIdForProfile(userId);
