@@ -3,36 +3,39 @@ import * as common from "oci-common";
 import * as objectstorage from "oci-objectstorage";
 
 import { RequiredTermAgreementError } from "../errors/auth.error.js";
-import { CONSENT_ERRORS } from "../errors/consent.error.js";
-import { DEVICE_TOKEN_ERRORS } from "../errors/deviceToken.error.js";
-import { MAILBOX_ERROR, throwMailboxError } from "../errors/mailbox.error.js";
-import { InvalidNoticeIdError, NoticeNotFoundError } from "../errors/notice.error.js";
-import { PolicyNotFoundError } from "../errors/policy.error.js";
-import { ProfileErrors, ProfileError } from "../errors/profile.error.js";
-
-import { upsertUserDeviceToken } from "../repositories/deviceToken.repository.js";
 import {
+  CONSENT_ERRORS,
+  DEVICE_TOKEN_ERRORS,
+  MAILBOX_ERROR,
+  throwMailboxError,
+  InvalidNoticeIdError,
+  NoticeNotFoundError,
+  PolicyNotFoundError,
+  ProfileErrors,
+  ProfileError,
+} from "../errors/user.error.js";
+
+import {
+  upsertUserDeviceToken,
   findActiveInterests,
   findMyActiveInterests,
   findActiveInterestsByIds,
   replaceUserInterests,
-} from "../repositories/interest.repository.js";
-import {
   findReceivedLettersForThreads,
   findReceivedLettersBySender,
   findSelfLetters,
   findUsersNicknameByIds,
-} from "../repositories/mailbox.repository.js";
-import { findActiveNotices, findNoticeById } from "../repositories/notice.repository.js";
-import {
+  findActiveNotices,
+  findNoticeById,
   findOrCreateNotificationSetting,
   upsertNotificationSetting,
-} from "../repositories/notification.repository.js";
-import { findUserAgreementByUserId, upsertUserAgreement } from "../repositories/consent.repository.js";
-import { findPolicyDocumentByKey } from "../repositories/policy.repository.js";
-import { getUserForOnboarding, updateUserOnboardingStep1 } from "../repositories/onboarding.repository.js";
-import { createUserAgreement, findUserById } from "../repositories/user.repository.js";
-import {
+  findUserAgreementByUserId,
+  upsertUserAgreement,
+  findPolicyDocumentByKey,
+  getUserForOnboarding,
+  updateUserOnboardingStep1,
+  createUserAgreement,
+  findUserById,
   findUserByIdForProfile,
   findUserInterestsByUserId,
   countSentLetters,
@@ -41,7 +44,7 @@ import {
   getTotalUsageMinutes,
   updateUserNicknameById,
   updateUserProfileImageUrlById,
-} from "../repositories/profile.repository.js";
+} from "../repositories/user.repository.js";
 
 // ------------------------------
 // Onboarding / Agreements (기존 user.service.js)

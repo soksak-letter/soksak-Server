@@ -17,26 +17,39 @@ import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handl
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser } from "./controllers/auth.controller.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriend } from "./controllers/friend.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
-import { handleCreateUserAgreements, handlePatchOnboardingStep1 } from "./controllers/user.controller.js";
-import {handleGetAllInterests,handleGetMyInterests,handleUpdateMyOnboardingInterests,} from "./controllers/interest.controller.js";
-import { handleGetMyNotificationSettings, handleUpdateMyNotificationSettings } from "./controllers/notification.controller.js";
+import {
+  handleCreateUserAgreements,
+  handlePatchOnboardingStep1,
+  handleGetAllInterests,
+  handleGetMyInterests,
+  handleUpdateMyOnboardingInterests,
+  handleGetMyNotificationSettings,
+  handleUpdateMyNotificationSettings,
+  handleGetCommunityGuidelines,
+  handleGetTerms,
+  handleGetPrivacy,
+  handleGetNotices,
+  handleGetNoticeDetail,
+  handleGetMyProfile,
+  handlePatchMyProfile,
+  handlePostMyProfileImage,
+  handlePutMyDeviceToken,
+  handleGetMyConsents,
+  handlePatchMyConsents,
+  handleGetAnonymousThreads,
+  handleGetAnonymousThreadLetters,
+  handleGetSelfMailbox,
+} from "./controllers/user.controller.js";
 import { bootstrapWeeklyReports } from "./jobs/weeklyReport.bootstrap.js";
 import { startWeeklyReportCron } from "./jobs/weeklyReport.cron.js";
 import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js";
 import { handleGetTodayQuestion } from "./controllers/question.controller.js";
-import {handleGetCommunityGuidelines,handleGetTerms,handleGetPrivacy,} from "./controllers/policy.controller.js";
-import {handleGetNotices,handleGetNoticeDetail,} from "./controllers/notice.controller.js";
-import {handleGetMyProfile,handlePatchMyProfile,handlePostMyProfileImage,} from "./controllers/profile.controller.js";
-import { handlePutMyDeviceToken } from "./controllers/deviceToken.controller.js";
-import { handleGetMyConsents, handlePatchMyConsents } from "./controllers/consent.controller.js";
 import { validate } from "./middlewares/validate.middleware.js";
 import { emailSchema, loginSchema, passwordSchema, SignUpSchema, verificationConfirmCodeSchema, verificationSendCodeSchema } from "./schemas/auth.schema.js";
 import { isLogin } from "./middlewares/auth.middleware.js";
 import { letterToMeSchema, letterToOtherSchema } from "./schemas/letter.schema.js";
 import { idParamSchema } from "./schemas/common.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
-import {handleGetAnonymousThreads,handleGetAnonymousThreadLetters,handleGetSelfMailbox,} from "./controllers/mailbox.controller.js";
-
 
 
 
@@ -46,6 +59,8 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+
 
 app.use((req, res, next) => {
   console.log("[REQ]", req.method, req.originalUrl);
@@ -63,6 +78,7 @@ app.use(
   })
 );
 app.set("trust proxy", 1);
+
 
 
 // "http://localhost:5173", "http://localhost:3000", 
@@ -167,6 +183,9 @@ app.get("/auth/callback/:provider",
   }
 )
 
+
+
+
 app.get("/mypage", isLogin, (req, res) => {
   res.status(200).success({
     message: `인증 성공! ${req.user.name}님의 마이페이지입니다.`,
@@ -228,22 +247,6 @@ app.get("/interests", isLogin, handleGetMyInterests); // 내 선택 목록 (로�
 app.patch("/users/me/notification-settings", isLogin, handleUpdateMyNotificationSettings);
 app.get("/users/me/notification-settings", isLogin, handleGetMyNotificationSettings);
 
-app.use((err, req, res, next) => {
-  if (res.headersSent) return next(err);
-
-  const status = err.status || err.statusCode || 500;
-
-  return res.status(status).json({
-    resultType: "FAIL",
-    error: {
-      errorCode: err.errorCode || "COMMON_001",
-      reason: err.reason || err.message || "Internal Server Error",
-      data: err.data || null,
-    },
-    success: null,
-  });
-});
-
 // 정책, 공지사항
 app.get("/policies/community-guidelines", handleGetCommunityGuidelines);
 app.get("/policies/terms", handleGetTerms);
@@ -273,6 +276,27 @@ app.patch("/users/me/profile", isLogin, handlePatchMyProfile);
 
 // multipart/form-data, field name = "image"
 app.post("/users/me/profile/image", isLogin, upload.single("image"), handlePostMyProfileImage);
+
+
+
+
+
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+
+  const status = err.status || err.statusCode || 500;
+
+  return res.status(status).json({
+    resultType: "FAIL",
+    error: {
+      errorCode: err.errorCode || "COMMON_001",
+      reason: err.reason || err.message || "Internal Server Error",
+      data: err.data || null,
+    },
+    success: null,
+  });
+});
+
 
 
 // 서버 실행
