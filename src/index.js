@@ -30,11 +30,12 @@ import { handleGetMyConsents, handlePatchMyConsents } from "./controllers/consen
 import { validate } from "./middlewares/validate.middleware.js";
 import { emailSchema, loginSchema, passwordSchema, SignUpSchema, verificationConfirmCodeSchema, verificationSendCodeSchema } from "./schemas/auth.schema.js";
 import { isLogin } from "./middlewares/auth.middleware.js";
+import { isRestriced } from "./middlewares/restriction.middleware.js";
 import { letterToMeSchema, letterToOtherSchema } from "./schemas/letter.schema.js";
 import { idParamSchema } from "./schemas/common.schema.js";
-import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
+import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";import {handleGetAnonymousThreads,handleGetAnonymousThreadLetters,handleGetSelfMailbox, handleGetLetterFromFriend,} from "./controllers/mailbox.controller.js";
 import { handleInsertUserReport, handleGetUserReports } from "./controllers/report.controller.js";
-import {handleGetAnonymousThreads,handleGetAnonymousThreadLetters,handleGetSelfMailbox, handleGetLetterFromFriend,} from "./controllers/mailbox.controller.js";
+import { handleGetUserAsTest } from "./controllers/test.controller.js";
 
 
 
@@ -160,23 +161,25 @@ app.get("/mypage", isLogin, (req, res) => {
   });
 });
 
-app.get("/friends", isLogin, asyncHandler(handleGetFriendsList)); //친구 목록 불러오기
-app.post("/friends/requests", isLogin, asyncHandler(handlePostFriendsRequest)); //친구 신청
-app.get("/friends/requests/incoming", isLogin, asyncHandler(handleGetIncomingFriendRequests)); //들어온 친구 신청 불러오기
-app.get("/friends/requests/outgoing", isLogin, asyncHandler(handleGetOutgoingFriendRequests)); //보낸 친구 신청 불러오기
-app.post("/friends/requests/accept", isLogin, asyncHandler(handleAcceptFriendRequest)); //들어온 친구 신청 수락
-app.post("/friends/requests/reject", isLogin, asyncHandler(handleRejectFriendRequest)); //들어온 친구 신청 거절
-app.delete("/friends/requests/:targetUserId", isLogin, asyncHandler(handleDeleteFriend)); //보낸 친구 신청 삭제
+app.get("/test", isLogin, isRestriced, asyncHandler(handleGetUserAsTest));
 
-app.post("/matching/sessions/:questionId", isLogin, asyncHandler(handlePostMatchingSession)); //세션 생성
-app.patch("/matching/sessions/:sessionId/friends", isLogin, asyncHandler(handlePatchMatchingSessionStatusFriends)); //세션 친구됨으로 변경
-app.patch("/matching/sessions/:sessionId/discards", isLogin, asyncHandler(handlePatchMatchingSessionStatusDiscarded)); //세션 삭제됨으로 변경
-app.post("/matching/sessions/:sessionId/reviews", isLogin, asyncHandler(handlePostSessionReview)); //세션 리뷰 작성
+app.get("/friends", isLogin, isRestriced, asyncHandler(handleGetFriendsList)); //친구 목록 불러오기
+app.post("/friends/requests", isLogin, isRestriced, asyncHandler(handlePostFriendsRequest)); //친구 신청
+app.get("/friends/requests/incoming", isLogin, isRestriced, asyncHandler(handleGetIncomingFriendRequests)); //들어온 친구 신청 불러오기
+app.get("/friends/requests/outgoing", isLogin, isRestriced, asyncHandler(handleGetOutgoingFriendRequests)); //보낸 친구 신청 불러오기
+app.post("/friends/requests/accept", isLogin, isRestriced, asyncHandler(handleAcceptFriendRequest)); //들어온 친구 신청 수락
+app.post("/friends/requests/reject", isLogin, isRestriced, asyncHandler(handleRejectFriendRequest)); //들어온 친구 신청 거절
+app.delete("/friends/requests/:targetUserId", isLogin, isRestriced, asyncHandler(handleDeleteFriend)); //보낸 친구 신청 삭제
 
-app.post("/reports", isLogin, asyncHandler(handleInsertUserReport));
-app.get("/reports", isLogin, asyncHandler(handleGetUserReports));
+app.post("/matching/sessions/:questionId", isLogin, isRestriced, asyncHandler(handlePostMatchingSession)); //세션 생성
+app.patch("/matching/sessions/:sessionId/friends", isLogin, isRestriced, asyncHandler(handlePatchMatchingSessionStatusFriends)); //세션 친구됨으로 변경
+app.patch("/matching/sessions/:sessionId/discards", isLogin, isRestriced, asyncHandler(handlePatchMatchingSessionStatusDiscarded)); //세션 삭제됨으로 변경
+app.post("/matching/sessions/:sessionId/reviews", isLogin, isRestriced, asyncHandler(handlePostSessionReview)); //세션 리뷰 작성
 
-app.get("/reports/weekly/:year/:week", isLogin, asyncHandler(handleGetWeeklyReport));
+app.post("/reports", isLogin, isRestriced, asyncHandler(handleInsertUserReport));
+app.get("/reports", isLogin, isRestriced, asyncHandler(handleGetUserReports));
+
+app.get("/reports/weekly/:year/:week", isLogin, isRestriced, asyncHandler(handleGetWeeklyReport));
 
 app.post("/auth/signup", validate(SignUpSchema), handleSignUp);                     // 회원가입
 app.post("/auth/login", validate(loginSchema), handleLogin);                        // 로그인
@@ -190,19 +193,19 @@ app.post("/auth/logout", isLogin, handleLogout);                            // �
 app.delete("/users", isLogin, handleWithdrawUser);                          // 탈퇴
 app.post("/users/me/agreements", isLogin, handleCreateUserAgreements)    // 이용약관 동의
 
-app.get("/letter-assets", isLogin, handleGetLetterAssets);        // 편지 꾸미기 리소스 목록 조회
-app.post("/letter/me", isLogin, validate(letterToMeSchema), handleSendMyLetter);                      // 나에게 편지 전송
-app.post("/letter/other", isLogin, validate(letterToOtherSchema),handleSendOtherLetter);              // 타인/친구에게 편지 전송
-app.get("/letters/:letterId", isLogin, validate(idParamSchema("letterId")),handleGetLetterDetail);    // 편지 상세 조회
-app.post("/letters/:letterId/like", isLogin, validate(idParamSchema("letterId")), handleAddLetterLike);                // 편지 좋아요 추가
-app.delete("/letters/:letterId/like", isLogin, validate(idParamSchema("letterId")), handleRemoveLetterLike);           // 편지 좋아요 삭제
+app.get("/letter-assets", isLogin, isRestriced, handleGetLetterAssets);        // 편지 꾸미기 리소스 목록 조회
+app.post("/letter/me", isLogin, isRestriced, validate(letterToMeSchema), handleSendMyLetter);                      // 나에게 편지 전송
+app.post("/letter/other", isLogin, isRestriced, validate(letterToOtherSchema),handleSendOtherLetter);              // 타인/친구에게 편지 전송
+app.get("/letters/:letterId", isLogin, isRestriced, validate(idParamSchema("letterId")),handleGetLetterDetail);    // 편지 상세 조회
+app.post("/letters/:letterId/like", isLogin, isRestriced, validate(idParamSchema("letterId")), handleAddLetterLike);                // 편지 좋아요 추가
+app.delete("/letters/:letterId/like", isLogin, isRestriced, validate(idParamSchema("letterId")), handleRemoveLetterLike);           // 편지 좋아요 삭제
 
 app.get("/questions/today", handleGetTodayQuestion);       // 오늘의 질문 조회
-app.get("/letters/others/public", isLogin, handleGetPublicLetterFromOther);       // 공개 편지 캐러셀 목록 조회
-app.get("/letters/friends/public", isLogin, handleGetPublicLetterFromFriend);     // 친구 편지 캐러셀 목록 조회
-app.get("/users/me/letters/stats", isLogin, handleGetUserLetterStats)  // 편지 여행 카드 데이터 조회
+app.get("/letters/others/public", isLogin, isRestriced, handleGetPublicLetterFromOther);       // 공개 편지 캐러셀 목록 조회
+app.get("/letters/friends/public", isLogin, isRestriced, handleGetPublicLetterFromFriend);     // 친구 편지 캐러셀 목록 조회
+app.get("/users/me/letters/stats", isLogin, isRestriced, handleGetUserLetterStats)  // 편지 여행 카드 데이터 조회
 
-app.get("/home/summary", isLogin, HandleGetHomeDashboard);  // 홈 대시보드 조회
+app.get("/home/summary", isLogin, isRestriced, HandleGetHomeDashboard);  // 홈 대시보드 조회
 
 // 온보딩 설정
 app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1); 
