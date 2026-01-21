@@ -1,4 +1,13 @@
-import { BadRequestError, NotFoundError, unauthorizedError } from "./base.error.js";
+import { BadRequestError, ConflictError, NotFoundError, unauthorizedError } from "./base.error.js";
+
+/**
+ * 401: 차단된 유저 (USER_401_05)
+ */
+export class RestrictedUserError extends unauthorizedError {
+  constructor(code = "USER_401_05", message = "해당 유저는 차단된 유저입니다.", data = null) {
+    super(code, message, data);
+  }
+}
 
 /**
  * 404: 유저 없음 (USER_404_01)
@@ -9,6 +18,7 @@ export class InvalidUserError extends NotFoundError {
     super(code, message, data);
   }
 }
+
 
 export class UserNotFoundError extends NotFoundError {
   constructor(code, message, data = null){
