@@ -1,9 +1,8 @@
 import { BadRequestError, NotFoundError } from "./base.error.js";
 
 export class LetterBadRequest extends BadRequestError {
-    constructor(
-    ) {
-        super(this.message, 400, "LETTER_400_01", null);
+    constructor(code, message, data = null) {
+        super(code, message, data);
     }
 }
 
