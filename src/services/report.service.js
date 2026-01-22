@@ -81,9 +81,7 @@ export const selectUserReport = async (userId) => {
   if (user == null) throw new UserNotFoundError();
   try {
     const result = await getUserReportAndReasonByUserId(userId);
-    return {
-      data: result,
-    };
+    return result;
   } catch (error) {
     if (error instanceof NotFoundError) {
       throw error;

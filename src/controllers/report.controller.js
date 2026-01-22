@@ -1,5 +1,5 @@
 import { createUserReport, selectUserReport } from "../services/report.service.js";
-import { ReportUnexpectedArgumentError } from "../errors/report.error.js";
+import { UnexpectedArgumentError } from "../errors/report.error.js";
 
 export const handleInsertUserReport = async (req, res, next) => {
   const reporterUserId = req.user.id; 
@@ -9,7 +9,7 @@ export const handleInsertUserReport = async (req, res, next) => {
   if (
     reporterUserId == null || letterId == null || reasons.isNull
   ) {
-    throw new ReportUnexpectedArgumentError();
+    throw new UnexpectedArgumentError();
   }
 
   try {
@@ -28,7 +28,7 @@ export const handleGetUserReports = async (req, res, next) => {
     const result = await selectUserReport(userId);
     res
       .status(200)
-      .success({ data: result.data, message: "신고 출력이 성공적으로 처리되었습니다." });
+      .success({ data: result, message: "신고 출력이 성공적으로 처리되었습니다." });
   } catch (error) {
     next(error);
   }
