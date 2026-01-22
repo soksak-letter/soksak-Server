@@ -6,6 +6,9 @@ import {
 } from "../repositories/user.repository.js";
 import { MailboxInvalidThreadIdError } from "../errors/mailbox.error.js";
 import { LETTER_TYPE_ANON, LETTER_TYPE_SELF, makePreview } from "../utils/user.util.js";
+import { findFriendById } from "../repositories/friend.repository.js";
+import { NotFriendError } from "../errors/friend.error.js";
+import { getFriendLetters, getMyLettersWithFriend } from "../repositories/letter.repository.js";
 
 // ------------------------------
 // Mailbox
@@ -86,6 +89,23 @@ export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
 
   return { items };
 };
+
+export const getLetterFromFriend = async ({userId, friendId}) => {
+    const friend = await findFriendById(userId, friendId);
+    if(!friend) throw new NotFriendError("FRIEND_NOT_FRIEND", "친구가 아닙니다.");
+
+    const {friendLetters, question: friendFirstQuestion} = await getFriendLetters({userId, friendId});
+    const myLetters = await getMyLettersWithFriend({userId, friendId});
+
+    const myFirstQuestion = myLetters[0]?.question?.content;
+
+    return {
+        friendName: friend.nickname,
+        firstQuestion: friendFirstQuestion ?? myFirstQuestion,
+        friendLetters: friendLetters,
+        userLetters: myLetters
+    };
+}
 
 export const getSelfMailbox = async (userId) => {
   const letters = await findSelfLetters({

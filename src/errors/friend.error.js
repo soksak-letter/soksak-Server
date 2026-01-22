@@ -1,6 +1,6 @@
 // errors/friend.error.js
 
-import { ForbiddenError } from "./base.error.js";
+import { BadRequestError, ForbiddenError } from "./base.error.js";
 
 // 기본 에러 클래스
 export class BaseError extends Error {
@@ -16,7 +16,7 @@ export class BaseError extends Error {
 /**
  * 400: 자기 자신에게 친구 신청 (FRIEND_400_01)
  */
-export class SelfFriendRequestError extends BaseError {
+export class SelfFriendRequestError extends BadRequestError {
   constructor(message = "자기 자신과는 친구 신청을 할 수 없습니다.") {
     super(message, 400, "FRIEND_400_01", null);
   }

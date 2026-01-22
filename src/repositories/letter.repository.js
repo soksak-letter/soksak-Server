@@ -356,3 +356,4 @@ export const selectSenderUserIdByLetterIdAndReceiverUserId = async(letterId, use
     })
     return result?.senderUserId ?? null;
 }
+
