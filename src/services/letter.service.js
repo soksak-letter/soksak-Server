@@ -103,9 +103,7 @@ export const removeLetterLike = async ({userId, letterId}) => {
 
 export const getPublicLetterFromOther = async (userId, isDetail) => {
     const friends = await selectAllFriendsByUserId(userId);
-    const friendIds = friends.map(f => {
-        return f.userAId === userId ? f.userBId : f.userAId;
-    });
+    const friendIds = friends.map(friend => friend.friendUserId);
 
     const letters = await getPublicLetters({ids: [...friendIds, userId], userId, isDetail});
 
