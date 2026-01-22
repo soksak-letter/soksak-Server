@@ -1,7 +1,11 @@
 import { xprisma } from "../xprisma.js";
 import { prisma } from "../db.config.js";
 import { FriendRequestNotFoundError } from "../errors/friend.error.js";
-import { selectLetterByUserIds, selectRecentLetterByUserIds, selectLetterDesignByLetterId } from "./letter.repository.js";
+import {
+  selectLetterByUserIds,
+  selectRecentLetterByUserIds,
+  selectLetterDesignByLetterId,
+} from "./letter.repository.js";
 
 export async function userExistsFriendRequest(receiverUserId, requesterUserId) {
   return await prisma.FriendRequest.findFirst({
@@ -66,23 +70,23 @@ export async function insertFriend(userId, targetUserId) {
 
 export async function acceptFriendRequestTx(receiverUserId, requesterUserId) {
   return prisma.$transaction(async (tx) => {
-    console.log("acceptFriendRequestTx args:", { receiverUserId, requesterUserId });
     const result = await tx.FriendRequest.updateMany({
       where: {
-        requesterUserId: requesterUserId, 
-        receiverUserId: receiverUserId, 
+        requesterUserId,
+        receiverUserId,
         status: "PENDING",
       },
       data: { status: "ACCEPTED" },
     });
-    
-    if(!result) throw new FriendRequestNotFoundError(null, "해당 친구 신청을 찾을 수 없습니다.");
+    console.log("result1111" + result);
+
+    if (!result) throw new FriendRequestNotFoundError();
 
     const rows = await tx.FriendRequest.findMany({
       where: {
         OR: [
-          { requesterUserId: receiverUserId, receiverUserId: requesterUserId },
-          { requesterUserId: requesterUserId, receiverUserId: receiverUserId },
+          { requesterUserId, receiverUserId },
+          { requesterUserId, receiverUserId },
         ],
       },
       select: {
@@ -92,14 +96,13 @@ export async function acceptFriendRequestTx(receiverUserId, requesterUserId) {
         status: true,
       },
     });
-    console.log("rows (both directions):", rows);
 
-    if (result.count === 0) {
-      throw new Error("수락 대기 중인 친구 요청이 없습니다.");
+    if (rows.count === 0) {
+      throw new FriendRequestNotFoundError();
     }
 
-    const userMin = Math.min(userId, targetUserId);
-    const userMax = Math.max(userId, targetUserId);
+    const userMin = Math.min(receiverUserId, requesterUserId);
+    const userMax = Math.max(receiverUserId, requesterUserId);
 
     const friendResult = await tx.Friend.create({
       data: { userAId: userMin, userBId: userMax },
@@ -109,53 +112,52 @@ export async function acceptFriendRequestTx(receiverUserId, requesterUserId) {
   });
 }
 
-export async function updateFriendRequestRejectTx(userId, targetUserId) {
+export async function updateFriendRequestRejectTx(
+  receiverUserId,
+  requesterUserId
+) {
   return prisma.$transaction(async (tx) => {
     const result = await tx.FriendRequest.updateMany({
-    where: {
-        requesterUserId: targetUserId, //4
-        receiverUserId: userId, //5
+      where: {
+        requesterUserId,
+        receiverUserId,
         status: "PENDING",
       },
-    data: {
-      status: "REJECTED",
-    },
-  });
-
-  if(!result) throw new FriendRequestNotFoundError(null, "해당 친구 신청을 찾을 수 없습니다.");
-
-  const rejectedResult = await tx.FriendRequest.findFirst({
-    where: {
-      requesterUserId: targetUserId, //4
-        receiverUserId: userId, //5
+      data: {
         status: "REJECTED",
-    }
-  });
+      },
+    });
 
-  return rejectedResult;
+    if (!result)
+      throw new FriendRequestNotFoundError(
+        null,
+        "해당 친구 신청을 찾을 수 없습니다."
+      );
+
+    const rejectedResult = await tx.FriendRequest.findFirst({
+      where: {
+        requesterUserId,
+        receiverUserId,
+        status: "REJECTED",
+      },
+    });
+    if(rejectedResult == null) throw new FriendRequestNotFoundError(null, "REJECTED 된 친구 신청을 찾을 수 없습니다.");
+
+    return rejectedResult;
   });
 }
 
-export async function updateFriendRequestReject(userId, targetUserId) {
-  const result = await prisma.FriendRequest.updateMany({
-    where: {
-        requesterUserId: targetUserId, //4
-        receiverUserId: userId, //5
-        status: "PENDING",
-      },
-    data: {
-      status: "REJECTED",
-    },
-  });
-  return result[0];
-} // 친구 신청 거절
-
 export async function selectAllFriendsByUserId(userId) {
   const rows = await xprisma.Friend.findMany({
-    where: { OR: [{ userAId: userId }, { userBId: userId }] },
+    where: {
+      blockerUserId: userId,
+      OR: [{ userAId: userId }, { userBId: userId }],
+    },
     select: { id: true, userAId: true, userBId: true },
   });
-  const friendIds = rows.map((r) => (r.userAId === userId ? r.userBId : r.userAId));
+  const friendIds = rows.map((r) =>
+    r.userAId === userId ? r.userBId : r.userAId
+  );
   const uniqueFriendIds = [...new Set(friendIds)];
 
   const users = await prisma.user.findMany({
@@ -168,8 +170,8 @@ export async function selectAllFriendsByUserId(userId) {
   const letterMetaEntries = await Promise.all(
     uniqueFriendIds.map(async (fid) => {
       const [letterCount, recentLetter] = await Promise.all([
-        selectLetterByUserIds(userId, fid),        // letterCount 반환한다고 가정
-        selectRecentLetterByUserIds(userId, fid),  // { id, createdAt } 반환한다고 가정
+        selectLetterByUserIds(userId, fid), // letterCount 반환한다고 가정
+        selectRecentLetterByUserIds(userId, fid), // { id, createdAt } 반환한다고 가정
       ]);
 
       if (!recentLetter) {
@@ -190,7 +192,7 @@ export async function selectAllFriendsByUserId(userId) {
           letterCount,
           recentLetter: {
             createdAt: recentLetter.createdAt ?? null,
-            design
+            design,
           },
         },
       ];
@@ -216,30 +218,36 @@ export async function selectAllFriendsByUserId(userId) {
   });
 }
 
-export async function deleteFriendRequest(userId, targetUserId) {
-  return await prisma.FriendRequest.deleteMany({
+export async function deleteFriendRequest(receiverUserId, requesterUserId) {
+  const result = await prisma.FriendRequest.updateMany({
     where: {
-        requesterUserId: userId,
-        receiverUserId: targetUserId,
+      requesterUserId,
+      receiverUserId,
+      status: "PENDING"
     },
+    data: {
+      status: "DELETED"
+    }
   });
+  return result;
 } // 친구 신청 삭제
 
 export const findFriendById = async (userId, friendId) => {
   const isFriend = await xprisma.friend.findFirst({
     where: {
+      blockerUserId: userId,
       OR: [
         { userAId: userId, userBId: friendId },
-        { userAId: friendId, userBId: userId }
-      ]
+        { userAId: friendId, userBId: userId },
+      ],
     },
-  })
+  });
 
-  if(!isFriend) return null;
+  if (!isFriend) return null;
 
   const friend = await prisma.user.findFirst({
-    where: { id: friendId }
+    where: { id: friendId },
   });
 
   return friend;
-} // 특정 친구 조회
+}; // 특정 친구 조회
