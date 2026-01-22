@@ -1,5 +1,6 @@
 import { prisma } from "../db.config.js";
-import { SessionInternalError } from "../errors/session.error.js";
+import { MaxTurnIsOver, SessionInternalError, SessionNotFoundError } from "../errors/session.error.js";
+import { findRandomUserByPool } from "../repositories/user.repository.js";
 
 export async function existsMatchingSession(userId, targetUserId, questionId) {
   const session = await prisma.MatchingSession.findFirst({
@@ -16,8 +17,40 @@ export async function existsMatchingSession(userId, targetUserId, questionId) {
   return session;
 }
 
-export async function acceptSessionRequestTx(id, targetUserId, questionId) {
+export const decrementSessionTurn = async (sessionId) => {
+  return await prisma.$transaction(async (tx) => {
+    const session = await tx.matchingSession.findUnique({
+      where: { id: sessionId },
+      select: { id: true, maxTurns: true },
+    });
+
+    if (!session) throw new SessionNotFoundError();
+    if (session.maxTurns <= 0) throw new MaxTurnIsOver();
+
+    return await tx.matchingSession.update({
+      where: { id: sessionId },
+      data: { maxTurns: { decrement: 1 } },
+      select: { id: true, maxTurns: true },
+    });
+  });
+};
+
+export const findMaxTurnBySessionId = async(sessionId) => {
+  const result = await prisma.matchingSession.findFirst({
+    where: {
+      id: sessionId
+    },
+    select: {
+      maxTurns: true,
+    }
+  })
+  if(result.maxTurns <= 0) return false;
+  return true;
+}
+
+export async function acceptSessionRequestTx(id, questionId) {
   try {
+    const targetUserId = await findRandomUserByPool(id);
     await prisma.$transaction(async (tx) => {
       const sessionResult = await tx.matchingSession.create({
         data: { questionId, status: "IN_PROGRESS" },
@@ -51,17 +84,6 @@ export const insertMatchingSession = async (questionId) => {
   };
 };
 
-export const decrementSessionTurn = async (sessionId) => {
-  return await prisma.matchingSession.update({
-    data: {
-      maxTurns: maxTurns - 1,
-    },
-    where: {
-      id: sessionId,
-    },
-  });
-};
-
 export const updateMatchingSessionToFriends = async (sessionId) => {
   return await prisma.matchingSession.update({
     where: {
@@ -83,6 +105,29 @@ export const updateMatchingSessionToDiscard = async (sessionId) => {
     },
   });
 };
+
+export const updateMatchingSessionToChating = async(sessionId) => {
+  return await prisma.matchingSession.updateMany({
+    where: {
+      id: sessionId
+    },
+    data: {
+      status: "CHATING"
+    }
+  })
+}
+
+export const countMatchingSessionWhichChating = async (userId) => {
+  return await prisma.matchingSession.count({
+    where: {
+      status: "CHATING",
+      participants: {
+        some: { userId },
+      },
+    },
+  });
+};
+
 
 export const insertSessionReview = async (
   id,
@@ -125,3 +170,23 @@ export const findMatchingSessionBySessionId = async(sessionId) => {
         }
     })
 }
+
+export const countMatchingSessionByUserId = async (userId) => {
+  const participants = await prisma.sessionParticipant.findMany({
+    where: { userId },
+    select: { sessionId: true },
+    distinct: ["sessionId"], // 중복 방지 (가능하면 추천)
+  });
+
+  const sessionIds = participants.map((p) => p.sessionId);
+  if (sessionIds.length === 0) return 0;
+
+  const count = await prisma.matchingSession.count({
+    where: {
+      id: { in: sessionIds },
+      status: "PENDING",
+    },
+  });
+
+  return count;
+};

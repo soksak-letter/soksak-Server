@@ -1,5 +1,6 @@
 /**
  * @swagger
+
  * /letter-assets:
  *   get:
  *     summary: 편지 꾸미기 리소스 목록 조회
@@ -30,12 +31,91 @@
  *                           type: array
  *                           items:
  *                             type: object
+ *             examples:
+ *               SUCCESS:
+ *                 value:
+ *                   resultType: "SUCCESS"
+ *                   error: null
+ *                   success:
+ *                     papers:
+ *                       - id: 1
+ *                         color: "#FFFFFF"
+ *                         assetUrl: "s3://papers/paper1.png"
+ *                     fonts:
+ *                       - id: 1
+ *                         font: "Arial"
+ *                         fontFamily: "sans-serif"
+ *                     stamps:
+ *                       - id: 1
+ *                         name: "Default Stamp"
+ *                         assetUrl: "s3://stamps/stamp1.png"
  *       401:
- *         description: 인증 실패
+ *         description: |
+ *           인증 실패:
+ *           - `AUTH_TOKEN_EXPIRED`: 토큰이 만료되었습니다.
+ *           - `AUTH_INVALID_TOKEN`: 액세스 토큰이 아니거나 유효하지 않습니다.
+ *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
+ *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
+ *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_TOKEN_EXPIRED"
+ *                           reason:
+ *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_INVALID_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아니거나 유효하지 않습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_ACCESS_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아닙니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_EXPIRED_TOKEN"
+ *                           reason:
+ *                             example: "이미 로그아웃된 토큰입니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "액세스 토큰이 유효하지 않습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_FOUND"
+ *                           reason:
+ *                             example: "인증 토큰이 없습니다."
  */
 
 /**
@@ -98,17 +178,44 @@
  *                               type: string
  *                               example: "success"
  *       400:
- *         description: 유효성 검사 실패 (INVALID_TYPE_400)
+ *         description: |
+ *           잘못된 요청:
+ *           - `REQ_BAD_REQUEST`: 요청 유효성 검사 실패
+ *           - `LETTER_BAD_WORD`: 편지 내용에 부적절한 단어 포함
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error: 
+ *                       properties:
+ *                         errorCode:
+ *                           example: "LETTER_BAD_WORD"
+ *                         reason:
+ *                           example: "부적절한 단어가 포함되어있습니다."
  *       401:
- *         description: 인증 실패
+ *         description: |
+ *           인증 실패:
+ *           - `AUTH_TOKEN_EXPIRED`: 토큰이 만료되었습니다.
+ *           - `AUTH_INVALID_TOKEN`: 액세스 토큰이 아니거나 유효하지 않습니다.
+ *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
+ *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
+ *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_TOKEN_EXPIRED"
+ *                           reason:
+ *                             example: "토큰이 만료되었습니다."
  *       404:
  *         description: 참조 데이터 없음 (REF_404)
  *         content:
@@ -183,12 +290,45 @@
  *                             status:
  *                               type: string
  *                               example: "success"
- *       401:
- *         description: 인증 실패
+ *       400:
+ *         description: |
+ *           잘못된 요청:
+ *           - `REQ_BAD_REQUEST`: 요청 유효성 검사 실패
+ *           - `LETTER_BAD_WORD`: 편지 내용에 부적절한 단어 포함
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error: 
+ *                       properties:
+ *                         errorCode:
+ *                           example: "LETTER_BAD_WORD"
+ *                         reason:
+ *                           example: "부적절한 단어가 포함되어있습니다."
+ *       401:
+ *         description: |
+ *           인증 실패:
+ *           - `AUTH_TOKEN_EXPIRED`: 토큰이 만료되었습니다.
+ *           - `AUTH_INVALID_TOKEN`: 액세스 토큰이 아니거나 유효하지 않습니다.
+ *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
+ *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
+ *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_TOKEN_EXPIRED"
+ *                           reason:
+ *                             example: "토큰이 만료되었습니다."
  *       404:
  *         description: 받는 사람 찾을 수 없음 (USER_404_02)
  *         content:
@@ -246,7 +386,7 @@
  *                       type: object
  *                       description: "Letter details object"
  *       400:
- *         description: 없는 편지 (LETTER_400_01)
+ *         description: 없는 편지 (LETTER_NOT_FOUND)
  *         content:
  *           application/json:
  *             schema:
@@ -256,71 +396,31 @@
  *                     error:
  *                       properties:
  *                         errorCode:
- *                           example: "LETTER_400_01"
+ *                           example: "LETTER_NOT_FOUND"
  *                         reason:
  *                           example: "작성되지 않은 편지입니다."
  *       401:
- *         description: 인증 실패
+ *         description: |
+ *           인증 실패:
+ *           - `AUTH_TOKEN_EXPIRED`: 토큰이 만료되었습니다.
+ *           - `AUTH_INVALID_TOKEN`: 액세스 토큰이 아니거나 유효하지 않습니다.
+ *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
+ *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
+ *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
- */
-
-/**
- * @swagger
- * /friends/{friendId}/conversations:
- *   get:
- *     summary: 친구 대화 목록 화면 조회
- *     tags: [편지]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: friendId
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: 조회 성공
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - properties:
- *                     success:
- *                       type: object
- *                       properties:
- *                         friendName:
- *                           type: string
- *                         firstQuestion:
- *                           type: string
- *                         letters:
- *                           type: array
- *                           items:
- *                             type: object
- *       401:
- *         description: 인증 실패
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
- *       403:
- *         description: 친구 관계 아님 (FRIEND_403_01)
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
- *                     error:
- *                       properties:
- *                         errorCode:
- *                           example: "FRIEND_403_01"
- *                         reason:
- *                           example: "친구가 아닙니다."
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_TOKEN_EXPIRED"
+ *                           reason:
+ *                             example: "토큰이 만료되었습니다."
  */
 
 /**
@@ -355,13 +455,29 @@
  *                           type: boolean
  *                           example: true
  *       401:
- *         description: 인증 실패
+ *         description: |
+ *           인증 실패:
+ *           - `AUTH_TOKEN_EXPIRED`: 토큰이 만료되었습니다.
+ *           - `AUTH_INVALID_TOKEN`: 액세스 토큰이 아니거나 유효하지 않습니다.
+ *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
+ *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
+ *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_TOKEN_EXPIRED"
+ *                           reason:
+ *                             example: "토큰이 만료되었습니다."
  *       409:
- *         description: 이미 좋아요 누름 (LIKE_409_01)
+ *         description: 이미 좋아요 누름 (LIKE_ALREADY_LIKED)
  *         content:
  *           application/json:
  *             schema:
@@ -371,7 +487,7 @@
  *                     error:
  *                       properties:
  *                         errorCode:
- *                           example: "LIKE_409_01"
+ *                           example: "LIKE_ALREADY_LIKED"
  *                         reason:
  *                           example: "이미 좋아요를 눌렀습니다."
  *   delete:
@@ -403,13 +519,29 @@
  *                           type: boolean
  *                           example: false
  *       401:
- *         description: 인증 실패
+ *         description: |
+ *           인증 실패:
+ *           - `AUTH_TOKEN_EXPIRED`: 토큰이 만료되었습니다.
+ *           - `AUTH_INVALID_TOKEN`: 액세스 토큰이 아니거나 유효하지 않습니다.
+ *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
+ *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
+ *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_TOKEN_EXPIRED"
+ *                           reason:
+ *                             example: "토큰이 만료되었습니다."
  *       409:
- *         description: 좋아요 누르지 않음 (LIKE_409_02)
+ *         description: 좋아요 누르지 않음 (LIKE_ALREADY_UNLIKED)
  *         content:
  *           application/json:
  *             schema:
@@ -419,7 +551,7 @@
  *                     error:
  *                       properties:
  *                         errorCode:
- *                           example: "LIKE_409_02"
+ *                           example: "LIKE_ALREADY_UNLIKED"
  *                         reason:
  *                           example: "이미 좋아요를 누르지 않았습니다."
  */

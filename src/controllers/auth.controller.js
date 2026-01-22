@@ -63,8 +63,9 @@ export const handleCheckDuplicatedEmail = async (req, res, next) => {
 }
 
 export const handleCheckDuplicatedUsername = async (req, res, next) => {
+    const { username } = req.body;
     try{
-        const { exists } = await checkDuplicatedUsername(email);
+        const { exists } = await checkDuplicatedUsername(username);
         res.status(200).success({ exists });
     } catch(err) {
         next(err);
