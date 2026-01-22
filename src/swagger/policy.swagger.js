@@ -4,7 +4,7 @@
  *   get:
  *     summary: 커뮤니티 가이드라인 조회
  *     description: 커뮤니티 가이드라인 문서를 조회합니다.
- *     tags: [공지/정책]
+ *     tags: [정책]
  *     responses:
  *       200:
  *         description: 성공
@@ -39,7 +39,7 @@
  *   get:
  *     summary: 서비스 이용약관 조회
  *     description: 서비스 이용약관 문서를 조회합니다.
- *     tags: [공지/정책]
+ *     tags: [정책]
  *     responses:
  *       200:
  *         description: 성공
@@ -74,7 +74,7 @@
  *   get:
  *     summary: 개인정보 처리방침 조회
  *     description: 개인정보 처리방침 문서를 조회합니다.
- *     tags: [공지/정책]
+ *     tags: [정책]
  *     responses:
  *       200:
  *         description: 성공
