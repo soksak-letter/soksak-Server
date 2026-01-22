@@ -162,7 +162,6 @@ export const findSessionParticipantByUserIdAndSessionId = async (id, sessionId) 
   return other?.userId ?? null;
 };
 
-
 export const findMatchingSessionBySessionId = async(sessionId) => {
     return await prisma.matchingSession.findFirst({
         where: {
