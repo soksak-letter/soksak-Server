@@ -33,9 +33,9 @@ import { isLogin } from "./middlewares/auth.middleware.js";
 import { isRestricted } from "./middlewares/restriction.middleware.js";
 import { letterToMeSchema, letterToOtherSchema } from "./schemas/letter.schema.js";
 import { idParamSchema } from "./schemas/common.schema.js";
-import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";import {handleGetAnonymousThreads,handleGetAnonymousThreadLetters,handleGetSelfMailbox, handleGetLetterFromFriend,} from "./controllers/mailbox.controller.js";
+import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
 import { handleInsertUserReport, handleGetUserReports } from "./controllers/report.controller.js";
-import { handleGetUserAsTest } from "./controllers/test.controller.js";
+
 
 
 
@@ -203,7 +203,7 @@ app.get("/letters/others/public", isLogin, isRestricted, handleGetPublicLetterFr
 app.get("/letters/friends/public", isLogin, isRestricted, handleGetPublicLetterFromFriend);     // 친구 편지 캐러셀 목록 조회
 app.get("/users/me/letters/stats", isLogin, isRestricted, handleGetUserLetterStats)  // 편지 여행 카드 데이터 조회
 
-app.get("/home/summary", isLogin, isRestriced, HandleGetHomeDashboard);  // 홈 대시보드 조회
+app.get("/home/summary", isLogin, isRestricted, HandleGetHomeDashboard);  // 홈 대시보드 조회
 
 // 온보딩 설정
 app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1); 
