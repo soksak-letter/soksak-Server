@@ -72,22 +72,36 @@ export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
     letterType: LETTER_TYPE_ANON,
   });
 
-  const items = letters.map((l) => ({
+  const firstQuestion = letters[0]?.question?.content ?? null;
+
+  const lettersData = letters.map((l) => ({
     id: l.id,
     title: l.title,
-    content: l.content,
     deliveredAt: l.deliveredAt ?? null,
-    createdAt: l.createdAt ?? null,
     design: l.design
       ? {
-          paperId: l.design.paperId ?? null,
-          stampId: l.design.stampId ?? null,
-          fontId: l.design.fontId ?? null,
+          paper: l.design.paper
+            ? {
+                id: l.design.paper.id,
+                name: l.design.paper.color, // color를 name으로 매핑
+                assetUrl: l.design.paper.assetUrl,
+              }
+            : null,
+          stamp: l.design.stamp
+            ? {
+                id: l.design.stamp.id,
+                name: l.design.stamp.name,
+                assetUrl: l.design.stamp.assetUrl,
+              }
+            : null,
         }
-      : { paperId: null, stampId: null, fontId: null },
+      : { paper: null, stamp: null },
   }));
 
-  return { items };
+  return {
+    firstQuestion,
+    letters: lettersData,
+  };
 };
 
 export const getLetterFromFriend = async ({userId, friendId}) => {

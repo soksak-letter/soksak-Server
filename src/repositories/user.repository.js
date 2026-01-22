@@ -349,8 +349,28 @@ export const findReceivedLettersBySender = async ({ userId, senderUserId, letter
       content: true,
       deliveredAt: true,
       createdAt: true,
+      question: {
+        select: {
+          content: true
+        }
+      },
       design: {
-        select: { paperId: true, stampId: true, fontId: true },
+        select: {
+          paper: {
+            select: {
+              id: true,
+              color: true,
+              assetUrl: true
+            }
+          },
+          stamp: {
+            select: {
+              id: true,
+              name: true,
+              assetUrl: true
+            }
+          },
+        },
       },
     },
   });
