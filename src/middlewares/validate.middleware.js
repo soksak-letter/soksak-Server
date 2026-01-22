@@ -17,7 +17,7 @@ export const validate = (schema) => (req, res, next) => {
                 message: e.message
             }))
 
-            const validationError = new BadRequestError("INVALID_TYPE_400", "입력값이 잘못되었습니다", errorDetails);
+            const validationError = new BadRequestError("REQ_BAD_REQUEST", "입력값이 잘못되었습니다", errorDetails);
             
             return next(validationError);
         }

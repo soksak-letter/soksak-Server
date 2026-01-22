@@ -132,6 +132,78 @@
 
 /**
  * @swagger
+ * /mailbox/friends/threads/{friendId}/letters:
+ *   get:
+ *     summary: 친구 스레드 편지 목록 조회
+ *     tags: [편지함]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: friendId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - properties:
+ *                     success:
+ *                       type: object
+ *                       properties:
+ *                         friendName:
+ *                           type: string
+ *                         firstQuestion:
+ *                           type: string
+ *                         letters:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *       401:
+ *         description: |
+ *           인증 실패:
+ *           - `AUTH_TOKEN_EXPIRED`: 토큰이 만료되었습니다.
+ *           - `AUTH_INVALID_TOKEN`: 액세스 토큰이 아니거나 유효하지 않습니다.
+ *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
+ *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
+ *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_TOKEN_EXPIRED"
+ *                           reason:
+ *                             example: "토큰이 만료되었습니다."
+ *       403:
+ *         description: 친구 관계 아님 (FRIEND_403_01)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "FRIEND_403_01"
+ *                         reason:
+ *                           example: "친구가 아닙니다."
+ */
+
+/**
+ * @swagger
  * /mailbox/self:
  *   get:
  *     summary: 나에게 탭 목록 조회

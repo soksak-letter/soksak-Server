@@ -1,4 +1,4 @@
-import { BadRequestError, TooManyRequests, unauthorizedError } from "./base.error.js";
+import { BadRequestError, NotFoundError, TooManyRequests, unauthorizedError } from "./base.error.js";
 
 export class AuthError extends unauthorizedError {
   constructor(code, message, data = null) {
@@ -19,6 +19,12 @@ export class NotAccessTokenError extends unauthorizedError {
 }
 
 export class NotRefreshTokenError extends unauthorizedError {
+  constructor(code, message, data = null) {
+    super(code, message, data);
+  }
+}
+
+export class NotFoundToken extends NotFoundError {
   constructor(code, message, data = null) {
     super(code, message, data);
   }
