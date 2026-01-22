@@ -1,4 +1,5 @@
 import { prisma } from "../configs/db.config.js";
+import { xprisma } from "../xprisma.js";
 import { DuplicatedValueError } from "../errors/base.error.js";
 
 export const findUserByEmail = async (email) => {
@@ -172,6 +173,32 @@ export const softDeleteUser = async (id) => {
         throw new Error(err);
     }
 }
+
+export const findRandomUserByPool = async (id) => {
+  const poolRaw = await prisma.user.findFirst({
+    where: {
+        id
+    },
+    select: {
+        pool: true
+    }
+  })
+  const pool = poolRaw?.pool;
+  const rows = await xprisma.user.findMany({
+    where: {
+        blockerUserId: id,
+        pool,
+        id: { not: id }
+    },
+    select: {
+        id: true
+    }
+  })
+  const length = rows.length;
+  const randomNum = Math.floor(Math.random() * length);
+  return rows[randomNum]?.id ?? null;
+};
+
 
 // ========== Consent Repository ==========
 export const findUserAgreementByUserId = async (userId) => {
