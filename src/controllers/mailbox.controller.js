@@ -1,13 +1,17 @@
-import { getAnonymousThreads, getAnonymousThreadLetters, getSelfMailbox } from "../services/mailbox.service.js";
-import { MailboxUnauthorizedError } from "../errors/mailbox.error.js";
+import {
+  getAnonymousThreads,
+  getAnonymousThreadLetters,
+  getSelfMailbox,
+  getLetterFromFriend,
+} from "../services/mailbox.service.js";
+import { MAILBOX_ERROR, throwMailboxError } from "../errors/mailbox.error.js";
 
-// ========== Mailbox Controllers ==========
 const getAuthUserId = (req) => req.user?.id ?? req.userId ?? req.user?.userId ?? null;
 
 export const handleGetAnonymousThreads = async (req, res, next) => {
   try {
     const userId = getAuthUserId(req);
-    if (!userId) throw new MailboxUnauthorizedError();
+    if (!userId) throwMailboxError(MAILBOX_ERROR.UNAUTHORIZED);
 
     const result = await getAnonymousThreads(userId);
     return res.status(200).json({
@@ -23,7 +27,7 @@ export const handleGetAnonymousThreads = async (req, res, next) => {
 export const handleGetAnonymousThreadLetters = async (req, res, next) => {
   try {
     const userId = getAuthUserId(req);
-    if (!userId) throw new MailboxUnauthorizedError();
+    if (!userId) throwMailboxError(MAILBOX_ERROR.UNAUTHORIZED);
 
     const { threadId } = req.params;
     const result = await getAnonymousThreadLetters(userId, threadId);
@@ -38,10 +42,23 @@ export const handleGetAnonymousThreadLetters = async (req, res, next) => {
   }
 };
 
+export const handleGetLetterFromFriend = async (req, res, next) => {
+    const friendId = parseInt(req.params.friendId);
+    const userId = req.user.id;
+    
+    try{
+        const letters = await getLetterFromFriend({userId, friendId});
+
+        res.status(200).success( letters );
+    } catch(err) {
+        next(err);
+    }
+}
+
 export const handleGetSelfMailbox = async (req, res, next) => {
   try {
     const userId = getAuthUserId(req);
-    if (!userId) throw new MailboxUnauthorizedError();
+    if (!userId) throwMailboxError(MAILBOX_ERROR.UNAUTHORIZED);
 
     const result = await getSelfMailbox(userId);
     return res.status(200).json({
@@ -53,4 +70,3 @@ export const handleGetSelfMailbox = async (req, res, next) => {
     next(err);
   }
 };
-

@@ -3,20 +3,34 @@ import {
   findReceivedLettersBySender,
   findSelfLetters,
   findUsersNicknameByIds,
-} from "../repositories/user.repository.js";
-import { MailboxInvalidThreadIdError } from "../errors/mailbox.error.js";
-import { LETTER_TYPE_ANON, LETTER_TYPE_SELF, makePreview } from "../utils/user.util.js";
+} from "../repositories/mailbox.repository.js";
+import { MAILBOX_ERROR, throwMailboxError } from "../errors/mailbox.error.js";
+import { getFriendLetters, getMyLettersWithFriend } from "../repositories/letter.repository.js";
+import { findFriendById } from "../repositories/friend.repository.js";
 
-// ------------------------------
-// Mailbox
-// ------------------------------
 
+const LETTER_TYPE_ANON = "ANON_SESSION";
+const LETTER_TYPE_SELF = "SELF";
+
+const makePreview = (text, maxLen = 30) => {
+  if (!text) return "";
+  const t = String(text);
+  if (t.length <= maxLen) return t;
+  return `${t.slice(0, maxLen)}...`;
+};
+
+/**
+ * 익명 탭 목록 조회
+ * - senderUserId별 최신 편지 1개씩 -> thread 카드
+ * - 편지통 색상: 최신 편지의 design.paperId 사용
+ */
 export const getAnonymousThreads = async (userId) => {
   const letters = await findReceivedLettersForThreads({
     userId,
     letterType: LETTER_TYPE_ANON,
   });
 
+  // senderUserId별 최신 편지 1개 유지
   const latestBySender = new Map(); // senderUserId -> letter
   for (const l of letters) {
     if (!l.senderUserId) continue;
@@ -29,25 +43,29 @@ export const getAnonymousThreads = async (userId) => {
   const nicknameMap = senderIds.length ? await findUsersNicknameByIds(senderIds) : new Map();
 
   const items = senderIds.map((senderId) => {
-    const l = latestBySender.get(senderId);
-    const updatedAt = l.deliveredAt ?? l.createdAt ?? null;
+      const l = latestBySender.get(senderId);
+      const updatedAt = l.deliveredAt ?? l.createdAt ?? null;
+    
+      return {
+        threadId: senderId, // threadId = senderUserId
+        lastLetterId: l.id,
+        lastLetterTitle: l.title,
+        lastLetterPreview: makePreview(l.content, 30),
+        updatedAt,
+    
+        //  닉네임 항상 노출
+        sender: {
+          id: senderId,
+          nickname: nicknameMap.get(senderId) ?? null,
+        },
+    
+        //  편지통 색상(=paperId)
+        paperId: l.design?.paperId ?? null,
+      };
+    });
+    
 
-    return {
-      threadId: senderId, // threadId = senderUserId
-      lastLetterId: l.id,
-      lastLetterTitle: l.title,
-      lastLetterPreview: makePreview(l.content, 30),
-      updatedAt,
-
-      sender: {
-        id: senderId,
-        nickname: nicknameMap.get(senderId) ?? null,
-      },
-
-      paperId: l.design?.paperId ?? null,
-    };
-  });
-
+  // 최신순 정렬
   items.sort((a, b) => {
     const ta = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
     const tb = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
@@ -57,10 +75,15 @@ export const getAnonymousThreads = async (userId) => {
   return { items };
 };
 
+/**
+ * 특정 익명 스레드의 편지 목록 조회
+ * - 그 senderUserId가 보낸 익명 편지들 목록
+ * - 편지통 색상 = 각 편지의 design.paperId
+ */
 export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
   const threadId = Number(threadIdRaw);
   if (!Number.isFinite(threadId) || threadId <= 0) {
-    throw new MailboxInvalidThreadIdError("MAILBOX_400_01", "threadId가 올바르지 않습니다.", { threadId: threadIdRaw });
+    throwMailboxError(MAILBOX_ERROR.INVALID_THREAD_ID, { threadId: threadIdRaw });
   }
 
   const letters = await findReceivedLettersBySender({
@@ -87,6 +110,24 @@ export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
   return { items };
 };
 
+export const getLetterFromFriend = async ({userId, friendId}) => {
+    const friend = await findFriendById(userId, friendId);
+    if(!friend) throw new NotFriendError("FRIEND_403_01", "친구가 아닙니다.");
+
+    const {friendLetters, question} = await getFriendLetters({userId, friendId});
+    const myLetters = await getMyLettersWithFriend({userId, friendId});
+    return {
+        friendName: friend.nickname,
+        firstQuestion: question,
+        friendLetters: friendLetters,
+        userLetters: myLetters
+    };
+}
+
+/**
+ * 나에게(SELF) 편지함 목록 조회
+ * - senderUserId = me AND letterType = SELF
+ */
 export const getSelfMailbox = async (userId) => {
   const letters = await findSelfLetters({
     userId,
@@ -97,7 +138,7 @@ export const getSelfMailbox = async (userId) => {
     id: l.id,
     title: l.title,
     createdAt: l.createdAt ?? null,
-    paperId: l.design?.paperId ?? null,
+    paperId: l.design?.paperId ?? null, // 편지통 색상
   }));
 
   return { items };
