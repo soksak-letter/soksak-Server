@@ -17,13 +17,20 @@ import {
   AlreadyFriendsError,
   FriendNotFoundError,
   FriendInternalError,
-  BaseError,
 } from "../errors/friend.error.js";
+import {
+  BadRequestError,
+  NotFoundError,
+  ConflictError,
+  InternalServerError,
+} from "../errors/base.error.js";
 
 async function userExistsOrThrow(userId) {
   const userById = await findUserById(userId);
   if (!userById)
-    throw new InvalidUserError(userId, "잘못된 유저 정보 입력입니다.");
+    throw new InvalidUserError(undefined, "잘못된 유저 정보 입력입니다.", {
+      userId,
+    });
 }
 
 async function assertUsersExistOrThrow(userId, targetUserId) {
@@ -33,12 +40,14 @@ async function assertUsersExistOrThrow(userId, targetUserId) {
   ]);
 
   if (!userById)
-    throw new InvalidUserError(userId, "잘못된 유저 정보 입력입니다.");
+    throw new InvalidUserError(undefined, "잘못된 유저 정보 입력입니다.", {
+      userId,
+    });
+
   if (!targetUserById)
-    throw new InvalidUserError(
+    throw new InvalidUserError(undefined, "잘못된 유저 정보 입력입니다.", {
       targetUserId,
-      "잘못된 타겟 유저 정보 입력입니다."
-    );
+    });
 }
 
 async function userSameCheck(userId, targetUserId) {
@@ -53,16 +62,12 @@ export const postFriendRequest = async (userId, targetUserId, sessionId) => {
   try {
     const result = await insertFriendRequest(userId, targetUserId, sessionId);
     if (!result) {
-      throw new FriendInternalError({
-        reason: "친구 요청 생성 실패",
-        action: "POST_FRIEND_REQUEST",
+      throw new FriendInternalError(undefined, undefined, {
         userId,
         targetUserId,
       });
     }
     return {
-      status: 201,
-      message: "친구 신청이 성공적으로 처리되었습니다.",
       data: result,
     };
   } catch (error) {
@@ -77,9 +82,15 @@ export const postFriendRequest = async (userId, targetUserId, sessionId) => {
         userId
       );
       if (existingRequest1 || existingRequest2) {
-        throw new FriendRequestAlreadyExistsError({ userId, targetUserId });
+        throw new FriendRequestAlreadyExistsError(undefined, undefined, {
+          userId,
+          targetUserId,
+        });
       } else {
-        throw new AlreadyFriendsError({ userId, targetUserId });
+        throw new AlreadyFriendsError(undefined, undefined, {
+          userId,
+          targetUserId,
+        });
       }
     }
     throw new FriendInternalError({
@@ -97,20 +108,22 @@ export const getFriendsList = async (userId) => {
   try {
     const friendsList = await selectAllFriendsByUserId(userId);
     if (friendsList.length === 0) {
-      throw new FriendNotFoundError({ userId });
+      throw new FriendNotFoundError(undefined, undefined, { userId });
     }
     return {
-      status: 200,
-      message: "친구 목록 조회가 성공적으로 처리되었습니다.",
       data: friendsList,
     };
   } catch (error) {
-    if (error instanceof BaseError) throw error;
-    throw new FriendInternalError({
-      reason: error.message,
-      action: "GET_FRIENDS_LIST",
-      userId,
-    });
+    if (
+      error instanceof BadRequestError ||
+      error instanceof NotFoundError ||
+      error instanceof ConflictError ||
+      error instanceof InternalServerError
+    ) {
+      throw error;
+    }
+
+    throw new FriendInternalError(undefined, undefined, { userId });
   }
 };
 
@@ -121,45 +134,50 @@ export const getIncomingFriendRequests = async (userId) => {
   try {
     const incomingRequests = await selectFriendsRequestByTargetUserId(userId);
     if (incomingRequests.length === 0) {
-      throw new FriendRequestNotFoundError({ userId, incomingRequests });
+      throw new FriendRequestNotFoundError(undefined, undefined, {
+        userId,
+        incomingRequests,
+      });
     }
     return {
-      status: 200,
-      message: "친구 신청 조회가 성공하였습니다.",
       data: incomingRequests,
     };
   } catch (error) {
-    if (error instanceof BaseError) throw error;
-    throw new FriendInternalError({
-      reason: error.message,
-      action: "GET_INCOMING_REQUESTS",
-      userId,
-    });
+    if (
+      error instanceof BadRequestError ||
+      error instanceof NotFoundError ||
+      error instanceof ConflictError ||
+      error instanceof InternalServerError
+    ) {
+      throw error;
+    }
+
+    throw new FriendInternalError(undefined, undefined, { userId });
   }
 };
 
 // 4) 보낸 친구 신청 목록 조회
 export const getOutgoingFriendRequests = async (userId) => {
   await userExistsOrThrow(userId);
-  console.log("service userId:" + userId);
   try {
     const outgoingRequests = await selectFriendsRequestByUserId(userId);
-    console.log("service outgoingRequests:" + JSON.stringify(outgoingRequests));
     if (outgoingRequests.length === 0) {
-      throw new FriendRequestNotFoundError({ userId });
+      throw new FriendRequestNotFoundError(undefined, undefined, { userId });
     }
     return {
-      status: 200,
-      message: "보낸 친구 신청 조회가 성공하였습니다.",
       data: outgoingRequests,
     };
   } catch (error) {
-    if (error instanceof BaseError) throw error;
-    throw new FriendInternalError({
-      reason: error.message,
-      action: "GET_OUTGOING_REQUESTS",
-      userId,
-    });
+    if (
+      error instanceof BadRequestError ||
+      error instanceof NotFoundError ||
+      error instanceof ConflictError ||
+      error instanceof InternalServerError
+    ) {
+      throw error;
+    }
+
+    throw new FriendInternalError(undefined, undefined, { userId });
   }
 };
 
@@ -168,29 +186,37 @@ export const acceptFriendRequest = async (receiverUserId, requesterUserId) => {
   await assertUsersExistOrThrow(receiverUserId, requesterUserId);
 
   const req = await userExistsFriendRequest(receiverUserId, requesterUserId);
-  if (!req) throw new FriendRequestNotFoundError({ receiverUserId, requesterUserId });
-
+  if (!req)
+    throw new FriendRequestNotFoundError(undefined, undefined, {
+      receiverUserId,
+      requesterUserId,
+    });
   try {
     const result = await acceptFriendRequestTx(receiverUserId, requesterUserId);
     return {
-      status: 200,
-      message: "해당 친구 신청이 수락되었습니다.",
       data: result,
     };
   } catch (error) {
     if (error?.message === "수락 대기 중인 친구 요청이 없습니다.") {
-      throw new FriendRequestNotFoundError({ receiverUserId, requesterUserId });
+      throw new FriendRequestNotFoundError(undefined, undefined, {
+        receiverUserId,
+        requesterUserId,
+      });
     }
     if (error?.code === "P2025") {
-      throw new FriendRequestNotFoundError({ receiverUserId, requesterUserId });
+      throw new FriendRequestNotFoundError(undefined, undefined, {
+        receiverUserId,
+        requesterUserId,
+      });
     } else if (error?.code === "P2002") {
-      throw new AlreadyFriendsError({ receiverUserId, requesterUserId });
+      throw new AlreadyFriendsError(undefined, undefined, {
+        receiverUserId,
+        requesterUserId,
+      });
     }
-    throw new FriendInternalError({
-      reason: error.message,
-      action: "ACCEPT_REQUEST",
-      userId,
-      targetUserId,
+    throw new FriendInternalError(undefined, undefined, {
+      receiverUserId,
+      requesterUserId,
     });
   }
 };
@@ -205,17 +231,16 @@ export const rejectFriendRequest = async (userId, targetUserId) => {
       targetUserId
     );
     return {
-      status: 200,
-      message: "해당 친구 신청이 거절되었습니다.",
       data: rejectedFriendRequest,
     };
   } catch (error) {
     if (error?.code === "P2025") {
-      throw new FriendRequestNotFoundError({ userId, targetUserId });
+      throw new FriendRequestNotFoundError(undefined, undefined, {
+        userId,
+        targetUserId,
+      });
     }
-    throw new FriendInternalError({
-      reason: error.message,
-      action: "REJECT_REQUEST",
+    throw new FriendInternalError(undefined, undefined, {
       userId,
       targetUserId,
     });
@@ -229,17 +254,16 @@ export const deleteFriendRequestData = async (userId, targetUserId) => {
   try {
     const result = await deleteFriendRequest(userId, targetUserId);
     return {
-      status: 200,
-      message: "해당 친구 신청이 삭제되었습니다.",
       data: result,
     };
   } catch (error) {
     if (error?.code === "P2025") {
-      throw new FriendNotFoundError({ userId, targetUserId });
+      throw new FriendNotFoundError(undefined, undefined, {
+        userId,
+        targetUserId,
+      });
     }
-    throw new FriendInternalError({
-      reason: error.message,
-      action: "DELETE_FRIEND_REQUEST",
+    throw new FriendInternalError(undefined, undefined, {
       userId,
       targetUserId,
     });
