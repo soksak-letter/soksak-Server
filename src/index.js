@@ -17,35 +17,10 @@ import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handl
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser } from "./controllers/auth.controller.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriend } from "./controllers/friend.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
-import {
-  handleCreateUserAgreements,
-  handlePatchOnboardingStep1,
-  handleGetAllInterests,
-  handleGetMyInterests,
-  handleUpdateMyOnboardingInterests,
-  handleGetMyNotificationSettings,
-  handleUpdateMyNotificationSettings,
-  handleGetMyProfile,
-  handlePatchMyProfile,
-  handlePostMyProfileImage,
-  handlePutMyDeviceToken,
-  handleGetMyConsents,
-  handlePatchMyConsents,
-} from "./controllers/user.controller.js";
-import {
-  handleGetAnonymousThreads,
-  handleGetAnonymousThreadLetters,
-  handleGetSelfMailbox,
-} from "./controllers/mailbox.controller.js";
-import {
-  handleGetNotices,
-  handleGetNoticeDetail,
-} from "./controllers/notice.controller.js";
-import {
-  handleGetCommunityGuidelines,
-  handleGetTerms,
-  handleGetPrivacy,
-} from "./controllers/policy.controller.js";
+import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyDeviceToken, handleGetMyConsents, handlePatchMyConsents, } from "./controllers/user.controller.js";
+import { handleGetAnonymousThreads, handleGetAnonymousThreadLetters, handleGetSelfMailbox, } from "./controllers/mailbox.controller.js";
+import { handleGetNotices, handleGetNoticeDetail, } from "./controllers/notice.controller.js";
+import { handleGetCommunityGuidelines, handleGetTerms, handleGetPrivacy, } from "./controllers/policy.controller.js";
 import { bootstrapWeeklyReports } from "./jobs/weeklyReport.bootstrap.js";
 import { startWeeklyReportCron } from "./jobs/weeklyReport.cron.js";
 import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js";
@@ -59,26 +34,15 @@ import { idParamSchema } from "./schemas/common.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
 import { handleInsertUserReport, handleGetUserReports } from "./controllers/report.controller.js";
 
-
-
-
-
-
 dotenv.config();
-
-
 
 const app = express();
 const port = process.env.PORT || 3000;
-
-
 
 app.use((req, res, next) => {
   console.log("[REQ]", req.method, req.originalUrl);
   next();
 });
-
-
 
 // 미들웨어 설정
 app.use(morgan("dev"));
@@ -89,8 +53,6 @@ app.use(
   })
 );
 app.set("trust proxy", 1);
-
-
 
 // "http://localhost:5173", "http://localhost:3000", 
 app.use(express.static("public"));
@@ -154,8 +116,7 @@ app.get("/", (req, res) => {
 });
 
 // 로그인/회원가입
-app.get("/auth/oauth/:provider",
-  (req, res, next) => {
+app.get("/auth/oauth/:provider", (req, res, next) => {
     const { provider } = req.params;
     
     const auth = passport.authenticate(provider, {
@@ -166,8 +127,7 @@ app.get("/auth/oauth/:provider",
   }
 );
 
-app.get("/auth/callback/:provider",
-  (req, res, next) => {
+app.get("/auth/callback/:provider", (req, res, next) => {
     const { provider } = req.params;
     
     const auth = passport.authenticate(provider, {
@@ -193,9 +153,6 @@ app.get("/auth/callback/:provider",
     });
   }
 )
-
-
-
 
 app.get("/mypage", isLogin, (req, res) => {
   res.status(200).success({
@@ -280,14 +237,9 @@ app.get("/mailbox/anonymous", isLogin, handleGetAnonymousThreads);
 app.get("/mailbox/anonymous/threads/:threadId/letters", isLogin, handleGetAnonymousThreadLetters);
 app.get("/mailbox/self", isLogin, handleGetSelfMailbox);
 
-
-
-
 // 프로필
 app.get("/users/me/profile", isLogin, handleGetMyProfile);
 app.patch("/users/me/profile", isLogin, handlePatchMyProfile);
-
-// multipart/form-data, field name = "image"
 app.post("/users/me/profile/image", isLogin, upload.single("image"), handlePostMyProfileImage);
 
 

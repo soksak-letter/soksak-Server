@@ -539,7 +539,7 @@
  * /users/me/profile/image:
  *   post:
  *     summary: 프로필 이미지 업로드
- *     description: 사용자의 프로필 이미지를 업로드합니다. (multipart/form-data, field name: "image")
+ *     description: '사용자의 프로필 이미지를 업로드합니다. (multipart/form-data, field name: "image")'
  *     tags: [프로필]
  *     security:
  *       - bearerAuth: []
