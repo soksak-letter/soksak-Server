@@ -35,6 +35,18 @@ export const decrementSessionTurn = async (sessionId) => {
   });
 };
 
+export const findMaxTurnBySessionId = async(sessionId) => {
+  const result = await prisma.matchingSession.findFirst({
+    where: {
+      id: sessionId
+    },
+    select: {
+      maxTurns: true,
+    }
+  })
+  if(result.maxTurns <= 0) return false;
+  return true;
+}
 
 export async function acceptSessionRequestTx(id, questionId) {
   try {
