@@ -1,5 +1,6 @@
-import { getCommunityGuidelines, getPrivacy, getTerms } from "../services/policy.service.js";
+import { getCommunityGuidelines, getTerms, getPrivacy } from "../services/policy.service.js";
 
+// ========== Policy Controllers ==========
 export const handleGetCommunityGuidelines = async (req, res, next) => {
   try {
     const data = await getCommunityGuidelines();
