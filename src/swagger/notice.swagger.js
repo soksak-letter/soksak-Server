@@ -4,7 +4,7 @@
  *   get:
  *     summary: 공지사항 목록
  *     description: 활성화된 공지사항 목록을 조회합니다.
- *     tags: [공지]
+ *     tags: [공지/정책]
  *     responses:
  *       200:
  *         description: 성공
@@ -48,7 +48,7 @@
  *   get:
  *     summary: 공지사항 상세 조회
  *     description: 특정 공지사항의 상세 내용을 조회합니다.
- *     tags: [공지]
+ *     tags: [공지/정책]
  *     parameters:
  *       - in: path
  *         name: noticeId

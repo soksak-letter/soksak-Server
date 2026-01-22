@@ -1,14 +1,22 @@
-import { BadRequestError, unauthorizedError } from "./base.error.js";
-
-// ========== Mailbox Errors ==========
-export class MailboxUnauthorizedError extends unauthorizedError {
-  constructor(code = "MAILBOX_401_01", message = "인증이 필요합니다.", data = null) {
-    super(code, message, data);
-  }
-}
-
-export class MailboxInvalidThreadIdError extends BadRequestError {
-  constructor(code = "MAILBOX_400_01", message = "threadId가 올바르지 않습니다.", data = null) {
-    super(code, message, data);
-  }
-}
+export const MAILBOX_ERROR = {
+    UNAUTHORIZED: {
+      statusCode: 401,
+      errorCode: "MAILBOX_UNAUTHORIZED",
+      message: "인증이 필요합니다.",
+    },
+    INVALID_THREAD_ID: {
+      statusCode: 400,
+      errorCode: "MAILBOX_INVALID_THREAD_ID",
+      message: "threadId가 올바르지 않습니다.",
+    },
+  };
+  
+  export const throwMailboxError = (errorObj, detail = null) => {
+    const err = new Error(errorObj.message);
+    err.statusCode = errorObj.statusCode;
+    err.errorCode = errorObj.errorCode;
+    err.reason = errorObj.message;
+    err.data = detail ?? null;
+    throw err;
+  };
+  
