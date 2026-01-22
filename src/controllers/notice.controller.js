@@ -1,5 +1,6 @@
-import { getNoticeDetail, getNotices } from "../services/notice.service.js";
+import { getNotices, getNoticeDetail } from "../services/notice.service.js";
 
+// ========== Notice Controllers ==========
 export const handleGetNotices = async (req, res, next) => {
   try {
     const data = await getNotices();
