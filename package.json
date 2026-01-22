@@ -7,11 +7,15 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "prisma:db-pull": "./node_modules/.bin/prisma db pull",
-    "prisma:studio": "./node_modules/.bin/prisma studio",
-    "db:gen": "./node_modules/.bin/prisma generate",
-    "db:mig": "./node_modules/.bin/prisma migrate dev",
-    "db:push": "./node_modules/.bin/prisma db push"
+    "prisma:db-pull": "prisma db pull",
+    "prisma:studio": "prisma studio",
+    "db:gen": "prisma generate",
+    "db:mig": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js" 
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.955.0",
@@ -33,6 +37,8 @@
     "mysql2": "^3.11.0",
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.12",
+    "oci-common": "^2.123.0",
+    "oci-objectstorage": "^2.123.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",

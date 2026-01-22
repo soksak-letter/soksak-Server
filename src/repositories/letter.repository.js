@@ -18,8 +18,8 @@ export const getLetterDetail = async (id) => {
                     paper: {
                         select: {
                             id: true,
-                            name: true,
-                            paperAssetUrl: true
+                            color: true,
+                            assetUrl: true
                         }
                     },
                     stamp: {
@@ -32,8 +32,8 @@ export const getLetterDetail = async (id) => {
                     font: {
                         select: {
                             id: true,
-                            name: true,
-                            assetUrl: true   
+                            font: true,
+                            fontFamily: true,
                         }
                     }
                 }
@@ -55,8 +55,8 @@ export const getLetterDetail = async (id) => {
         design: {
             paper: {
                 id: letter?.design?.paper?.id,
-                name: letter?.design?.paper?.name,
-                assetUrl: letter?.design?.paper?.paperAssetUrl
+                color: letter?.design?.paper?.color,
+                assetUrl: letter?.design?.paper?.assetUrl
             },
             stamp: {
                 id: letter?.design?.stamp?.id,
@@ -65,8 +65,8 @@ export const getLetterDetail = async (id) => {
             },
             font: {
                 id: letter?.design?.font?.id,
-                name: letter?.design?.font?.name,
-                assetUrl: letter?.design?.font?.assetUrl
+                font: letter?.design?.font?.font,
+                fontFamily: letter?.design?.font?.fontFamily,
             }
         }
     }
@@ -75,7 +75,7 @@ export const getLetterDetail = async (id) => {
 // senderUserId = receiverUserId, letterType, questionId, title, content, isPublic, status, scheduledAt 필수 deliveredAt, readAt은 scheduledAt에 따라서
 export const createLetter = async ({letter, design}) => {
     try{
-        await prisma.letter.create({
+        const newLetter = await prisma.letter.create({
             data: {
                 ...letter,
                 design: {
@@ -83,6 +83,8 @@ export const createLetter = async ({letter, design}) => {
                 }
             }
         });
+
+        return newLetter.id;
     } catch(err) {
         const fieldNameMap = {
             "question_id": "questionId",
@@ -104,10 +106,8 @@ export const createLetter = async ({letter, design}) => {
 export const getFriendLetters = async ({userId, friendId}) => {
     const letters = await prisma.letter.findMany({
         where: {
-            OR:[
-                { senderUserId: userId, receiverUserId: friendId },
-                { senderUserId: friendId, receiverUserId: userId }
-            ]
+            senderUserId: friendId, 
+            receiverUserId: userId
         },
         select: {
             id: true,
@@ -124,8 +124,8 @@ export const getFriendLetters = async ({userId, friendId}) => {
                     paper: {
                         select: {
                             id: true,
-                            name: true,
-                            paperAssetUrl: true
+                            color: true,
+                            assetUrl: true
                         }
                     },
                     stamp: {
@@ -143,9 +143,49 @@ export const getFriendLetters = async ({userId, friendId}) => {
     const question = letters[0]?.question?.content;
 
     return { 
-        letters: letters.map(({ question, ...rest }) => rest), 
+        friendLetters: letters.map(({ question, ...rest }) => rest), 
         question 
     };
+}
+
+export const getMyLettersWithFriend = async ({userId, friendId}) => {
+    const myLetters = await prisma.letter.findMany({
+        where: {
+            senderUserId: userId, 
+            receiverUserId: friendId
+        },
+        select: {
+            id: true,
+            title: true,
+            deliveredAt: true,
+            readAt: true,
+            question: {
+                select: {
+                    content: true
+                }
+            },
+            design: {
+                select: {
+                    paper: {
+                        select: {
+                            id: true,
+                            color: true,
+                            assetUrl: true
+                        }
+                    },
+                    stamp: {
+                        select: {
+                            id: true,
+                            name: true,
+                            assetUrl: true
+                        }
+                    },
+                }
+            }
+        }
+    })
+
+    return myLetters;
 }
 
 export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDetail = false}) => {
@@ -176,8 +216,8 @@ export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDet
                     paper: {
                         select: {
                             id: true,
-                            name: true,
-                            envelopeAssetUrl: true
+                            color: true,
+                            assetUrl: true
                         }
                     },
                 }
@@ -201,8 +241,8 @@ export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDet
         design: {
             paper: {
                 id: letter?.design?.paper?.id,
-                name: letter?.design?.paper?.name,
-                assetUrl: letter?.design?.paper?.envelopeAssetUrl
+                color: letter?.design?.paper?.color,
+                assetUrl: letter?.design?.paper?.assetUrl
             }
         }
     }));
@@ -284,16 +324,36 @@ export const selectLetterDesignByLetterId = async (lId) => {
   const [letterPaper, letterStamp] = await Promise.all([
     prisma.letterAssetPaper.findFirst({
       where: { id: letterDesign.paperId },
-      select: { paperAssetUrl: true },
+      select: { color: true, assetUrl: true },
     }),
     prisma.letterAssetStamp.findFirst({
       where: { id: letterDesign.stampId },
-      select: { assetUrl: true },
+      select: { name: true, assetUrl: true },
     }),
   ]);
 
   return {
-    paperUrl: letterPaper?.paperAssetUrl ?? null,
-    stampUrl: letterStamp?.assetUrl ?? null,
+    paper: {
+        color: letterPaper.color,
+        assetUrl: letterPaper.assetUrl
+    },
+    stamp: {
+        name: letterStamp.name,
+        assetUrl: letterStamp.assetUrl
+    },
   };
 };
+
+
+export const selectSenderUserIdByLetterIdAndReceiverUserId = async(letterId, userId) => {
+    const result = await prisma.letter.findFirst({
+        where: {
+            id: letterId,
+            receiverUserId: userId,
+        },
+        select: 
+        { senderUserId: true }
+    })
+    return result?.senderUserId ?? null;
+}
+
