@@ -363,7 +363,22 @@ export const findReceivedLettersForThreads = async ({ userId, letterType }) => {
       createdAt: true,
       sessionId: true,
       design: {
-        select: { paperId: true },
+        select: {
+          paper: {
+            select: {
+              id: true,
+              color: true,
+              assetUrl: true,
+            }
+          },
+          stamp: {
+            select: {
+              id: true,
+              name: true,
+              assetUrl: true,
+            }
+          },
+        },
       },
     },
   });
