@@ -5,9 +5,16 @@ import {
 } from "../repositories/report.repository.js";
 import { selectSenderUserIdByLetterIdAndReceiverUserId } from "../repositories/letter.repository.js";
 import { LetterNotFoundError } from "../errors/letter.error.js";
-import { ReportInternalError, UnExpectedReportReasonError } from "../errors/report.error.js";
+import {
+  ReportInternalError,
+  UnExpectedReportReasonError,
+} from "../errors/report.error.js";
 import { findUserById } from "../repositories/user.repository.js";
 import { UserNotFoundError } from "../errors/user.error.js";
+import {
+  BadRequestError,
+  NotFoundError,
+} from "../errors/base.error.js";
 
 const ALLOWED_REASONS = new Set([
   "욕설/비하",
@@ -36,7 +43,6 @@ export function validateReasons(reasons) {
   return false;
 }
 
-
 export const createUserReport = async (reporterUserId, letterId, reasons) => {
   const user = await findUserById(reporterUserId);
   if (user == null) throw new UserNotFoundError();
@@ -46,7 +52,7 @@ export const createUserReport = async (reporterUserId, letterId, reasons) => {
   );
   console.log(senderUserId);
   if (senderUserId == null) throw new LetterNotFoundError();
-  if (validateReasons(reasons)) throw new UnExpectedReportReasonError();
+  if (validateReasons(reasons)) throw new UnExpectedReportReasonError(undefined, undefined, { reasons });
   try {
     const userReport = await insertUserReport(
       reporterUserId,
@@ -63,7 +69,10 @@ export const createUserReport = async (reporterUserId, letterId, reasons) => {
       message: "신고가 성공적으로 처리되었습니다.",
     };
   } catch (error) {
-    throw(error);
+    if (error instanceof BadRequestError || error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new ReportInternalError();
   }
 };
 
@@ -72,12 +81,11 @@ export const selectUserReport = async (userId) => {
   if (user == null) throw new UserNotFoundError();
   try {
     const result = await getUserReportAndReasonByUserId(userId);
-    return {
-      status: 200,
-      message: "신고 출력이 성공적으로 처리되었습니다.",
-      data: result,
-    };
+    return result;
   } catch (error) {
-    throw(error);
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new ReportInternalError();
   }
 };
