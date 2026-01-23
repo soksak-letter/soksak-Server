@@ -77,3 +77,9 @@ export class SessionCountOverError extends InternalServerError {
     super(code, message, data);
   }
 }
+
+export class SessionFullError extends NotFoundError {
+  constructor(data = null, message = "세션을 맺을 유저가 없습니다.") {
+    super(message, 404, "SESSION_FULL", data);
+  }
+}
