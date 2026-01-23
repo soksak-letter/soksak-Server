@@ -1,6 +1,7 @@
 // src/index.js
+import "dotenv/config";
 import cors from "cors";
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 import express from "express";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
@@ -12,29 +13,41 @@ import { jwtStrategy } from "./Auths/strategies/jwt.strategy.js";
 import { googleStrategy } from "./Auths/strategies/google.strategy.js";
 import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
 import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
-import { handleGetLetterAssets } from "./controllers/asset.controller.js";
-import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats } from "./controllers/letter.controller.js";
-import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser } from "./controllers/auth.controller.js";
-import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriend } from "./controllers/friend.controller.js";
+import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriendRequest } from "./controllers/friend.controller.js";
+import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats, handleGetLetterAssets } from "./controllers/letter.controller.js";
+import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername } from "./controllers/auth.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
 import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyDeviceToken, handleGetMyConsents, handlePatchMyConsents, } from "./controllers/user.controller.js";
-import { handleGetAnonymousThreads, handleGetAnonymousThreadLetters, handleGetSelfMailbox, } from "./controllers/mailbox.controller.js";
 import { handleGetNotices, handleGetNoticeDetail, } from "./controllers/notice.controller.js";
 import { handleGetCommunityGuidelines, handleGetTerms, handleGetPrivacy, } from "./controllers/policy.controller.js";
 import { bootstrapWeeklyReports } from "./jobs/weeklyReport.bootstrap.js";
 import { startWeeklyReportCron } from "./jobs/weeklyReport.cron.js";
 import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js";
 import { handleGetTodayQuestion } from "./controllers/question.controller.js";
+
 import { validate } from "./middlewares/validate.middleware.js";
-import { emailSchema, loginSchema, passwordSchema, SignUpSchema, verificationConfirmCodeSchema, verificationSendCodeSchema } from "./schemas/auth.schema.js";
+import { emailSchema, loginSchema, passwordSchema, SignUpSchema, usernameSchema, verificationConfirmCodeSchema, verificationSendCodeSchema } from "./schemas/auth.schema.js";
+
 import { isLogin } from "./middlewares/auth.middleware.js";
 import { isRestricted } from "./middlewares/restriction.middleware.js";
-import { letterToMeSchema, letterToOtherSchema } from "./schemas/letter.schema.js";
+import {
+  letterToMeSchema,
+  letterToOtherSchema,
+} from "./schemas/letter.schema.js";
 import { idParamSchema } from "./schemas/common.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
-import { handleInsertUserReport, handleGetUserReports } from "./controllers/report.controller.js";
+import {
+  handleGetAnonymousThreads,
+  handleGetAnonymousThreadLetters,
+  handleGetSelfMailbox,
+  handleGetLetterFromFriend
+} from "./controllers/mailbox.controller.js";
+import {
+  handleInsertUserReport,
+  handleGetUserReports,
+} from "./controllers/report.controller.js";
 
-dotenv.config();
+//dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -54,7 +67,6 @@ app.use(
 );
 app.set("trust proxy", 1);
 
-// "http://localhost:5173", "http://localhost:3000", 
 app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -117,42 +129,41 @@ app.get("/", (req, res) => {
 
 // 로그인/회원가입
 app.get("/auth/oauth/:provider", (req, res, next) => {
-    const { provider } = req.params;
-    
-    const auth = passport.authenticate(provider, {
-      session: false
-    })
+  const { provider } = req.params;
+  const auth = passport.authenticate(provider, {
+    session: false,
+  });
 
-    auth(req, res, next);
-  }
-);
+  auth(req, res, next);
+});
+
 
 app.get("/auth/callback/:provider", (req, res, next) => {
     const { provider } = req.params;
-    
+
     const auth = passport.authenticate(provider, {
       session: false,
       // failureRedirect: "/login-failed" // 추후 구현
     });
-    
+
     auth(req, res, next);
-  }, 
+  },
 
   (req, res) => {
-    const {id, jwtAccessToken, jwtRefreshToken} = req.user;
+    const { id, jwtAccessToken, jwtRefreshToken } = req.user;
     const { provider } = req.params;
 
     res.status(200).json({
       resultType: "SUCCESS",
       error: null,
       success: {
-          message: `${provider} 로그인 성공!`,
-          id: id,
-          tokens: { jwtAccessToken, jwtRefreshToken }
-      }
+        message: `${provider} 로그인 성공!`,
+        id: id,
+        tokens: { jwtAccessToken, jwtRefreshToken },
+      },
     });
   }
-)
+);
 
 app.get("/mypage", isLogin, (req, res) => {
   res.status(200).success({
@@ -162,25 +173,81 @@ app.get("/mypage", isLogin, (req, res) => {
 });
 
 app.get("/friends", isLogin, isRestricted, asyncHandler(handleGetFriendsList)); //친구 목록 불러오기
-app.post("/friends/requests", isLogin, isRestricted, asyncHandler(handlePostFriendsRequest)); //친구 신청
-app.get("/friends/requests/incoming", isLogin, isRestricted, asyncHandler(handleGetIncomingFriendRequests)); //들어온 친구 신청 불러오기
-app.get("/friends/requests/outgoing", isLogin, isRestricted, asyncHandler(handleGetOutgoingFriendRequests)); //보낸 친구 신청 불러오기
-app.post("/friends/requests/accept", isLogin, isRestricted, asyncHandler(handleAcceptFriendRequest)); //들어온 친구 신청 수락
-app.post("/friends/requests/reject", isLogin, isRestricted, asyncHandler(handleRejectFriendRequest)); //들어온 친구 신청 거절
-app.delete("/friends/requests/:targetUserId", isLogin, isRestricted, asyncHandler(handleDeleteFriend)); //보낸 친구 신청 삭제
+app.post(
+  "/friends/requests",
+  isLogin,
+  isRestricted,
+  asyncHandler(handlePostFriendsRequest)
+); //친구 신청
+app.get(
+  "/friends/requests/incoming",
+  isLogin,
+  isRestricted,
+  asyncHandler(handleGetIncomingFriendRequests)
+); //들어온 친구 신청 불러오기
+app.get(
+  "/friends/requests/outgoing",
+  isLogin,
+  isRestricted,
+  asyncHandler(handleGetOutgoingFriendRequests)
+); //보낸 친구 신청 불러오기
+app.post(
+  "/friends/requests/accept",
+  isLogin,
+  isRestricted,
+  asyncHandler(handleAcceptFriendRequest)
+); //들어온 친구 신청 수락
+app.post(
+  "/friends/requests/reject",
+  isLogin,
+  isRestricted,
+  asyncHandler(handleRejectFriendRequest)
+); //들어온 친구 신청 거절
+app.delete(
+  "/friends/requests/:targetUserId",
+  isLogin,
+  isRestricted,
+  asyncHandler(handleDeleteFriendRequest)
+); //보낸 친구 신청 삭제
 
-app.post("/matching/sessions/:questionId", isLogin, isRestricted, asyncHandler(handlePostMatchingSession)); //세션 생성
-app.patch("/matching/sessions/:sessionId/friends", isLogin, isRestricted, asyncHandler(handlePatchMatchingSessionStatusFriends)); //세션 친구됨으로 변경
-app.patch("/matching/sessions/:sessionId/discards", isLogin, isRestricted, asyncHandler(handlePatchMatchingSessionStatusDiscarded)); //세션 삭제됨으로 변경
-app.post("/matching/sessions/:sessionId/reviews", isLogin, isRestricted, asyncHandler(handlePostSessionReview)); //세션 리뷰 작성
+app.post(
+  "/matching/sessions/:questionId",
+  isLogin,
+  isRestricted,
+  asyncHandler(handlePostMatchingSession)
+); //세션 생성
+app.patch(
+  "/matching/sessions/:sessionId/friends",
+  isLogin,
+  isRestricted,
+  asyncHandler(handlePatchMatchingSessionStatusFriends)
+); //세션 친구됨으로 변경
+app.patch(
+  "/matching/sessions/:sessionId/discards",
+  isLogin,
+  isRestricted,
+  asyncHandler(handlePatchMatchingSessionStatusDiscarded)
+); //세션 삭제됨으로 변경
+app.post(
+  "/matching/sessions/:sessionId/reviews",
+  isLogin,
+  isRestricted,
+  asyncHandler(handlePostSessionReview)
+); //세션 리뷰 작성
 
-app.post("/reports", isLogin, isRestricted, asyncHandler(handleInsertUserReport));
+app.post(
+  "/reports",
+  isLogin,
+  isRestricted,
+  asyncHandler(handleInsertUserReport)
+);
 app.get("/reports", isLogin, isRestricted, asyncHandler(handleGetUserReports));
 
 app.get("/reports/weekly/:year/:week", isLogin, isRestricted, asyncHandler(handleGetWeeklyReport));
 
 app.post("/auth/signup", validate(SignUpSchema), handleSignUp);                     // 회원가입
 app.post("/auth/login", validate(loginSchema), handleLogin);                        // 로그인
+app.post("/auth/username/exists", validate(usernameSchema), handleCheckDuplicatedUsername);   // 아이디 중복 확인
 app.post("/auth/email/exists", validate(emailSchema), handleCheckDuplicatedEmail);  // 이메일 중복 확인
 app.get("/auth/refresh", handleRefreshToken);                                       // 액세스 토큰 재발급
 app.post("/auth/:type/verification-codes", validate(verificationSendCodeSchema), handleSendVerifyEmailCode);       // 이메일 인증번호 전송
@@ -206,16 +273,28 @@ app.get("/users/me/letters/stats", isLogin, isRestricted, handleGetUserLetterSta
 app.get("/home/summary", isLogin, isRestricted, HandleGetHomeDashboard);  // 홈 대시보드 조회
 
 // 온보딩 설정
-app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1); 
-app.put("/users/me/onboarding/interests", isLogin, handleUpdateMyOnboardingInterests);
+app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1);
+app.put(
+  "/users/me/onboarding/interests",
+  isLogin,
+  handleUpdateMyOnboardingInterests
+);
 
 // 관심사
 app.get("/interests/all", handleGetAllInterests); // 전체 목록 (로그인 불필요)
 app.get("/interests", isLogin, handleGetMyInterests); // 내 선택 목록 (로그인 필요)
 
 // 알람 설정
-app.patch("/users/me/notification-settings", isLogin, handleUpdateMyNotificationSettings);
-app.get("/users/me/notification-settings", isLogin, handleGetMyNotificationSettings);
+app.patch(
+  "/users/me/notification-settings",
+  isLogin,
+  handleUpdateMyNotificationSettings
+);
+app.get(
+  "/users/me/notification-settings",
+  isLogin,
+  handleGetMyNotificationSettings
+);
 
 // 정책, 공지사항
 app.get("/policies/community-guidelines", handleGetCommunityGuidelines);
@@ -234,17 +313,23 @@ app.put("/users/me/device-tokens", isLogin, handlePutMyDeviceToken);
 
 // / 편지함
 app.get("/mailbox/anonymous", isLogin, handleGetAnonymousThreads);
-app.get("/mailbox/anonymous/threads/:threadId/letters", isLogin, handleGetAnonymousThreadLetters);
+app.get(
+  "/mailbox/anonymous/threads/:threadId/letters",
+  isLogin,
+  handleGetAnonymousThreadLetters
+);
+app.get(
+  "/mailbox/friends/threads/:friendId/letters",
+  isLogin,
+  validate(idParamSchema("friendId")),
+  handleGetLetterFromFriend
+); // 친구 대화 목록 화면 조회
 app.get("/mailbox/self", isLogin, handleGetSelfMailbox);
 
 // 프로필
 app.get("/users/me/profile", isLogin, handleGetMyProfile);
 app.patch("/users/me/profile", isLogin, handlePatchMyProfile);
 app.post("/users/me/profile/image", isLogin, upload.single("image"), handlePostMyProfileImage);
-
-
-
-
 
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
@@ -261,8 +346,6 @@ app.use((err, req, res, next) => {
     success: null,
   });
 });
-
-
 
 // 서버 실행
 app.listen(port, async () => {

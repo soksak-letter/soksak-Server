@@ -19,7 +19,7 @@ model User {
   email           String    @unique @map("email")
   name            String?   @map("name")
   nickname        String?   @map("nickname")
-  phoneNumber     String?   @unique @map("phone_number")
+  phoneNumber     String?   @map("phone_number")
   profileImageUrl String?   @map("profile_image_url")
   bio             String?   @map("bio")
   gender          String?   @map("gender")

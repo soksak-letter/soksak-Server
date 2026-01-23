@@ -1,4 +1,4 @@
-import { getAnonymousThreads, getAnonymousThreadLetters, getSelfMailbox } from "../services/mailbox.service.js";
+import { getAnonymousThreads, getAnonymousThreadLetters, getSelfMailbox, getLetterFromFriend } from "../services/mailbox.service.js";
 import { MailboxUnauthorizedError } from "../errors/mailbox.error.js";
 
 // ========== Mailbox Controllers ==========
@@ -37,6 +37,19 @@ export const handleGetAnonymousThreadLetters = async (req, res, next) => {
     next(err);
   }
 };
+
+export const handleGetLetterFromFriend = async (req, res, next) => {
+    const friendId = parseInt(req.params.friendId);
+    const userId = req.user.id;
+    
+    try{
+        const letters = await getLetterFromFriend({userId, friendId});
+
+        res.status(200).success( letters );
+    } catch(err) {
+        next(err);
+    }
+}
 
 export const handleGetSelfMailbox = async (req, res, next) => {
   try {

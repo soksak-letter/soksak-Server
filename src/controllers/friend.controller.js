@@ -87,7 +87,7 @@ export const handleAcceptFriendRequest = async (req, res, next) => {
   // 친구 신청 수락 로직 구현
   const receiverUserId = req.user.id;
   const requesterUserId = req.body.targetUserId;
-  userIsNull(userId, targetUserId);
+  userIsNull(receiverUserId, requesterUserId);
   try {
     const result = await acceptFriendRequest(receiverUserId, requesterUserId);
     res
@@ -100,8 +100,8 @@ export const handleAcceptFriendRequest = async (req, res, next) => {
 
 export const handleRejectFriendRequest = async (req, res, next) => {
   // 친구 신청 거절 로직 구현
-  const receiverUserId = req.user.id;
-  const requesterUserId = req.body.targetUserId;
+  const userId = req.user.id;
+  const targetUserId = req.body.targetUserId;
   userIsNull(userId, targetUserId);
   try {
     const result = await rejectFriendRequest(userId, targetUserId);
@@ -113,7 +113,7 @@ export const handleRejectFriendRequest = async (req, res, next) => {
   }
 };
 
-export const handleDeleteFriend = async (req, res, next) => {
+export const handleDeleteFriendRequest = async (req, res, next) => {
   // 친구 신청 취소 로직
   const userId = req.user.id;
   const targetUserId = Number(req.params.targetUserId);

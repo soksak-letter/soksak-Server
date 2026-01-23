@@ -1,4 +1,4 @@
-import { addLetterLike, getLetter, getPublicLetterFromFriend, getPublicLetterFromOther, getUserLetterStats, removeLetterLike } from "../services/letter.service.js";
+import { addLetterLike, getLetter, getLetterAssets, getPublicLetterFromFriend, getPublicLetterFromOther, getUserLetterStats, removeLetterLike } from "../services/letter.service.js";
 import { sendLetterToMe, sendLetterToOther } from "../services/letter.service.js";
 
 export const handleGetLetterDetail = async (req, res, next) => {
@@ -92,6 +92,16 @@ export const handleGetUserLetterStats = async (req, res, next) => {
 
         res.status(200).success( data );
     } catch(err) { 
+        next(err);
+    }
+}
+
+export const handleGetLetterAssets = async (req, res, next) => {
+    try{
+        const assets = await getLetterAssets();
+
+        res.status(200).success( assets );
+    } catch(err) {
         next(err);
     }
 }

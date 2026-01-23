@@ -93,11 +93,7 @@ export const postFriendRequest = async (userId, targetUserId, sessionId) => {
         });
       }
     }
-    throw new FriendInternalError({
-      reason: error.message,
-      action: "POST_FRIEND_REQUEST",
-      userId,
-    });
+    throw new FriendInternalError();
   }
 };
 
@@ -222,13 +218,12 @@ export const acceptFriendRequest = async (receiverUserId, requesterUserId) => {
 };
 
 // 6) 친구 신청 거절
-export const rejectFriendRequest = async (userId, targetUserId) => {
-  await assertUsersExistOrThrow(userId, targetUserId);
+export const rejectFriendRequest = async (receiverUserId, requesterUserId) => {
+  await assertUsersExistOrThrow(receiverUserId, requesterUserId);
 
   try {
     const rejectedFriendRequest = await updateFriendRequestRejectTx(
-      userId,
-      targetUserId
+      receiverUserId, requesterUserId
     );
     return {
       data: rejectedFriendRequest,
@@ -248,15 +243,16 @@ export const rejectFriendRequest = async (userId, targetUserId) => {
 };
 
 // 7) 친구 삭제
-export const deleteFriendRequestData = async (userId, targetUserId) => {
-  await assertUsersExistOrThrow(userId, targetUserId);
+export const deleteFriendRequestData = async (requesterUserId, receiverUserId) => {
+  await assertUsersExistOrThrow(receiverUserId, requesterUserId);
 
   try {
-    const result = await deleteFriendRequest(userId, targetUserId);
+    const result = await deleteFriendRequest(requesterUserId, receiverUserId);
     return {
       data: result,
     };
   } catch (error) {
+     if (error instanceof FriendRequestNotFoundError) throw error;
     if (error?.code === "P2025") {
       throw new FriendNotFoundError(undefined, undefined, {
         userId,
