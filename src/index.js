@@ -1,6 +1,7 @@
 // src/index.js
+import "dotenv/config";
 import cors from "cors";
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 import express from "express";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
@@ -17,27 +18,12 @@ import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handl
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername } from "./controllers/auth.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
 import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyDeviceToken, handleGetMyConsents, handlePatchMyConsents, } from "./controllers/user.controller.js";
-import { handleGetAnonymousThreads, handleGetAnonymousThreadLetters, handleGetSelfMailbox, handleGetLetterFromFriend, } from "./controllers/mailbox.controller.js";
 import { handleGetNotices, handleGetNoticeDetail, } from "./controllers/notice.controller.js";
 import { handleGetCommunityGuidelines, handleGetTerms, handleGetPrivacy, } from "./controllers/policy.controller.js";
 import { bootstrapWeeklyReports } from "./jobs/weeklyReport.bootstrap.js";
 import { startWeeklyReportCron } from "./jobs/weeklyReport.cron.js";
 import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js";
 import { handleGetTodayQuestion } from "./controllers/question.controller.js";
-import {
-  handleGetCommunityGuidelines,
-  handleGetTerms,
-  handleGetPrivacy,
-} from "./controllers/policy.controller.js";
-import {
-  handleGetNotices,
-  handleGetNoticeDetail,
-} from "./controllers/notice.controller.js";
-import { handlePutMyDeviceToken } from "./controllers/deviceToken.controller.js";
-import {
-  handleGetMyConsents,
-  handlePatchMyConsents,
-} from "./controllers/consent.controller.js";
 
 import { validate } from "./middlewares/validate.middleware.js";
 import { emailSchema, loginSchema, passwordSchema, SignUpSchema, usernameSchema, verificationConfirmCodeSchema, verificationSendCodeSchema } from "./schemas/auth.schema.js";
@@ -54,16 +40,14 @@ import {
   handleGetAnonymousThreads,
   handleGetAnonymousThreadLetters,
   handleGetSelfMailbox,
-  handleGetLetterFromFriend,
-  getLetterFromFriend
+  handleGetLetterFromFriend
 } from "./controllers/mailbox.controller.js";
 import {
   handleInsertUserReport,
   handleGetUserReports,
 } from "./controllers/report.controller.js";
 
-
-dotenv.config();
+//dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
