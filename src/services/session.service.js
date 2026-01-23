@@ -5,6 +5,7 @@ import {
   updateMatchingSessionToFriends,
   findSessionParticipantByUserIdAndSessionId,
   findMatchingSessionBySessionId,
+  countMatchingSessionWhichChating,
 } from "../repositories/session.repository.js";
 import {
   SessionInternalError,
@@ -240,3 +241,9 @@ export const createSessionReview = async (
     throw new Error("알 수 없는 오류가 발생했습니다.");
   }
 };
+
+export const countUserSession = async (userId) => {
+  const count = await countMatchingSessionWhichChating(userId);
+
+  return count;
+}

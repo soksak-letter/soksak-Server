@@ -20,8 +20,7 @@ import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInt
 import { handleGetAnonymousThreads, handleGetAnonymousThreadLetters, handleGetSelfMailbox, handleGetLetterFromFriend, } from "./controllers/mailbox.controller.js";
 import { handleGetNotices, handleGetNoticeDetail, } from "./controllers/notice.controller.js";
 import { handleGetCommunityGuidelines, handleGetTerms, handleGetPrivacy, } from "./controllers/policy.controller.js";
-import { bootstrapWeeklyReports } from "./jobs/weeklyReport.bootstrap.js";
-import { startWeeklyReportCron } from "./jobs/weeklyReport.cron.js";
+import { bootstrapWeeklyReports } from "./jobs/bootstraps/weeklyReport.bootstrap.js";
 import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js";
 import { handleGetTodayQuestion } from "./controllers/question.controller.js";
 import { validate } from "./middlewares/validate.middleware.js";
@@ -32,7 +31,7 @@ import { letterToMeSchema, letterToOtherSchema } from "./schemas/letter.schema.j
 import { idParamSchema } from "./schemas/common.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
 import { handleInsertUserReport, handleGetUserReports } from "./controllers/report.controller.js";
-import { getLetterFromFriend } from "./services/mailbox.service.js";
+import { startBatch } from "./jobs/index.job.js";
 
 dotenv.config();
 
@@ -100,7 +99,7 @@ app.use((req, res, next) => {
 });
 
 await bootstrapWeeklyReports();
-startWeeklyReportCron();
+startBatch();
 
 // 비동기 에러 래퍼
 const asyncHandler = (fn) => (req, res, next) => {

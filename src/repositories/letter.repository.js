@@ -357,3 +357,21 @@ export const selectSenderUserIdByLetterIdAndReceiverUserId = async(letterId, use
     return result?.senderUserId ?? null;
 }
 
+export const sendReservedLetter = async ({startTime, endTime}) => {
+    const updatedLetters = await prisma.letter.updateMany({
+        where: {
+            letterType: "TO_ME",
+            status: "PENDING",
+            scheduledAt: {
+                gte: startTime,
+                lte: endTime
+            }
+        },
+        data: {
+            status: "DELIVERED",
+            deliveredAt: new Date()
+        }
+    })
+
+    return updatedLetters;
+}
