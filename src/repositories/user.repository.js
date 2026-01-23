@@ -310,12 +310,48 @@ export const replaceUserInterests = async ({ userId, interestIds }) => {
  * - receiverUserId = me
  * - letterType = ANON_SESSION
  * - senderUserId별 최신 편지 1개씩 뽑기 위해, 일단 최신순 전체를 가져오고 service에서 group 처리
+ * - 세션 상태가 "PENDING" 또는 "CHATING"인 세션의 편지만 조회
+ * - senderUserId가 해당 세션의 참가자인지 확인
  */
 export const findReceivedLettersForThreads = async ({ userId, letterType }) => {
-  return prisma.letter.findMany({
+  // 먼저 세션 상태가 PENDING 또는 CHATING인 세션들을 조회
+  // receiver(userId)가 참가자인 세션만 조회
+  const validSessions = await prisma.matchingSession.findMany({
+    where: {
+      status: { in: ["PENDING", "CHATING"] },
+      participants: {
+        some: {
+          userId: userId // receiver가 참가자인 세션
+        }
+      }
+    },
+    select: {
+      id: true,
+      participants: {
+        select: {
+          userId: true
+        }
+      }
+    }
+  });
+
+  // 유효한 세션이 없으면 빈 배열 반환
+  if (validSessions.length === 0) {
+    return [];
+  }
+
+  const validSessionIds = new Set(validSessions.map(s => s.id));
+  const sessionParticipantMap = new Map();
+  validSessions.forEach(session => {
+    sessionParticipantMap.set(session.id, new Set(session.participants.map(p => p.userId)));
+  });
+
+  // 해당 세션에 연결된 편지들을 조회
+  const letters = await prisma.letter.findMany({
     where: {
       receiverUserId: userId,
       letterType,
+      sessionId: { in: Array.from(validSessionIds) },
     },
     orderBy: [{ deliveredAt: "desc" }, { createdAt: "desc" }],
     select: {
@@ -325,10 +361,18 @@ export const findReceivedLettersForThreads = async ({ userId, letterType }) => {
       content: true,
       deliveredAt: true,
       createdAt: true,
+      sessionId: true,
       design: {
-        select: { paperId: true }, // 편지통 색상용
+        select: { paperId: true },
       },
     },
+  });
+
+  // senderUserId가 세션 참가자인지 확인하여 필터링
+  return letters.filter(letter => {
+    if (!letter.sessionId || !letter.senderUserId) return false;
+    const participantUserIds = sessionParticipantMap.get(letter.sessionId);
+    return participantUserIds && participantUserIds.has(letter.senderUserId);
   });
 };
 
