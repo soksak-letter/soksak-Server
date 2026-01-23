@@ -136,8 +136,6 @@ export const createSessionReview = async (
     );
     if (!result) throw new SessionInternalError();
     return {
-      status: 200,
-      message: "세션에 대한 review가 작성되었습니다.",
       data: result,
     };
   } catch (error) {
