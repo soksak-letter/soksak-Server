@@ -12,6 +12,7 @@ import {
 } from "../errors/session.error.js";
 import { InvalidUserError } from "../errors/user.error.js";
 import { findUserById } from "../repositories/user.repository.js";
+import { Prisma } from "@prisma/client";
 
 async function assertUsersExistOrThrow(userId, targetUserId) {
   const [userById, targetUserById] = await Promise.all([
@@ -180,20 +181,20 @@ export const createSessionReview = async (
   tag
 ) => {
   if (!validateTag(tag)) {
-    return res.status(400).json({
-      errorCode: "VALIDATION_400_TAG",
-      reason:
-        "tag는 그냥 그래요, 좋아요!, 또 만나고 싶어요 중 하나여야 합니다.",
-      data: { tag },
-    });
+    // return res.status(400).json({
+    //   errorCode: "VALIDATION_400_TAG",
+    //   reason:
+    //     "tag는 그냥 그래요, 좋아요!, 또 만나고 싶어요 중 하나여야 합니다.",
+    //   data: { tag },
+    // });
   }
 
   if (!validateTemperatureScore(temperatureScore)) {
-    return res.status(400).json({
-      errorCode: "VALIDATION_400_TEMPERATURE_SCORE",
-      reason: "temperatureScore는 0부터 100 사이의 숫자여야 합니다.",
-      data: { temperatureScore },
-    });
+    // return res.status(400).json({
+    //   errorCode: "VALIDATION_400_TEMPERATURE_SCORE",
+    //   reason: "temperatureScore는 0부터 100 사이의 숫자여야 합니다.",
+    //   data: { temperatureScore },
+    // });
   }
   const targetUserId = await findSessionParticipantByUserIdAndSessionId(userId, id);
   assertUsersExistOrThrow(userId, targetUserId);

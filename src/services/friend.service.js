@@ -231,13 +231,13 @@ export const rejectFriendRequest = async (receiverUserId, requesterUserId) => {
   } catch (error) {
     if (error?.code === "P2025") {
       throw new FriendRequestNotFoundError(undefined, undefined, {
-        userId,
-        targetUserId,
+        receiverUserId,
+        requesterUserId,
       });
     }
     throw new FriendInternalError(undefined, undefined, {
-      userId,
-      targetUserId,
+      receiverUserId,
+      requesterUserId,
     });
   }
 };
@@ -255,13 +255,13 @@ export const deleteFriendRequestData = async (requesterUserId, receiverUserId) =
      if (error instanceof FriendRequestNotFoundError) throw error;
     if (error?.code === "P2025") {
       throw new FriendNotFoundError(undefined, undefined, {
-        userId,
-        targetUserId,
+        requesterUserId,
+        receiverUserId,
       });
     }
     throw new FriendInternalError(undefined, undefined, {
-      userId,
-      targetUserId,
+      requesterUserId,
+      receiverUserId,
     });
   }
 };
