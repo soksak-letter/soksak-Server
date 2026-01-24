@@ -1,0 +1,17 @@
+{
+  "env": {
+    "node": true,
+    "es2021": true
+  },
+  "extends": [
+    "eslint:recommended"
+  ],
+  "plugins": ["import"],
+  "rules": {
+    "no-unused-vars": "error",          // 안 쓰는 변수 있으면 에러
+    "no-duplicate-imports": "error",    // 중복 임포트 있으면 에러
+    "import/no-duplicates": "error",    // 플러그인을 통한 더 정밀한 중복 임포트 체크
+    "no-undef": "error",                // 정의되지 않은 변수 사용 금지
+    "semi": ["error", "always"]         // 세미콜론 강제 (선택 사항)
+  }
+}

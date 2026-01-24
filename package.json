@@ -15,7 +15,7 @@
     "db:seed": "prisma db seed"
   },
   "prisma": {
-    "seed": "node prisma/seed.js" 
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.955.0",
@@ -51,6 +51,9 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "eslint-plugin-import": "^2.32.0",
     "nodemon": "^3.1.4",
     "prisma": "^6.15.0"
   }
