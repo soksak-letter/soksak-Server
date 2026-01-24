@@ -1,5 +1,4 @@
-import { addLetterLike, getLetter, getLetterAssets, getPublicLetterFromFriend, getPublicLetterFromOther, getUserLetterStats, removeLetterLike } from "../services/letter.service.js";
-import { sendLetterToMe, sendLetterToOther } from "../services/letter.service.js";
+import { addLetterLike, getLetter, getLetterAssets, getPublicLetterFromFriend, getPublicLetterFromOther, getUserLetterStats, removeLetterLike, sendLetterToMe, sendLetterToOther } from "../services/letter.service.js";
 
 export const handleGetLetterDetail = async (req, res, next) => {
     try{

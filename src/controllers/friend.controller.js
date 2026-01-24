@@ -20,6 +20,7 @@ function userIsNull(...users) {
     };
   }
 }
+
 export const handleGetFriendsList = async (req, res, next) => {
   // 친구 목록 조회 로직 구현
   const userId = req.user.id;
@@ -28,10 +29,9 @@ export const handleGetFriendsList = async (req, res, next) => {
 
   try {
     const result = await getFriendsList(userId);
-    return res.success({
-      message: "친구 조회가 성공적으로 처리되었습니다.",
-      result,
-    });
+    res
+      .status(200)
+      .success({ data: result.data, message: "친구 목록 조회가 성공적으로 처리되었습니다." });
   } catch (error) {
     next(error);
   }
@@ -46,7 +46,9 @@ export const handlePostFriendsRequest = async (req, res, next) => {
 
   try {
     const result = await postFriendRequest(userId, targetUserId, sessionId);
-    return res.success({ message: "친구 신청이 완료되었습니다.", result });
+    return res
+      .status(201)
+      .success({ message: "친구 신청이 성공적으로 처리되었습니다.", data: result.data });
   } catch (error) {
     return next(error);
   }
@@ -59,7 +61,9 @@ export const handleGetIncomingFriendRequests = async (req, res, next) => {
   userIsNull(userId);
   try {
     const result = await getIncomingFriendRequests(userId);
-    return res.success({ message: "들어온 친구 신청 목록 조회가 성공하였습니다.", result });
+    res
+      .status(200)
+      .success({ data: result.data, message: "친구 신청 조회가 성공하였습니다." });
   } catch (error) {
     next(error);
   }
@@ -71,7 +75,9 @@ export const handleGetOutgoingFriendRequests = async (req, res, next) => {
   userIsNull(userId);
   try {
     const result = await getOutgoingFriendRequests(userId);
-    return res.success({ message: "보낸 친구 신청 목록 조회가 성공하였습니다.", result });
+    res
+      .status(200)
+      .success({ data: result.data, message: "보낸 친구 신청 조회가 성공하였습니다." });
   } catch (error) {
     next(error);
   }
@@ -79,12 +85,14 @@ export const handleGetOutgoingFriendRequests = async (req, res, next) => {
 
 export const handleAcceptFriendRequest = async (req, res, next) => {
   // 친구 신청 수락 로직 구현
-  const userId = req.user.id;
-  const targetUserId = req.body.targetUserId;
-  userIsNull(userId, targetUserId);
+  const receiverUserId = req.user.id;
+  const requesterUserId = req.body.targetUserId;
+  userIsNull(receiverUserId, requesterUserId);
   try {
-    const result = await acceptFriendRequest(userId, targetUserId);
-    return res.success({ message: "친구 신청 수락이 성공하였습니다.", result });
+    const result = await acceptFriendRequest(receiverUserId, requesterUserId);
+    res
+      .status(200)
+      .success({ data: result.data, message: "친구 신청이 수락되었습니다." });
   } catch (error) {
     next(error);
   }
@@ -97,7 +105,9 @@ export const handleRejectFriendRequest = async (req, res, next) => {
   userIsNull(userId, targetUserId);
   try {
     const result = await rejectFriendRequest(userId, targetUserId);
-    return res.success({ message: "친구 신청 거절이 성공하였습니다.", result });
+    res
+      .status(200)
+      .success({ data: result.data, message: "친구 신청이 거절되었습니다." });
   } catch (error) {
     next(error);
   }
@@ -110,7 +120,9 @@ export const handleDeleteFriendRequest = async (req, res, next) => {
   userIsNull(userId, targetUserId);
   try {
     const result = await deleteFriendRequest(userId, targetUserId);
-    return res.success({ message: "친구 신청 취소가 성공하였습니다.", result });
+    res
+      .status(200)
+      .success({ data: result.data, message: "해당 친구 신청이 삭제되었습니다." });
   } catch (error) {
     next(error);
   }

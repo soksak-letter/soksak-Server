@@ -1,6 +1,7 @@
 // src/index.js
+import "dotenv/config";
 import cors from "cors";
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 import express from "express";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
@@ -17,7 +18,6 @@ import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handl
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername } from "./controllers/auth.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
 import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyDeviceToken, handleGetMyConsents, handlePatchMyConsents, } from "./controllers/user.controller.js";
-import { handleGetAnonymousThreads, handleGetAnonymousThreadLetters, handleGetSelfMailbox, handleGetLetterFromFriend, } from "./controllers/mailbox.controller.js";
 import { handleGetNotices, handleGetNoticeDetail, } from "./controllers/notice.controller.js";
 import { handleGetCommunityGuidelines, handleGetTerms, handleGetPrivacy, } from "./controllers/policy.controller.js";
 import { bootstrapWeeklyReports } from "./jobs/weeklyReport.bootstrap.js";
@@ -39,9 +39,10 @@ import {
   handleInsertUserReport,
   handleGetUserReports,
 } from "./controllers/report.controller.js";
+import { handleGetInquiry, handleInsertInquiryAsAdmin, handleInsertInquiryAsUser } from "./controllers/inquiry.controller.js";
 
+//dotenv.config();
 
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -237,7 +238,16 @@ app.post(
 );
 app.get("/reports", isLogin, isRestricted, asyncHandler(handleGetUserReports));
 
-app.get("/reports/weekly/:year/:week", isLogin, isRestricted, asyncHandler(handleGetWeeklyReport));
+app.get(
+  "/reports/weekly/:year/:week",
+  isLogin,
+  isRestricted,
+  asyncHandler(handleGetWeeklyReport)
+);
+
+app.post("/inquiries", isLogin, asyncHandler(handleInsertInquiryAsUser));
+app.post("/inquiries/admin", isLogin, asyncHandler(handleInsertInquiryAsAdmin));
+app.get("/inquiries", isLogin, asyncHandler(handleGetInquiry));
 
 app.post("/auth/signup", validate(SignUpSchema), handleSignUp);                     // 회원가입
 app.post("/auth/login", validate(loginSchema), handleLogin);                        // 로그인
