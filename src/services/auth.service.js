@@ -6,7 +6,7 @@ import { checkEmailRateLimit, createEmailVerifiedKey, getEmailVerifiedKey, getEm
 import { createRandomNumber } from "../utils/random.util.js";
 import { transporter } from "../configs/mailer.config.js";
 import { UserNotFoundError } from "../errors/user.error.js";
-import { DuplicatedValueError } from "../errors/base.error.js";
+import { DuplicatedValueError, InternalServerError } from "../errors/base.error.js";
 import { AuthError, InvalidVerificationCodeError, NotRefreshTokenError, RequiredTermAgreementError, VerificationRateLimitError } from "../errors/auth.error.js";
 
 /**
@@ -18,13 +18,13 @@ import { AuthError, InvalidVerificationCodeError, NotRefreshTokenError, Required
  */
 export const verifySocialAccount = async ({email, provider, providerUserId}) => {
     if(!email) {
-        throw new Error(`이메일이 존재하지 않습니다: ${email}`);
+        throw new UserNotFoundError("USER_NOT_FOUND", "존재하지 않는 이메일입니다.");
     }
 
     let user = await findUserByEmail(email);
 
     if(user && user.provider !== provider) {
-        throw new Error(`이미 ${user.provider}에서 가입한 이메일입니다`);
+        throw new DuplicatedValueError("USER_EMAIL_DUPLICATED", `이미 ${user.provider}에서 가입한 이메일입니다`, "email");
     }
 
     if(!user) {
@@ -40,8 +40,8 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
     }
 
     const payload = { id: user.id, email: user.email, provider: user.provider };
-    const jwtAccessToken = generateAccessToken(payload, "1h");
-    const jwtRefreshToken = generateRefreshToken(payload, "14d");
+    const jwtAccessToken = generateAccessToken(payload, process.env.JWT_ACCESS_EXPIRED_TIME);
+    const jwtRefreshToken = generateRefreshToken(payload, process.env.JWT_REFRESH_EXPIRED_TIME);
 
     await saveRefreshToken({id: user.id, jwtRefreshToken});
     
@@ -57,16 +57,15 @@ export const updateRefreshToken = async (token) => {
     const payload = verifyToken(token);
     const savedRefreshToken = await getRefreshToken(payload.id);
 
-    if(savedRefreshToken !== token) throw new NotRefreshTokenError("AUTH_401_8", "리프레시 토큰이 아니거나 유효하지 않습니다.");
-    const jwtAccessToken = generateAccessToken(payload, "1h");
-
+    if(savedRefreshToken !== token) throw new NotRefreshTokenError("AUTH_INVALID_TOKEN", "리프레시 토큰이 아니거나 유효하지 않습니다.");
+    const jwtAccessToken = generateAccessToken(payload, process.env.JWT_ACCESS_EXPIRED_TIME);
     return jwtAccessToken;
 }
 
 export const signUpUser = async (data) => {
     const passwordHash = await bcrypt.hash(data.password, 10);
 
-    if(!data.termsAgreed || !data.privacyAgreed || !data.ageOver14Agreed) throw new RequiredTermAgreementError("TERM_400_01", "필수 약관에 모두 동의해주세요.");
+    if(!data.termsAgreed || !data.privacyAgreed || !data.ageOver14Agreed) throw new RequiredTermAgreementError("TERM_BAD_REQUEST", "필수 약관에 모두 동의해주세요.");
 
     const newUser = await prisma.$transaction(async (tx) => {
         const user = await createUserAndAuth({
@@ -93,8 +92,8 @@ export const signUpUser = async (data) => {
         return user;
     }) 
     const payload = { id: newUser.id, email: newUser.email, provider: newUser.provider};
-    const jwtAccessToken = generateAccessToken(payload, "1h");
-    const jwtRefreshToken = generateRefreshToken(payload, "14d");
+    const jwtAccessToken = generateAccessToken(payload, process.env.JWT_ACCESS_EXPIRED_TIME);
+    const jwtRefreshToken = generateRefreshToken(payload, process.env.JWT_REFRESH_EXPIRED_TIME);
 
     return { 
         id: payload.id,
@@ -109,17 +108,17 @@ export const signUpUser = async (data) => {
 
 export const loginUser = async ({username, password}) => {
     const user = await findUserByUsername(username);
-    if(!user) throw new AuthError("AUTH_401_07", "아이디 또는 비밀번호가 일치하지 않습니다.");
+    if(!user) throw new AuthError("AUTH_BAD_REQUEST", "아이디 또는 비밀번호가 일치하지 않습니다.");
 
     const passwordHash = await getHashedPassword(username);
-    if(!passwordHash) throw new AuthError("AUTH_401_07", "아이디 또는 비밀번호가 일치하지 않습니다.");
+    if(!passwordHash) throw new AuthError("AUTH_BAD_REQUEST", "아이디 또는 비밀번호가 일치하지 않습니다.");
 
     const isValidPassword = await bcrypt.compare(password, passwordHash);
-    if(!isValidPassword) throw new AuthError("AUTH_401_07", "아이디 또는 비밀번호가 일치하지 않습니다.");
+    if(!isValidPassword) throw new AuthError("AUTH_BAD_REQUEST", "아이디 또는 비밀번호가 일치하지 않습니다.");
 
     const payload = { id: user.id, email: user.email, provider: user.provider};
-    const jwtAccessToken = generateAccessToken(payload, "1h");
-    const jwtRefreshToken = generateRefreshToken(payload, "14d");
+    const jwtAccessToken = generateAccessToken(payload, process.env.JWT_ACCESS_EXPIRED_TIME);
+    const jwtRefreshToken = generateRefreshToken(payload, process.env.JWT_REFRESH_EXPIRED_TIME);
 
     await saveRefreshToken({id: user.id, jwtRefreshToken});
 
@@ -131,7 +130,7 @@ export const loginUser = async ({username, password}) => {
 
 export const logoutUser = async ({id, token, ttl}) => {
     const isLogout = await revokeToken(id, token, ttl);
-    if(!isLogout) throw new Error("삭제되지 않았습니다. 다시 시도해주세요.");
+    if(!isLogout) throw new InternalServerError("INTERNAL_SERVER_ERROR", "로그아웃에 실패했습니다. 다시 시도해주세요.");
 
     return { status: "Logged Out"};
 }
@@ -146,7 +145,7 @@ export const checkDuplicatedEmail = async (email) => {
     const user = await findUserByEmail(email);
     
     if(user) {
-        throw new DuplicatedValueError("USER_409_01", `이미 ${user.provider}에서 가입한 이메일입니다`, "email");
+        throw new DuplicatedValueError("USER_EMAIL_DUPLICATED", `이미 ${user.provider}에서 가입한 이메일입니다`, "email");
     }
 
     return { exists: false }
@@ -156,7 +155,7 @@ export const checkDuplicatedUsername = async (username) => {
     const user = await findUserByUsername(username);
 
     if(user) {
-        throw new DuplicatedValueError("USER_409_02", `이미 존재하는 아이디입니다.`, "username");
+        throw new DuplicatedValueError("USER_USERNAME_DUPLICATED", `이미 존재하는 아이디입니다.`, "username");
     }
     
     return { exists: false }
@@ -164,10 +163,10 @@ export const checkDuplicatedUsername = async (username) => {
 
 export const SendVerifyEmailCode = async ({email, type}) => {
     const user = await findUserByEmail(email);
-    if(!user) throw new UserNotFoundError("USER_404_01", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "email");
+    if(!user) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "email");
 
     const isLocked = await checkEmailRateLimit(email, type);
-    if(!isLocked) throw new VerificationRateLimitError("EMAIL_429_01", "5분 후 다시 시도해주세요.");
+    if(!isLocked) throw new VerificationRateLimitError("EMAIL_TOO_MANY_REQUEST", "5분 후 다시 시도해주세요.");
 
     const authCode = createRandomNumber(6);
     await saveEmailVerifyCode({email, authCode, type});
@@ -189,7 +188,7 @@ export const SendVerifyEmailCode = async ({email, type}) => {
 
 export const checkEmailCode = async ({email, code, type}) => {
     const storedCode = await getEmailVerifyCode(email, type);
-    if(storedCode !== code) throw new InvalidVerificationCodeError("EMAIL_400_01", "인증번호가 일치하지 않습니다.");
+    if(storedCode !== code) throw new InvalidVerificationCodeError("EMAIL_INVALID_CODE", "인증번호가 일치하지 않습니다.");
 
     const result = { verified: true };
 
@@ -200,7 +199,7 @@ export const checkEmailCode = async ({email, code, type}) => {
 
         case "reset-password":
             const user = await findUserByEmail(email);
-            if(!user) throw new UserNotFoundError("USER_404_01", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "email");
+            if(!user) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "email");
             
             result.jwtAccessToken = generateAccessToken(user, "10m");
             break;
@@ -214,10 +213,10 @@ export const checkEmailCode = async ({email, code, type}) => {
 
 export const getAccountInfo = async (email) => {
     const isValid = await getEmailVerifiedKey(email, "find-id");
-    if(!isValid) throw new AuthError("EMAIL_401_01", "인증되지 않은 이메일입니다.");
+    if(!isValid) throw new AuthError("EMAIL_UNAUTHORIZED", "인증되지 않은 이메일입니다.");
 
     const user = await findUserByEmail(email);
-    if(!user) throw new UserNotFoundError("USER_404_01", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "email");
+    if(!user) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "email");
 
     return {
         username: user.username,

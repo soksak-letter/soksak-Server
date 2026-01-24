@@ -20,6 +20,7 @@ function userIsNull(...users) {
     };
   }
 }
+
 export const handleGetFriendsList = async (req, res, next) => {
   // 친구 목록 조회 로직 구현
   const userId = req.user.id;
@@ -29,16 +30,14 @@ export const handleGetFriendsList = async (req, res, next) => {
   try {
     const result = await getFriendsList(userId);
     res
-      .status(result.status)
-      .json({ data: result.data, message: result.message });
+      .status(200)
+      .success({ data: result.data, message: "친구 목록 조회가 성공적으로 처리되었습니다." });
   } catch (error) {
     next(error);
   }
 };
 
 export const handlePostFriendsRequest = async (req, res, next) => {
-  console.log("1. controller start", req.body);
-
   const userId = req.user.id;
   const targetUserId = req.body.targetUserId;
   const sessionId = req.body.sessionId;
@@ -46,16 +45,14 @@ export const handlePostFriendsRequest = async (req, res, next) => {
   userIsNull(userId, targetUserId);
 
   try {
-    console.log("2. before service");
     const result = await postFriendRequest(userId, targetUserId, sessionId);
-    console.log("3. after service", result);
-return res.status(result.status).json({ message: result.message, data: result.data });
+    return res
+      .status(201)
+      .success({ message: "친구 신청이 성공적으로 처리되었습니다.", data: result.data });
   } catch (error) {
-    console.error("controller error", error);
     return next(error);
   }
 };
-
 
 export const handleGetIncomingFriendRequests = async (req, res, next) => {
   // 들어온 친구 신청 목록 조회 로직 구현
@@ -65,8 +62,8 @@ export const handleGetIncomingFriendRequests = async (req, res, next) => {
   try {
     const result = await getIncomingFriendRequests(userId);
     res
-      .status(result.status)
-      .json({ data: result.data, message: result.message });
+      .status(200)
+      .success({ data: result.data, message: "친구 신청 조회가 성공하였습니다." });
   } catch (error) {
     next(error);
   }
@@ -75,14 +72,12 @@ export const handleGetIncomingFriendRequests = async (req, res, next) => {
 export const handleGetOutgoingFriendRequests = async (req, res, next) => {
   // 보낸 친구 신청 목록 조회 로직 구현
   const userId = req.user.id;
-  console.log("userId1:"+ userId);
   userIsNull(userId);
-  console.log("userId2:"+ userId);
   try {
     const result = await getOutgoingFriendRequests(userId);
     res
-      .status(result.status)
-      .json({ data: result.data, message: result.message });
+      .status(200)
+      .success({ data: result.data, message: "보낸 친구 신청 조회가 성공하였습니다." });
   } catch (error) {
     next(error);
   }
@@ -92,10 +87,12 @@ export const handleAcceptFriendRequest = async (req, res, next) => {
   // 친구 신청 수락 로직 구현
   const receiverUserId = req.user.id;
   const requesterUserId = req.body.targetUserId;
-  userIsNull(userId, targetUserId);
+  userIsNull(receiverUserId, requesterUserId);
   try {
     const result = await acceptFriendRequest(receiverUserId, requesterUserId);
-    res.status(result.status).json({ data: result.data, message: result.message });
+    res
+      .status(200)
+      .success({ data: result.data, message: "친구 신청이 수락되었습니다." });
   } catch (error) {
     next(error);
   }
@@ -103,25 +100,29 @@ export const handleAcceptFriendRequest = async (req, res, next) => {
 
 export const handleRejectFriendRequest = async (req, res, next) => {
   // 친구 신청 거절 로직 구현
-  const receiverUserId = req.user.id;
-  const requesterUserId = req.body.targetUserId;
+  const userId = req.user.id;
+  const targetUserId = req.body.targetUserId;
   userIsNull(userId, targetUserId);
   try {
     const result = await rejectFriendRequest(userId, targetUserId);
-    res.status(result.status).json({ data: result.data, message: result.message });
+    res
+      .status(200)
+      .success({ data: result.data, message: "친구 신청이 거절되었습니다." });
   } catch (error) {
     next(error);
   }
 };
 
-export const handleDeleteFriend = async (req, res, next) => {
+export const handleDeleteFriendRequest = async (req, res, next) => {
   // 친구 신청 취소 로직
   const userId = req.user.id;
   const targetUserId = Number(req.params.targetUserId);
   userIsNull(userId, targetUserId);
   try {
     const result = await deleteFriendRequest(userId, targetUserId);
-    res.status(result.status).json({ data: result.data, message: result.message });
+    res
+      .status(200)
+      .success({ data: result.data, message: "해당 친구 신청이 삭제되었습니다." });
   } catch (error) {
     next(error);
   }
