@@ -26,7 +26,7 @@ import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js"
 import { handleGetTodayQuestion } from "./controllers/question.controller.js";
 import { validate } from "./middlewares/validate.middleware.js";
 import { emailSchema, loginSchema, passwordSchema, SignUpSchema, usernameSchema, verificationConfirmCodeSchema, verificationSendCodeSchema } from "./schemas/auth.schema.js";
-
+import { handleInsertInquiryAsUser, handleInsertInquiryAsAdmin, handleGetInquiry } from "./controllers/inquiry.controller.js";
 import { isLogin } from "./middlewares/auth.middleware.js";
 import { isRestricted } from "./middlewares/restriction.middleware.js";
 import {
