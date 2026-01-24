@@ -46,6 +46,7 @@ import {
   handleInsertUserReport,
   handleGetUserReports,
 } from "./controllers/report.controller.js";
+import { handleGetInquiry, handleInsertInquiryAsAdmin, handleInsertInquiryAsUser } from "./controllers/inquiry.controller.js";
 
 //dotenv.config();
 

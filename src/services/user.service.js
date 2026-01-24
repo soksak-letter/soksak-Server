@@ -14,6 +14,7 @@ import {
   ProfileFileRequiredError,
   ProfileUnsupportedImageTypeError,
   ProfileInvalidImageUrlError,
+  UserNotFoundError,
 } from "../errors/user.error.js";
 
 import {
