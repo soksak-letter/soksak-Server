@@ -7,6 +7,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
+    "lint": "eslint src/**",
+    "build": "npx prisma validate && npx prisma generate && npm run lint",
     "prisma:db-pull": "prisma db pull",
     "prisma:studio": "prisma studio",
     "db:gen": "prisma generate",
@@ -52,7 +54,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
-    "eslint": "^9.39.2",
+    "eslint": "^8.57.0",
     "eslint-plugin-import": "^2.32.0",
     "nodemon": "^3.1.4",
     "prisma": "^6.15.0"
