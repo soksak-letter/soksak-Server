@@ -52,7 +52,7 @@ export const createMatchingSession = async (
   const count = await countMatchingSessionByUserId(userId);
   console.log("count" + count);
   if(count >= 10) throw new SessionCountOverError(undefined, undefined, { count });
-  const question = await findQuestionByQuesionId(questionId);
+  const question = await findQuestionByQuestionId(questionId);
   console.log("question" + question.id);
   if(question == null) throw new QuestionNotFoundError(undefined, undefined, { questionId });
 
