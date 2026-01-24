@@ -46,8 +46,10 @@ import {
   handleInsertUserReport,
   handleGetUserReports,
 } from "./controllers/report.controller.js";
+import { handleGetInquiry, handleInsertInquiryAsAdmin, handleInsertInquiryAsUser } from "./controllers/inquiry.controller.js";
 
 //dotenv.config();
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -243,7 +245,16 @@ app.post(
 );
 app.get("/reports", isLogin, isRestricted, asyncHandler(handleGetUserReports));
 
-app.get("/reports/weekly/:year/:week", isLogin, isRestricted, asyncHandler(handleGetWeeklyReport));
+app.get(
+  "/reports/weekly/:year/:week",
+  isLogin,
+  isRestricted,
+  asyncHandler(handleGetWeeklyReport)
+);
+
+app.post("/inquiries", isLogin, asyncHandler(handleInsertInquiryAsUser));
+app.post("/inquiries/admin", isLogin, asyncHandler(handleInsertInquiryAsAdmin));
+app.get("/inquiries", isLogin, asyncHandler(handleGetInquiry));
 
 app.post("/auth/signup", validate(SignUpSchema), handleSignUp);                     // 회원가입
 app.post("/auth/login", validate(loginSchema), handleLogin);                        // 로그인

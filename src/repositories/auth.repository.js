@@ -1,5 +1,4 @@
-import { prisma } from "../configs/db.config.js";
-import { redis } from "../configs/db.config.js";
+import { prisma, redis } from "../configs/db.config.js";
 
 export const saveRefreshToken = async ({id, jwtRefreshToken}) => {
     await redis.set(`refreshToken:${id}`, jwtRefreshToken, {
