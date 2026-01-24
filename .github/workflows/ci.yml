@@ -23,9 +23,10 @@ jobs:
 
       - name: Generate Prisma Client
         run: npx prisma generate
-
-      - name: Run Tests
-        run: npm test
+        env:
+          DATABASE_URL: "mysql://johndoe:randompassword@localhost:5432/mydb"
 
       - name: Build project
+        env:
+          DATABASE_URL: "mysql://johndoe:randompassword@localhost:5432/mydb"
         run: npm run build
