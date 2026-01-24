@@ -642,28 +642,16 @@ export const getAverageTemperatureScore = async (userId) => {
   return result?._avg?.temperatureScore ?? null;
 };
 
-//  이용시간(분): matching_session started_at~ended_at 합 (참여한 세션 기준)
+//  이용시간(분): 실제 웹사이트 사용 시간 (totalUsageMinutes 필드 사용)
 export const getTotalUsageMinutes = async (userId) => {
-  const participants = await prisma.sessionParticipant.findMany({
-    where: { userId },
-    select: {
-      session: {
-        select: { startedAt: true, endedAt: true },
-      },
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { 
+      totalUsageMinutes: true,
     },
   });
 
-  let totalMs = 0;
-  for (const p of participants) {
-    const startedAt = p?.session?.startedAt;
-    const endedAt = p?.session?.endedAt;
-    if (!startedAt || !endedAt) continue;
-
-    const diff = new Date(endedAt).getTime() - new Date(startedAt).getTime();
-    if (diff > 0) totalMs += diff;
-  }
-
-  return Math.floor(totalMs / 1000 / 60);
+  return user?.totalUsageMinutes ?? 0;
 };
 
 export const updateUserNicknameById = async ({ userId, nickname }) => {
@@ -694,5 +682,21 @@ export const updateUserOnboardingStep1 = async ({ userId, gender, job }) => {
   return prisma.user.update({
     where: { id: userId },
     data: { gender, job },
+  });
+};
+
+// ========== Activity Repository ==========
+export const incrementTotalUsageMinutes = async (userId) => {
+  return prisma.user.update({
+    where: { id: userId },
+    data: {
+      totalUsageMinutes: {
+        increment: 1,
+      },
+    },
+    select: {
+      id: true,
+      totalUsageMinutes: true,
+    },
   });
 };
