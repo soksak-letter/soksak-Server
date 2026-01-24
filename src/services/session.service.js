@@ -15,7 +15,7 @@ import {
 } from "../errors/session.error.js";
 import { InvalidUserError } from "../errors/user.error.js";
 import { findUserById } from "../repositories/user.repository.js";
-import { findQuestionByQuesionId } from "../repositories/question.repository.js";
+import { findQuestionByQuestionId } from "../repositories/question.repository.js";
 import { QuestionNotFoundError } from "../errors/question.error.js";
 import { UnExpectedReportReasonError } from "../errors/report.error.js";
 import { BadRequestError, NotFoundError, InternalServerError } from "../errors/base.error.js";

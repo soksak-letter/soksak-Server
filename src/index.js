@@ -24,21 +24,6 @@ import { bootstrapWeeklyReports } from "./jobs/weeklyReport.bootstrap.js";
 import { startWeeklyReportCron } from "./jobs/weeklyReport.cron.js";
 import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js";
 import { handleGetTodayQuestion } from "./controllers/question.controller.js";
-import {
-  handleGetCommunityGuidelines,
-  handleGetTerms,
-  handleGetPrivacy,
-} from "./controllers/policy.controller.js";
-import {
-  handleGetNotices,
-  handleGetNoticeDetail,
-} from "./controllers/notice.controller.js";
-import { handlePutMyDeviceToken } from "./controllers/deviceToken.controller.js";
-import {
-  handleGetMyConsents,
-  handlePatchMyConsents,
-} from "./controllers/consent.controller.js";
-
 import { validate } from "./middlewares/validate.middleware.js";
 import { emailSchema, loginSchema, passwordSchema, SignUpSchema, usernameSchema, verificationConfirmCodeSchema, verificationSendCodeSchema } from "./schemas/auth.schema.js";
 
@@ -50,13 +35,6 @@ import {
 } from "./schemas/letter.schema.js";
 import { idParamSchema } from "./schemas/common.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
-import {
-  handleGetAnonymousThreads,
-  handleGetAnonymousThreadLetters,
-  handleGetSelfMailbox,
-  handleGetLetterFromFriend,
-  getLetterFromFriend
-} from "./controllers/mailbox.controller.js";
 import {
   handleInsertUserReport,
   handleGetUserReports,

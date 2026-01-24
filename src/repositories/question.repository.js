@@ -21,3 +21,14 @@ export const findQuestionByDate = async (date) => {
 
     return question;
 }
+
+export const findQuestionByQuestionId = async(id) => {
+    const result = prisma.question.findFirst({
+        where: {
+            id
+        },
+        select: {
+            id: true
+        }
+    })
+}
