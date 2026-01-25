@@ -7,8 +7,8 @@ import { BadRequestError } from "../errors/base.error.js";
 import {
   ConsentUnauthorizedError,
   ConsentInvalidBodyError,
-  DeviceTokenUnauthorizedError,
-  DeviceTokenInvalidBodyError,
+  PushSubscriptionUnauthorizedError,
+  PushSubscriptionInvalidBodyError,
   ProfileUnauthorizedError,
   ProfileUserNotFoundError,
   ProfileInvalidNicknameError,
@@ -29,7 +29,7 @@ import {
 } from "../errors/user.error.js";
 
 import {
-  upsertUserDeviceToken,
+  upsertPushSubscription,
   findActiveInterests,
   findMyActiveInterests,
   findActiveInterestsByIds,
@@ -148,18 +148,29 @@ export const patchMyConsents = async ({ userId, payload }) => {
 };
 
 // ------------------------------
-// DeviceToken 
+// PushSubscription 
 // ------------------------------
-export const updateMyDeviceToken = async ({ userId, deviceToken }) => {
-  if (!userId) throw new DeviceTokenUnauthorizedError();
-  if (typeof deviceToken !== "string" || deviceToken.trim().length === 0) {
-    throw new DeviceTokenInvalidBodyError();
+export const updateMyPushSubscription = async ({ userId, subscription }) => {
+  if (!userId) throw new PushSubscriptionUnauthorizedError();
+  
+  const { endpoint, keys } = subscription || {};
+  const { p256dh, auth } = keys || {};
+
+  if (!endpoint || typeof endpoint !== "string" || endpoint.trim().length === 0) {
+    throw new PushSubscriptionInvalidBodyError("USER_PUSH_SUBSCRIPTION_INVALID", "endpoint는 필수입니다.");
+  }
+  if (!p256dh || typeof p256dh !== "string" || p256dh.trim().length === 0) {
+    throw new PushSubscriptionInvalidBodyError("USER_PUSH_SUBSCRIPTION_INVALID", "keys.p256dh는 필수입니다.");
+  }
+  if (!auth || typeof auth !== "string" || auth.trim().length === 0) {
+    throw new PushSubscriptionInvalidBodyError("USER_PUSH_SUBSCRIPTION_INVALID", "keys.auth는 필수입니다.");
   }
 
-  await upsertUserDeviceToken({
+  await upsertPushSubscription({
     userId,
-    deviceToken: deviceToken.trim(),
-    deviceType: "FCM",
+    endpoint: endpoint.trim(),
+    p256dh: p256dh.trim(),
+    auth: auth.trim(),
   });
 
   return { updated: true };

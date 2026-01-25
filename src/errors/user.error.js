@@ -38,15 +38,15 @@ export class ConsentInvalidBodyError extends BadRequestError {
   }
 }
 
-// ========== DeviceToken Errors ==========
-export class DeviceTokenUnauthorizedError extends unauthorizedError {
+// ========== PushSubscription Errors ==========
+export class PushSubscriptionUnauthorizedError extends unauthorizedError {
   constructor(code = "USER_UNAUTHORIZED", message = "인증이 필요합니다.", data = null) {
     super(code, message, data);
   }
 }
 
-export class DeviceTokenInvalidBodyError extends BadRequestError {
-  constructor(code = "USER_DEVICE_TOKEN_INVALID", message = "요청 바디가 올바르지 않습니다. (deviceToken: string 필수)", data = null) {
+export class PushSubscriptionInvalidBodyError extends BadRequestError {
+  constructor(code = "USER_PUSH_SUBSCRIPTION_INVALID", message = "요청 바디가 올바르지 않습니다. (endpoint, keys.p256dh, keys.auth 필수)", data = null) {
     super(code, message, data);
   }
 }

@@ -16,7 +16,7 @@ import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriend
 import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats, handleGetLetterAssets } from "./controllers/letter.controller.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername } from "./controllers/auth.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
-import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyDeviceToken, handleGetMyConsents, handlePatchMyConsents, } from "./controllers/user.controller.js";
+import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyPushSubscription, handleGetMyConsents, handlePatchMyConsents, } from "./controllers/user.controller.js";
 import { handleGetAnonymousThreads, handleGetAnonymousThreadLetters, handleGetSelfMailbox, handleGetLetterFromFriend, } from "./controllers/mailbox.controller.js";
 import { handleGetNotices, handleGetNoticeDetail, } from "./controllers/notice.controller.js";
 import { handleGetCommunityGuidelines, handleGetTerms, handleGetPrivacy, } from "./controllers/policy.controller.js";
@@ -34,6 +34,7 @@ import {
   letterToOtherSchema,
 } from "./schemas/letter.schema.js";
 import { idParamSchema } from "./schemas/common.schema.js";
+import { pushSubscriptionSchema } from "./schemas/user.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
 import {
   handleInsertUserReport,
@@ -312,7 +313,7 @@ app.get("/users/me/consents", isLogin, handleGetMyConsents);
 app.patch("/users/me/consents", isLogin, handlePatchMyConsents);
 
 // 디바이스 토큰
-app.put("/users/me/device-tokens", isLogin, handlePutMyDeviceToken);
+app.put("/users/me/push-subscriptions", isLogin, validate(pushSubscriptionSchema), handlePutMyPushSubscription);
 
 // / 편지함
 app.get("/mailbox/anonymous", isLogin, handleGetAnonymousThreads);

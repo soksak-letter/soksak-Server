@@ -32,7 +32,7 @@ model User {
   pool            Int?
 
   notificationSetting UserNotificationSetting?
-  deviceTokens        UserDeviceToken[]
+  pushSubscriptions   PushSubscription[]
   agreements          UserAgreement[]
   auths               Auth[]
   interests           UserInterest[]
@@ -68,18 +68,19 @@ model UserNotificationSetting {
   @@map("user_notification_setting")
 }
 
-model UserDeviceToken {
-  id          Int      @id @default(autoincrement()) @map("id")
-  userId      Int      @unique @map("user_id")  
-  deviceType  String   @map("device_type")
-  deviceToken String   @map("device_token")
-  lastSeenAt  DateTime @default(now()) @map("last_seen_at")
-  createdAt   DateTime @default(now()) @map("created_at")
+model PushSubscription {
+  id        Int      @id @default(autoincrement()) @map("id")
+  userId    Int      @map("user_id")
+  endpoint  String   @unique @map("endpoint")
+  p256dh    String   @map("p256dh")
+  auth      String   @map("auth")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId]) 
-  @@map("user_device_token")
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 model UserAgreement {

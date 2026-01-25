@@ -3,7 +3,7 @@ import {
   updateOnboardingStep1,
   getMyConsents,
   patchMyConsents,
-  updateMyDeviceToken,
+  updateMyPushSubscription,
   getAllInterests,
   getMyInterests,
   updateMyOnboardingInterests,
@@ -74,13 +74,13 @@ export const handlePatchMyConsents = async (req, res, next) => {
   }
 };
 
-// ========== DeviceToken Controllers ==========
-export const handlePutMyDeviceToken = async (req, res, next) => {
+// ========== PushSubscription Controllers ==========
+export const handlePutMyPushSubscription = async (req, res, next) => {
   try {
     const userId = req.user?.id;
-    const { deviceToken } = req.body ?? {};
+    const subscription = req.body ?? {};
 
-    const result = await updateMyDeviceToken({ userId, deviceToken });
+    const result = await updateMyPushSubscription({ userId, subscription });
 
     return res.status(200).success(result);
   } catch (err) {
