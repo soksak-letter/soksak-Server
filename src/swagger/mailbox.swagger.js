@@ -93,7 +93,11 @@
  *                 success:
  *                   type: object
  *                   properties:
- *                     items:
+ *                     firstQuestion:
+ *                       type: string
+ *                       nullable: true
+ *                       description: 첫 번째 편지의 질문
+ *                     letters:
  *                       type: array
  *                       items:
  *                         type: object
@@ -102,28 +106,33 @@
  *                             type: integer
  *                           title:
  *                             type: string
- *                           content:
- *                             type: string
  *                           deliveredAt:
- *                             type: string
- *                             format: date-time
- *                             nullable: true
- *                           createdAt:
  *                             type: string
  *                             format: date-time
  *                             nullable: true
  *                           design:
  *                             type: object
  *                             properties:
- *                               paperId:
- *                                 type: integer
+ *                               paper:
+ *                                 type: object
  *                                 nullable: true
- *                               stampId:
- *                                 type: integer
+ *                                 properties:
+ *                                   id:
+ *                                     type: integer
+ *                                   name:
+ *                                     type: string
+ *                                   assetUrl:
+ *                                     type: string
+ *                               stamp:
+ *                                 type: object
  *                                 nullable: true
- *                               fontId:
- *                                 type: integer
- *                                 nullable: true
+ *                                 properties:
+ *                                   id:
+ *                                     type: integer
+ *                                   name:
+ *                                     type: string
+ *                                   assetUrl:
+ *                                     type: string
  *       400:
  *         description: 잘못된 threadId
  *       401:

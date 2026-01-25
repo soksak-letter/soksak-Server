@@ -16,8 +16,10 @@ import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriend
 import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats, handleGetLetterAssets } from "./controllers/letter.controller.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername } from "./controllers/auth.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
-import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyDeviceToken, handleGetMyConsents, handlePatchMyConsents, } from "./controllers/user.controller.js";
+import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyDeviceToken, handleGetMyConsents, handlePatchMyConsents, handleUpdateActivity, } from "./controllers/user.controller.js";
+
 import { handleGetAnonymousThreads, handleGetAnonymousThreadLetters, handleGetSelfMailbox, handleGetLetterFromFriend, } from "./controllers/mailbox.controller.js";
+
 import { handleGetNotices, handleGetNoticeDetail, } from "./controllers/notice.controller.js";
 import { handleGetCommunityGuidelines, handleGetTerms, handleGetPrivacy, } from "./controllers/policy.controller.js";
 import { bootstrapWeeklyReports } from "./jobs/weeklyReport.bootstrap.js";
@@ -333,6 +335,9 @@ app.get("/mailbox/self", isLogin, handleGetSelfMailbox);
 app.get("/users/me/profile", isLogin, handleGetMyProfile);
 app.patch("/users/me/profile", isLogin, handlePatchMyProfile);
 app.post("/users/me/profile/image", isLogin, upload.single("image"), handlePostMyProfileImage);
+
+// 활동 시간 추적
+app.post("/users/me/activity", isLogin, handleUpdateActivity);
 
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
