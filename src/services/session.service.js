@@ -145,3 +145,9 @@ export const createSessionReview = async (
     throw new SessionInternalError();
   }
 };
+
+export const countUserSession = (userId) => {
+  const count = countMatchingSessionByUserId(userId);
+
+  return count;
+} 

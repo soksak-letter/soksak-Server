@@ -16,13 +16,8 @@ export const handlePostMatchingSession = async(req, res, next) => {
     const questionId = Number(req.params.questionId);
     if(questionId == null || targetUserId == null) throw new UnExpectArgumentsError;
     try{
-<<<<<<< HEAD
-        const result = await createMatchingSession(userId, questionId);
-        res.status(result.status).json({ data: result.data, message: result.message });
-=======
         const result = await createMatchingSession(userId, targetUserId, questionId);
         res.status(201).success({ data: result.data, message: "세션 매칭이 성공하였습니다." });
->>>>>>> dev
     } catch(error) {
         next(error);
     }
