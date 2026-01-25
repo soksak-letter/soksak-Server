@@ -63,7 +63,7 @@ export const getAnonymousThreads = async (userId) => {
 export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
   const threadId = Number(threadIdRaw);
   if (!Number.isFinite(threadId) || threadId <= 0) {
-    throw new MailboxInvalidThreadIdError("MAILBOX_400_01", "threadId가 올바르지 않습니다.", { threadId: threadIdRaw });
+    throw new MailboxInvalidThreadIdError("MAILBOX_INVALID_THREAD_ID", "threadId가 올바르지 않습니다.", { threadId: threadIdRaw });
   }
 
   const letters = await findReceivedLettersBySender({

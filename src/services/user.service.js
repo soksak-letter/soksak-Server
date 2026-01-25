@@ -3,6 +3,7 @@ import * as common from "oci-common";
 import * as objectstorage from "oci-objectstorage";
 
 import { RequiredTermAgreementError } from "../errors/auth.error.js";
+import { BadRequestError } from "../errors/base.error.js";
 import {
   ConsentUnauthorizedError,
   ConsentInvalidBodyError,
@@ -14,7 +15,17 @@ import {
   ProfileFileRequiredError,
   ProfileUnsupportedImageTypeError,
   ProfileInvalidImageUrlError,
+  ProfileFileTooLargeError,
+  ProfileFileBufferMissingError,
   UserNotFoundError,
+  OnboardingInvalidGenderError,
+  OnboardingInvalidJobError,
+  OnboardingAlreadyCompletedError,
+  InterestIdsNotArrayError,
+  InterestIdsInvalidFormatError,
+  InterestIdsMinCountError,
+  InterestIdsInvalidError,
+  NotificationSettingsInvalidBodyError,
 } from "../errors/user.error.js";
 
 import {
@@ -57,32 +68,20 @@ import {
 export const updateOnboardingStep1 = async ({ userId, gender, job }) => {
   // validation 
   if (!gender || !ALLOWED_GENDERS.has(gender)) {
-    const e = new Error("gender 값이 올바르지 않습니다.");
-    e.status = 400;
-    e.errorCode = "USER_400";
-    throw e;
+    throw new OnboardingInvalidGenderError();
   }
   if (!job || !ALLOWED_JOBS.has(job)) {
-    const e = new Error("job 값이 올바르지 않습니다.");
-    e.status = 400;
-    e.errorCode = "USER_400";
-    throw e;
+    throw new OnboardingInvalidJobError();
   }
 
   const user = await getUserForOnboarding(userId);
   if (!user) {
-    const e = new Error("유저를 찾을 수 없습니다.");
-    e.status = 404;
-    e.errorCode = "USER_404";
-    throw e;
+    throw new UserNotFoundError("USER_NOT_FOUND", "유저를 찾을 수 없습니다.");
   }
 
   // 온보딩 1회 정책 
   if (user.gender != null && user.job != null) {
-    const e = new Error("이미 온보딩 1이 완료된 사용자입니다.");
-    e.status = 409;
-    e.errorCode = "USER_409";
-    throw e;
+    throw new OnboardingAlreadyCompletedError();
   }
 
   await updateUserOnboardingStep1({ userId, gender, job });
@@ -182,26 +181,26 @@ export const getMyInterests = async ({ userId }) => {
 
 export const updateMyOnboardingInterests = async ({ userId, interestIds }) => {
   if (!Array.isArray(interestIds)) {
-    throw new Error("interestIds는 배열이어야 합니다.");
+    throw new InterestIdsNotArrayError();
   }
 
   const parsed = toIntArray(interestIds);
 
   if (parsed.some((n) => !Number.isInteger(n) || n <= 0)) {
-    throw new Error("interestIds는 양의 정수 배열이어야 합니다.");
+    throw new InterestIdsInvalidFormatError();
   }
 
   const uniqueIds = [...new Set(parsed)];
 
   if (uniqueIds.length < 3) {
-    throw new Error("관심사는 최소 3개 선택해야 합니다.");
+    throw new InterestIdsMinCountError();
   }
 
   const found = await findActiveInterestsByIds(uniqueIds);
   if (found.length !== uniqueIds.length) {
     const foundSet = new Set(found.map((x) => x.id));
     const invalid = uniqueIds.filter((id) => !foundSet.has(id));
-    throw new Error(`유효하지 않은 관심사 id가 포함되어 있습니다: ${invalid.join(", ")}`);
+    throw new InterestIdsInvalidError("USER_INTEREST_IDS_INVALID", `유효하지 않은 관심사 id가 포함되어 있습니다: ${invalid.join(", ")}`, { invalidIds: invalid });
   }
 
   await replaceUserInterests({ userId, interestIds: uniqueIds });
@@ -214,13 +213,13 @@ export const updateMyOnboardingInterests = async ({ userId, interestIds }) => {
 // ------------------------------
 export const updateMyNotificationSettings = async ({ userId, letter, marketing }) => {
   if (typeof letter !== "boolean" && typeof marketing !== "boolean") {
-    throw new Error('요청 바디에 "letter" 또는 "marketing" 중 하나 이상이 boolean으로 필요합니다.');
+    throw new NotificationSettingsInvalidBodyError("USER_NOTIFICATION_SETTINGS_INVALID_BODY", '요청 바디에 "letter" 또는 "marketing" 중 하나 이상이 boolean으로 필요합니다.');
   }
   if (typeof letter !== "undefined" && typeof letter !== "boolean") {
-    throw new Error('"letter"는 boolean이어야 합니다.');
+    throw new NotificationSettingsInvalidBodyError("USER_NOTIFICATION_SETTINGS_INVALID_BODY", '"letter"는 boolean이어야 합니다.');
   }
   if (typeof marketing !== "undefined" && typeof marketing !== "boolean") {
-    throw new Error('"marketing"은 boolean이어야 합니다.');
+    throw new NotificationSettingsInvalidBodyError("USER_NOTIFICATION_SETTINGS_INVALID_BODY", '"marketing"은 boolean이어야 합니다.');
   }
 
   await upsertNotificationSetting({
@@ -284,15 +283,10 @@ const getObjectStorageClient = () => {
 
 export const uploadUserProfileImage = async ({ userId, fileBuffer, mimeType }) => {
   if (!fileBuffer || fileBuffer.length === 0) {
-    const err = new Error("업로드할 파일이 비어있습니다.");
-    err.statusCode = 400;
-    throw err;
+    throw new ProfileFileRequiredError("USER_PROFILE_FILE_REQUIRED", "업로드할 파일이 비어있습니다.");
   }
   if (fileBuffer.length > MAX_PROFILE_IMAGE_SIZE) {
-    const err = new Error("파일 크기가 너무 큽니다. 최대 5MB까지 업로드 가능합니다.");
-    err.code = "FILE_TOO_LARGE";
-    err.statusCode = 400;
-    throw err;
+    throw new ProfileFileTooLargeError();
   }
   console.log("파일은 받음");
   const namespaceName = requiredEnv("OCI_NAMESPACE");
@@ -303,10 +297,7 @@ export const uploadUserProfileImage = async ({ userId, fileBuffer, mimeType }) =
   console.log(regionId);
   const ext = mimeToExt(mimeType);
   if (!ext) {
-    const err = new Error("지원하지 않는 이미지 형식입니다. (jpg/png/webp 허용)");
-    err.code = "UNSUPPORTED_IMAGE_TYPE";
-    err.statusCode = 400;
-    throw err;
+    throw new ProfileUnsupportedImageTypeError();
   }
   console.log("여기까지");
   const objectName = `profiles/${userId}/profile${ext}`;
@@ -380,10 +371,7 @@ export const updateMyProfileImage = async ({ userId, file }) => {
   if (!file) throw new ProfileFileRequiredError();
 
   if (!file.buffer) {
-    const err = new Error("파일 버퍼를 찾을 수 없습니다.");
-    err.status = 400;
-    err.errorCode = "FILE_BUFFER_MISSING";
-    throw err;
+    throw new ProfileFileBufferMissingError();
   }
 
   const { publicUrl } = await uploadUserProfileImage({

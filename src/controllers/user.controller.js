@@ -22,7 +22,7 @@ export const handlePatchOnboardingStep1 = async (req, res, next) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
-      return res.status(401).error({ errorCode: "AUTH_401", reason: "Unauthorized" });
+      throw new ProfileUnauthorizedError();
     }
 
     // 화면/기획 기준: gender, job만 받음 (ageRange는 받지 않음)
@@ -49,7 +49,7 @@ export const handleCreateUserAgreements = async (req, res, next) => {
 };
 
 // ========== Consent Controllers ==========
-export const handleGetMyConsents = async (req, res) => {
+export const handleGetMyConsents = async (req, res, next) => {
   try {
     const userId = req.user?.id;
 
@@ -57,19 +57,11 @@ export const handleGetMyConsents = async (req, res) => {
 
     return res.status(200).success(result);
   } catch (err) {
-    const status = err.status ?? 500;
-    const code = err.code ?? "INTERNAL_SERVER_ERROR";
-    const message = err.message ?? "서버 내부 오류";
-
-    return res.status(status).json({
-      resultType: "ERROR",
-      error: { code, message },
-      success: null,
-    });
+    next(err);
   }
 };
 
-export const handlePatchMyConsents = async (req, res) => {
+export const handlePatchMyConsents = async (req, res, next) => {
   try {
     const userId = req.user?.id;
     const payload = req.body ?? {};
@@ -78,20 +70,12 @@ export const handlePatchMyConsents = async (req, res) => {
 
     return res.status(200).success(result);
   } catch (err) {
-    const status = err.status ?? 500;
-    const code = err.code ?? "INTERNAL_SERVER_ERROR";
-    const message = err.message ?? "서버 내부 오류";
-
-    return res.status(status).json({
-      resultType: "ERROR",
-      error: { code, message },
-      success: null,
-    });
+    next(err);
   }
 };
 
 // ========== DeviceToken Controllers ==========
-export const handlePutMyDeviceToken = async (req, res) => {
+export const handlePutMyDeviceToken = async (req, res, next) => {
   try {
     const userId = req.user?.id;
     const { deviceToken } = req.body ?? {};
@@ -100,15 +84,7 @@ export const handlePutMyDeviceToken = async (req, res) => {
 
     return res.status(200).success(result);
   } catch (err) {
-    const status = err.status ?? 500;
-    const code = err.code ?? "INTERNAL_SERVER_ERROR";
-    const message = err.message ?? "서버 내부 오류";
-
-    return res.status(status).json({
-      resultType: "ERROR",
-      error: { code, message },
-      success: null,
-    });
+    next(err);
   }
 };
 
@@ -150,7 +126,7 @@ export const handleUpdateMyOnboardingInterests = async (req, res, next) => {
 export const handleUpdateMyNotificationSettings = async (req, res, next) => {
   try {
     const userId = req.user?.id;
-    if (!userId) throw new Error("인증 정보가 없습니다.");
+    if (!userId) throw new ProfileUnauthorizedError();
 
     const { letter, marketing } = req.body;
 
@@ -165,7 +141,7 @@ export const handleUpdateMyNotificationSettings = async (req, res, next) => {
 export const handleGetMyNotificationSettings = async (req, res, next) => {
   try {
     const userId = req.user?.id;
-    if (!userId) throw new Error("인증 정보가 없습니다.");
+    if (!userId) throw new ProfileUnauthorizedError();
 
     const result = await getMyNotificationSettings({ userId });
 
@@ -176,37 +152,21 @@ export const handleGetMyNotificationSettings = async (req, res, next) => {
 };
 
 // ========== Profile Controllers ==========
-const ok = (res, success) => {
-  return res.status(200).success(success);
-};
-
-const fail = (res, err) => {
-  const status = err?.statusCode || 500;
-  const code = err?.code || "INTERNAL_SERVER_ERROR";
-  const message = err?.message || "서버 내부 오류";
-
-  return res.status(status).json({
-    resultType: "ERROR",
-    error: { code, message },
-    success: null,
-  });
-};
-
 // GET /users/me/profile
-export const handleGetMyProfile = async (req, res) => {
+export const handleGetMyProfile = async (req, res, next) => {
   try {
     const userId = req?.user?.id;
     if (!userId) throw new ProfileUnauthorizedError();
 
     const data = await getMyProfile({ userId });
-    return ok(res, data);
+    return res.status(200).success(data);
   } catch (e) {
-    return fail(res, e);
+    next(e);
   }
 };
 
 // PATCH /users/me/profile  (nickname)
-export const handlePatchMyProfile = async (req, res) => {
+export const handlePatchMyProfile = async (req, res, next) => {
   try {
     const userId = req?.user?.id;
     if (!userId) throw new ProfileUnauthorizedError();
@@ -214,14 +174,14 @@ export const handlePatchMyProfile = async (req, res) => {
     const { nickname } = req.body || {};
     const result = await updateMyNickname({ userId, nickname });
 
-    return ok(res, result);
+    return res.status(200).success(result);
   } catch (e) {
-    return fail(res, e);
+    next(e);
   }
 };
 
 // POST /users/me/profile/image  (multipart)
-export const handlePostMyProfileImage = async (req, res) => {
+export const handlePostMyProfileImage = async (req, res, next) => {
   try {
     const userId = req?.user?.id;
     if (!userId) throw new ProfileUnauthorizedError();
@@ -229,8 +189,8 @@ export const handlePostMyProfileImage = async (req, res) => {
     const file = req.file; // multer single("image")
     const result = await updateMyProfileImage({ userId, file });
 
-    return ok(res, result);
+    return res.status(200).success(result);
   } catch (e) {
-    return fail(res, e);
+    next(e);
   }
 };
