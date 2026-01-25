@@ -55,11 +55,7 @@ export const handleGetMyConsents = async (req, res) => {
 
     const result = await getMyConsents({ userId });
 
-    return res.status(200).json({
-      resultType: "SUCCESS",
-      error: null,
-      success: result,
-    });
+    return res.status(200).success(result);
   } catch (err) {
     const status = err.status ?? 500;
     const code = err.code ?? "INTERNAL_SERVER_ERROR";
@@ -80,11 +76,7 @@ export const handlePatchMyConsents = async (req, res) => {
 
     const result = await patchMyConsents({ userId, payload });
 
-    return res.status(200).json({
-      resultType: "SUCCESS",
-      error: null,
-      success: result,
-    });
+    return res.status(200).success(result);
   } catch (err) {
     const status = err.status ?? 500;
     const code = err.code ?? "INTERNAL_SERVER_ERROR";
@@ -106,11 +98,7 @@ export const handlePutMyDeviceToken = async (req, res) => {
 
     const result = await updateMyDeviceToken({ userId, deviceToken });
 
-    return res.status(200).json({
-      resultType: "SUCCESS",
-      error: null,
-      success: result,
-    });
+    return res.status(200).success(result);
   } catch (err) {
     const status = err.status ?? 500;
     const code = err.code ?? "INTERNAL_SERVER_ERROR";
@@ -189,7 +177,7 @@ export const handleGetMyNotificationSettings = async (req, res, next) => {
 
 // ========== Profile Controllers ==========
 const ok = (res, success) => {
-  return res.status(200).json({ resultType: "SUCCESS", error: null, success });
+  return res.status(200).success(success);
 };
 
 const fail = (res, err) => {

@@ -4,7 +4,7 @@ import { getCommunityGuidelines, getTerms, getPrivacy } from "../services/policy
 export const handleGetCommunityGuidelines = async (req, res, next) => {
   try {
     const data = await getCommunityGuidelines();
-    return res.status(200).json({ resultType: "SUCCESS", error: null, success: data });
+    return res.status(200).success(data);
   } catch (err) {
     next(err);
   }
@@ -13,7 +13,7 @@ export const handleGetCommunityGuidelines = async (req, res, next) => {
 export const handleGetTerms = async (req, res, next) => {
   try {
     const data = await getTerms();
-    return res.status(200).json({ resultType: "SUCCESS", error: null, success: data });
+    return res.status(200).success(data);
   } catch (err) {
     next(err);
   }
@@ -22,7 +22,7 @@ export const handleGetTerms = async (req, res, next) => {
 export const handleGetPrivacy = async (req, res, next) => {
   try {
     const data = await getPrivacy();
-    return res.status(200).json({ resultType: "SUCCESS", error: null, success: data });
+    return res.status(200).success(data);
   } catch (err) {
     next(err);
   }
