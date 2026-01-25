@@ -10,6 +10,7 @@ import {
 import {
   SessionCountOverError,
   SessionInternalError,
+  SessionNotFoundError,
   SessionParticipantNotFoundError,
   UnExpectArgumentsError,
 } from "../errors/session.error.js";
@@ -45,23 +46,12 @@ export function validateTemperatureScore(temperatureScore) {
   return v >= 0 && v <= 100;
 }
 
-export const createMatchingSession = async (
-  userId,
-  questionId
-) => {
-  const count = await countMatchingSessionByUserId(userId);
-  console.log("count" + count);
-  if(count >= 10) throw new SessionCountOverError(undefined, undefined, { count });
-  const question = await findQuestionByQuestionId(questionId);
-  console.log("question" + question.id);
-  if(question == null) throw new QuestionNotFoundError(undefined, undefined, { questionId });
-
+export const createMatchingSession = async (userId, targetUserId, questionId, tx) => {
   try {
-    const result = await acceptSessionRequestTx(userId, questionId);
+    const result = await acceptSessionRequestTx(userId, targetUserId, questionId, tx);
     if (result == null) throw new SessionInternalError(undefined, undefined, { userId, questionId });
-    return {
-      data: result,
-    };
+
+    return result;
   } catch (error) {
     if (error instanceof BadRequestError || error instanceof NotFoundError || error instanceof InternalServerError) {
       throw error;

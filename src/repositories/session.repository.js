@@ -8,6 +8,7 @@ import { UserNotFoundError } from "../errors/user.error.js";
 import { findRandomUserByPool } from "../repositories/user.repository.js";
 
 export async function existsMatchingSession(userId, targetUserId, questionId) {
+  console.log(userId, targetUserId);
   const session = await prisma.matchingSession.findFirst({
     where: {
       questionId: questionId,
@@ -22,21 +23,19 @@ export async function existsMatchingSession(userId, targetUserId, questionId) {
   return session;
 }
 
-export const decrementSessionTurn = async (sessionId) => {
-  return await prisma.$transaction(async (tx) => {
-    const session = await tx.matchingSession.findUnique({
-      where: { id: sessionId },
-      select: { id: true, maxTurns: true },
-    });
+export const decrementSessionTurn = async (sessionId, tx) => {
+  const session = await tx.matchingSession.findUnique({
+    where: { id: sessionId },
+    select: { id: true, maxTurns: true },
+  });
 
-    if (!session) throw new SessionNotFoundError();
-    if (session.maxTurns <= 0) throw new MaxTurnIsOver();
+  if (!session) throw new SessionNotFoundError();
+  if (session.maxTurns <= 0) throw new MaxTurnIsOver();
 
-    return await tx.matchingSession.update({
-      where: { id: sessionId },
-      data: { maxTurns: { decrement: 1 } },
-      select: { id: true, maxTurns: true },
-    });
+  return await tx.matchingSession.update({
+    where: { id: sessionId },
+    data: { maxTurns: { decrement: 1 } },
+    select: { id: true, maxTurns: true },
   });
 };
 
@@ -53,29 +52,20 @@ export const findMaxTurnBySessionId = async (sessionId) => {
   return true;
 };
 
-export async function acceptSessionRequestTx(userId, questionId) {
+export async function acceptSessionRequestTx(userId, targetUserId, questionId, tx = prisma) {
   try {
-    const targetUserId = await findRandomUserByPool(userId);
-    if (!targetUserId)
-      throw new UserNotFoundError(undefined, undefined, { userId });
-    return await prisma.$transaction(async (tx) => {
-      console.log("start");
-      const sessionResult = await tx.matchingSession.create({
-        data: { questionId, status: "PENDING" 
-        },
-      });
-      console.log("sessionResult: "+sessionResult.id);
-      const result = await tx.sessionParticipant.createMany({
-        data: [
-          { sessionId: sessionResult.id, userId },
-          { sessionId: sessionResult.id, userId: targetUserId },
-        ],
-      });
-
-      if (result.count !== 2) throw new SessionInternalError();
-
-      return sessionResult.id;
+    const sessionResult = await tx.matchingSession.create({
+      data: { questionId, status: "PENDING"},
     });
+    
+    const result = await tx.sessionParticipant.createMany({
+      data: [
+        { sessionId: sessionResult.id, userId },
+        { sessionId: sessionResult.id, userId: targetUserId },
+      ],
+    });
+
+    return sessionResult;
   } catch (error) {
     throw new SessionInternalError(undefined, error.message, undefined);
   }
@@ -115,8 +105,8 @@ export const updateMatchingSessionToDiscard = async (sessionId) => {
   });
 };
 
-export const updateMatchingSessionToChating = async (sessionId) => {
-  return await prisma.matchingSession.updateMany({
+export const updateMatchingSessionToChating = async (sessionId, tx) => {
+  return await tx.matchingSession.updateMany({
     where: {
       id: sessionId,
     },

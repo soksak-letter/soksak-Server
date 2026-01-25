@@ -73,13 +73,15 @@ export const getLetterDetail = async (id) => {
 }
 
 // senderUserId = receiverUserId, letterType, questionId, title, content, isPublic, status, scheduledAt 필수 deliveredAt, readAt은 scheduledAt에 따라서
-export const createLetter = async ({letter, design}) => {
+export const createLetter = async ({letter, design}, tx = prisma) => {
     try{
-        const newLetter = await prisma.letter.create({
+        const newLetter = await tx.letter.create({
             data: {
                 ...letter,
                 design: {
-                    ...design
+                    create: {
+                        ...design
+                    }
                 }
             }
         });
