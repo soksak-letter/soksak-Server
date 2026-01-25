@@ -43,6 +43,7 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+const allowed_origins = process.env.ALLOWED_ORIGINS?.split(',') || ["http://localhost:3000"];
 
 app.use((req, res, next) => {
   console.log("[REQ]", req.method, req.originalUrl);
@@ -53,7 +54,7 @@ app.use((req, res, next) => {
 app.use(morgan("dev"));
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: allowed_origins,
     credentials: true,
   })
 );
