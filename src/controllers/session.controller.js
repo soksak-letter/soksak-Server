@@ -16,8 +16,13 @@ export const handlePostMatchingSession = async(req, res, next) => {
     const questionId = Number(req.params.questionId);
     if(questionId == null || targetUserId == null) throw new UnExpectArgumentsError;
     try{
+<<<<<<< HEAD
         const result = await createMatchingSession(userId, questionId);
         res.status(result.status).json({ data: result.data, message: result.message });
+=======
+        const result = await createMatchingSession(userId, targetUserId, questionId);
+        res.status(201).success({ data: result.data, message: "세션 매칭이 성공하였습니다." });
+>>>>>>> dev
     } catch(error) {
         next(error);
     }
@@ -29,7 +34,7 @@ export const handlePatchMatchingSessionStatusFriends = async(req, res, next) => 
     if(sessionId == null) throw new UnExpectArgumentsError;
     try{
         const result = await updateSessionFriends(userId, sessionId);
-        res.status(result.status).json({ data: result.data, message: result.message });
+        res.status(200).success({ data: result.data, message: "세션 상태가 FRIENDS로 변경되었습니다." });
     } catch (error) {
         next(error);
     }
@@ -41,7 +46,7 @@ export const handlePatchMatchingSessionStatusDiscarded = async(req, res, next) =
     if(sessionId == null) throw new UnExpectArgumentsError;
     try{
         const result = await updateSessionDiscarded(userId, sessionId);
-        res.status(result.status).json({ data: result.data, message: result.message });
+        res.status(200).success({ data: result.data, message: "세션 상태가 DISCRADED로 변경되었습니다." });
     } catch (error) {
         next(error);
     }
@@ -55,7 +60,7 @@ export const handlePostSessionReview = async(req, res, next) => {
     if(sessionId == null || userId == null || temperatureScore == null || reviewTag == null) throw new UnExpectArgumentsError;
     try{
         const result = await createSessionReview(sessionId, userId, temperatureScore, reviewTag);
-        res.status(result.status).json({ data: result.data, message: result.message });
+        res.status(201).success({ data: result.data, message: "세션 리뷰 작성에 성공하였습니다." });
     }catch(error){
         next(error);
     }

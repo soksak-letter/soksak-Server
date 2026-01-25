@@ -1,19 +1,19 @@
 import { BadRequestError, InternalServerError } from "./base.error.js"
 
-export class ReportUnexpectedArgumentError extends BadRequestError {
-  constructor(message="잘못된 인자 입력입니다.") {
-    super(message, 400, "REPORT_400_1", data)
+export class UnexpectedArgumentError extends BadRequestError {
+  constructor(code = "REPORT_400_01", message = "잘못된 인자 입력입니다.", data=null) {
+    super (code, message, data);
   }
 }
 
 export class ReportInternalError extends BadRequestError {
-  constructor(message="db 에러입니다.") {
-    super(message, 500, "REPORT_500_1", data) 
+  constructor(code = "REPORT_500_01", message = "신고 처리 중 서버 에러가 발생하였습니다.", data=null) {
+    super (code, message, data);
   }
 }
 
 export class UnExpectedReportReasonError extends InternalServerError {
-  constructor(message="잘못된 report reason입니다.") {
-    super(message, 400, "REPORT_400_02", data)
+  constructor(code = "REPORT_400_02", message = "잘못된 신고 이유 입력입니다.", data=null) {
+    super (code, message, data);
   }
 }

@@ -40,8 +40,8 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
     }
 
     const payload = { id: user.id, email: user.email, provider: user.provider };
-    const jwtAccessToken = generateAccessToken(payload, "1h");
-    const jwtRefreshToken = generateRefreshToken(payload, "14d");
+    const jwtAccessToken = generateAccessToken(payload, process.env.JWT_ACCESS_EXPIRED_TIME);
+    const jwtRefreshToken = generateRefreshToken(payload, process.env.JWT_REFRESH_EXPIRED_TIME);
 
     await saveRefreshToken({id: user.id, jwtRefreshToken});
     
@@ -58,8 +58,7 @@ export const updateRefreshToken = async (token) => {
     const savedRefreshToken = await getRefreshToken(payload.id);
 
     if(savedRefreshToken !== token) throw new NotRefreshTokenError("AUTH_INVALID_TOKEN", "리프레시 토큰이 아니거나 유효하지 않습니다.");
-    const jwtAccessToken = generateAccessToken(payload, "1h");
-
+    const jwtAccessToken = generateAccessToken(payload, process.env.JWT_ACCESS_EXPIRED_TIME);
     return jwtAccessToken;
 }
 
@@ -93,8 +92,8 @@ export const signUpUser = async (data) => {
         return user;
     }) 
     const payload = { id: newUser.id, email: newUser.email, provider: newUser.provider};
-    const jwtAccessToken = generateAccessToken(payload, "1h");
-    const jwtRefreshToken = generateRefreshToken(payload, "14d");
+    const jwtAccessToken = generateAccessToken(payload, process.env.JWT_ACCESS_EXPIRED_TIME);
+    const jwtRefreshToken = generateRefreshToken(payload, process.env.JWT_REFRESH_EXPIRED_TIME);
 
     return { 
         id: payload.id,
@@ -118,8 +117,8 @@ export const loginUser = async ({username, password}) => {
     if(!isValidPassword) throw new AuthError("AUTH_BAD_REQUEST", "아이디 또는 비밀번호가 일치하지 않습니다.");
 
     const payload = { id: user.id, email: user.email, provider: user.provider};
-    const jwtAccessToken = generateAccessToken(payload, "1h");
-    const jwtRefreshToken = generateRefreshToken(payload, "14d");
+    const jwtAccessToken = generateAccessToken(payload, process.env.JWT_ACCESS_EXPIRED_TIME);
+    const jwtRefreshToken = generateRefreshToken(payload, process.env.JWT_REFRESH_EXPIRED_TIME);
 
     await saveRefreshToken({id: user.id, jwtRefreshToken});
 
