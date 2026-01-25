@@ -1,4 +1,4 @@
-import { BadRequestError, NotFoundError, InternalServerError } from "./base.error.js";
+import { BadRequestError, NotFoundError, InternalServerError, ForbiddenError } from "./base.error.js";
 
 /**
  * 400: 올바르지 않은 Arguments 입력 (SESSION_400_01)
@@ -42,7 +42,7 @@ export class SessionInternalError extends InternalServerError {
 /**
  * 500: 편지 주고 받은 횟수 초과 (SESSION_500_02)
  */
-export class MaxTurnIsOver extends InternalServerError {
+export class MaxTurnIsOver extends ForbiddenError {
   constructor(
     code = "SESSION_500_02",
     message = "편지 주고 받은 횟수가 10번이 되었습니다.",
