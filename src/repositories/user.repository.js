@@ -2,6 +2,7 @@ import { prisma } from "../configs/db.config.js";
 import { xprisma } from "../xprisma.js";
 import { DuplicatedValueError } from "../errors/base.error.js";
 import { UserNotFoundError } from "../errors/user.error.js";
+import { SessionNotFoundError, SessionFullError } from "../errors/session.error.js";
 
 export const findUserByEmail = async (email) => {
     try{
@@ -170,27 +171,79 @@ export const softDeleteUser = async (id) => {
 
 export const findRandomUserByPool = async (id) => {
   const poolRaw = await prisma.user.findFirst({
+    where: { id },
+    select: { pool: true },
+  });
+
+  const sessions = await prisma.matchingSession.findMany({
     where: {
-        id
+      status: "CHATING",
+      participants: { some: { userId: id } },
     },
     select: {
-        pool: true
-    }
-  })
+      participants: {
+        where: { userId: { not: id } },
+        select: { userId: true },
+      },
+    },
+  });
+
+  const sessionOtherUserIds = sessions.flatMap((s) =>
+    s.participants.map((p) => p.userId)
+  );
+
+  const friendIdsRaw = await prisma.friend.findMany({
+    where: { OR: [{ userAId: id }, { userBId: id }] },
+    select: { userAId: true, userBId: true },
+  });
+
+  const friendIds = friendIdsRaw
+    .map((r) => (r.userAId === id ? r.userBId : r.userAId))
+    .filter((x) => x != null);
+
+  const excludeIds = [...new Set([id, ...friendIds, ...sessionOtherUserIds])];
+
   const pool = poolRaw?.pool;
+
   const rows = await xprisma.user.findMany({
     where: {
-        blockerUserId: id,
-        pool,
-        id: { not: id }
+      blockerUserId: id,
+      pool,
+      id: { notIn: excludeIds },
     },
-    select: {
-        id: true
-    }
-  })
-  const length = rows.length;
-  const randomNum = Math.floor(Math.random() * length);
-  return rows[randomNum]?.id ?? null;
+    select: { id: true },
+  });
+
+  const candidateIds = rows.map((r) => r.id);
+  if (candidateIds.length === 0) return null;
+    
+  const counts = await prisma.sessionParticipant.groupBy({
+    by: ["userId"],
+    where: {
+      userId: { in: candidateIds },
+      session: { status: "CHATING" }, 
+    },
+    _count: { sessionId: true },
+  });
+
+  const countMap = new Map(counts.map((r) => [r.userId, r._count.sessionId]));
+
+  const availableIds = candidateIds.filter(
+    (uid) => (countMap.get(uid) ?? 0) <= 10
+  );
+
+  if (availableIds.length === 0) {
+    throw new SessionFullError();
+  }
+
+  const randomId = availableIds[Math.floor(Math.random() * availableIds.length)];
+
+  const pickedCount = countMap.get(randomId) ?? 0;
+  if (pickedCount > 10) {
+    throw new SessionNotFoundError(undefined, undefined, randomId);
+  }
+
+  return randomId;
 };
 
 
@@ -685,7 +738,6 @@ export const updateUserOnboardingStep1 = async ({ userId, gender, job }) => {
   });
 };
 
-// ========== Activity Repository ==========
 export const incrementTotalUsageMinutes = async (userId) => {
   return prisma.user.update({
     where: { id: userId },
