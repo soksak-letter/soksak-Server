@@ -1,5 +1,5 @@
 // errors/friend.error.js
-import { BadRequestError, NotFoundError, ConflictError, InternalServerError } from "./base.error.js";
+import { BadRequestError, NotFoundError, ConflictError, InternalServerError, ForbiddenError } from "./base.error.js";
 
 /**
  * 400: 자기 자신에게 친구 신청 (FRIEND_400_01)
