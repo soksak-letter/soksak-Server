@@ -3,12 +3,13 @@ import { DuplicatedValueError } from "../errors/base.error.js";
 import { selectAllFriendsByUserId } from "../repositories/friend.repository.js";
 import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getLetterDetail, getPublicLetters } from "../repositories/letter.repository.js"
 import { createLetterLike, deleteLetterLike, findLetterLike } from "../repositories/like.repository.js";
-import { findUserById } from "../repositories/user.repository.js";
+import { findRandomUserByPool, findUserById } from "../repositories/user.repository.js";
 import { getMonthAndWeek, getWeekStartAndEnd } from "../utils/date.util.js";
 import { getLevelInfo } from "../utils/planetConstants.js";
 import { blockBadWordsInText } from "../utils/profanity.util.js";
 import { LetterBadRequest, LetterNotFound } from "../errors/letter.error.js";
 import { findLetterAssets } from "../repositories/asset.repository.js";
+import { acceptSessionRequestTx, decrementSessionTurn, existsMatchingSession } from "../repositories/session.repository.js";
 
 export const getLetter = async (id) => {
     const letter = await getLetterDetail(id);
@@ -46,12 +47,28 @@ export const sendLetterToMe = async (userId, data) => {
 }
 
 export const sendLetterToOther = async (userId, data) => {
+    if(!data?.receiver) {
+        data.receiver = await findRandomUserByPool(userId);
+    }
+
     const receiver = await findUserById(data.receiverUserId);
     if(!receiver) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
     if(userId === receiver.id) throw new DuplicatedValueError("USER_DUPLICATED_ID", "전송하는 유저와 전달받는 유저의 id가 같습니다", "id");
 
     const isProfane = blockBadWordsInText(data.content);
     if(isProfane) throw new LetterBadRequest("LETTER_BAD_WORD", "부적절한 단어가 포함되어있습니다.");
+
+    const session = await existsMatchingSession(userId, data.receiverUserId, data.questionId);
+
+    // 친구도 아니고 채팅중도 아닐 때
+    if(!session){
+        await acceptSessionRequestTx({id: userId, targetUserId: data.receiverUserId, questionId: data.questionId});
+    }
+    
+    // 친구는 아닌데 채팅중일 때
+    if(session.status === "CHATING") {
+        await decrementSessionTurn(session.id);
+    }
 
     const letterId = await createLetter({
         letter: {

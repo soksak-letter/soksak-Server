@@ -98,7 +98,7 @@ app.use((req, res, next) => {
   next();
 });
 
-await bootstrapWeeklyReports();
+// await bootstrapWeeklyReports();
 startBatch();
 
 // 비동기 에러 래퍼

@@ -3,7 +3,7 @@ import { MaxTurnIsOver, SessionInternalError, SessionNotFoundError } from "../er
 import { findRandomUserByPool } from "../repositories/user.repository.js";
 
 export async function existsMatchingSession(userId, targetUserId, questionId) {
-  const session = await prisma.MatchingSession.findFirst({
+  const session = await prisma.matchingSession.findFirst({
     where: {
       questionId: questionId,
       AND: [
@@ -11,7 +11,7 @@ export async function existsMatchingSession(userId, targetUserId, questionId) {
         { participants: { some: { userId: targetUserId } } },
       ],
     },
-    select: { id: true, maxTurns: true },
+    select: { id: true, maxTurns: true, status: true },
   });
 
   return session;
@@ -48,9 +48,8 @@ export const findMaxTurnBySessionId = async(sessionId) => {
   return true;
 }
 
-export async function acceptSessionRequestTx(id, questionId) {
+export async function acceptSessionRequestTx({id, targetUserId, questionId}) {
   try {
-    const targetUserId = await findRandomUserByPool(id);
     await prisma.$transaction(async (tx) => {
       const sessionResult = await tx.matchingSession.create({
         data: { questionId, status: "IN_PROGRESS" },

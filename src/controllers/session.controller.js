@@ -16,7 +16,7 @@ export const handlePostMatchingSession = async(req, res, next) => {
     const questionId = Number(req.params.questionId);
     if(questionId == null || targetUserId == null) throw new UnExpectArgumentsError;
     try{
-        const result = await createMatchingSession(userId, targetUserId, questionId);
+        const result = await createMatchingSession(userId, questionId);
         res.status(result.status).json({ data: result.data, message: result.message });
     } catch(error) {
         next(error);

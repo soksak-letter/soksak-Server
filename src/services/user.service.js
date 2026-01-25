@@ -38,6 +38,7 @@ import {
   getTotalUsageMinutes,
   updateUserNicknameById,
   updateUserProfileImageUrlById,
+  findRandomUserByPool,
 } from "../repositories/user.repository.js";
 import {
   ALLOWED_GENDERS,
@@ -395,3 +396,9 @@ export const updateMyProfileImage = async ({ userId, file }) => {
 
   return { updated: true, profileImageUrl: publicUrl };
 };
+
+export const selectRandomUser = async (userId) => {
+  const receiverUserId = await findRandomUserByPool(userId);
+  
+  return receiverUserId;
+}
