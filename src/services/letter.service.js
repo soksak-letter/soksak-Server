@@ -43,11 +43,9 @@ export const sendLetterToMe = async (userId, data) => {
             status: "PENDING"
         },
         design: {
-            create: {
-                paperId: data.paperId,
-                stampId: data.stampId,
-                fontId: data.fontId
-            }
+            paperId: data.paperId,
+            stampId: data.stampId,
+            fontId: data.fontId
         }
     });
 
