@@ -40,6 +40,7 @@ import {
   updateUserNicknameById,
   updateUserProfileImageUrlById,
   findRandomUserByPool,
+  incrementTotalUsageMinutes,
 } from "../repositories/user.repository.js";
 import {
   ALLOWED_GENDERS,
@@ -403,3 +404,13 @@ export const selectRandomUser = async (userId) => {
   
   return receiverUserId;
 }
+// ========== Activity Service ==========
+export const updateActivity = async (userId) => {
+  const user = await incrementTotalUsageMinutes(userId);
+  
+  if (!user) {
+    throw new ProfileUserNotFoundError("USER_NOT_FOUND", "사용자를 찾을 수 없습니다.");
+  }
+
+  return { message: "Activity updated successfully" };
+};
