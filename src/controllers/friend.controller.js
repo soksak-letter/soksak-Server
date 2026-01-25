@@ -81,7 +81,7 @@ export const handleAcceptFriendRequest = async (req, res, next) => {
   const requesterUserId = req.body.targetUserId;
   userIsNull(receiverUserId, requesterUserId);
   try {
-    const result = await acceptFriendRequest(userId, targetUserId);
+    const result = await acceptFriendRequest(receiverUserId, requesterUserId);
     return res.status(200).success({ message: "친구 신청 수락이 성공하였습니다.", result });
   } catch (error) {
     next(error);
