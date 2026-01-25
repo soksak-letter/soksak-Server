@@ -1,6 +1,6 @@
 // src/index.js
 import cors from "cors";
-import dotenv from "dotenv";
+import "dotenv/config";
 import express from "express";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
@@ -107,8 +107,14 @@ app.use((req, res, next) => {
   next();
 });
 
+let weeklyReportTrigger = true;
+app.post("/trigger", (req) => {
+  if(req.body.trigger = true) {weeklyReportTrigger = true;} else {weeklyReportTrigger = false;}
+})
+if(weeklyReportTrigger) {
 await bootstrapWeeklyReports();
 startWeeklyReportCron();
+}
 
 // 비동기 에러 래퍼
 const asyncHandler = (fn) => (req, res, next) => {
