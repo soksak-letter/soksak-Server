@@ -121,7 +121,7 @@ await insertWeeklyReportEmotions(emotionRows);
     return weeklyReportResult;
   } catch (error) {
     if (error?.code === "P2025") {
-      throw new WeeklyReportNotFoundError({
+      throw new WeeklyReportNotFoundError(undefined, undefined, {
         userId,
         year,
         week,
@@ -148,7 +148,7 @@ export const readWeeklyReport = async (userId, year, week) => {
   try {
     const weeklyReport = await findWeeklyReportByUserIdAndDate(userId, year, week);
     if (!weeklyReport) {
-      throw new WeeklyReportNotFoundError({ userId, year, week });
+      throw new WeeklyReportNotFoundError(undefined, undefined, { userId, year, week });
     }
 
     console.log("DDD" + JSON.stringify(weeklyReport));
