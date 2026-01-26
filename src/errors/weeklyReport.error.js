@@ -29,10 +29,3 @@ export class WeeklyReportInternalError extends InternalServerError {
     super(code, message, data);
   }
 }
-
-
-export class UnExpectArgumentsError extends BadRequestError {
-    constructor(code = "WEEKLYREPORT_UNEXPECTEDARGS_ERROR", message = "잘못된 argument 입력입니다.", data = null) {
-        super(code, message, data);
-    }
-}

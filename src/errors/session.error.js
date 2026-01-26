@@ -9,12 +9,6 @@ export class SelfFriendRequestError extends BadRequestError {
   }
 }
 
-export class UnExpectArgumentsError extends BadRequestError {
-    constructor(code = "SESSION_UNEXPECTEDARGS_ERROR", message = "올바르지 않은 Arguments 입력입니다.", data = null) {
-        super(code, message, data);
-    }
-}
-
 export class SessionParticipantNotFoundError extends NotFoundError {
   constructor(code = "SESSION_PARTICIPANTNOTFOUND_ERROR", message = "존재하지 않는 세션 참가자입니다.", data = null) {
         super(code, message, data);
@@ -57,5 +51,17 @@ export class SessionCountOverError extends InternalServerError {
 export class SessionFullError extends NotFoundError {
   constructor(code = "SESSION_FULL_ERROR", message = "세션을 맺을 유저가 없습니다.", data = null) {
         super(code, message, data);
+  }
+}
+
+export class UnExpectTagError extends BadRequestError {
+  constructor(code = "SESSION_WRONGTAG_ERROR", message = "잘못된 리뷰 태그 입력입니다.", data = null){
+    super(code, message, data);
+  }
+}
+
+export class TemperatureRangeError extends BadRequestError {
+  constructor(code = "SESSION_SCORERANGE_ERROR", message = "온도 입력 범위 오류입니다.", data = null){
+    super(code, message, data);
   }
 }
