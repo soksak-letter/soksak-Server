@@ -276,14 +276,12 @@ export const readWeeklyReport = async (userId) => {
     };
   } catch (error) {
     if (error?.code === "P2025") {
-      throw new WeeklyReportNotFoundError({ userId, year, week });
+      throw new WeeklyReportNotFoundError({ userId });
     }
     throw new WeeklyReportInternalError({
       reason: error.message,
       action: "READ_WEEKLY_REPORT",
       userId,
-      year,
-      week,
     });
   }
 };
