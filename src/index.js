@@ -34,7 +34,16 @@ import {
   letterToOtherSchema,
 } from "./schemas/letter.schema.js";
 import { idParamSchema } from "./schemas/common.schema.js";
-import { pushSubscriptionSchema } from "./schemas/user.schema.js";
+import {
+  pushSubscriptionSchema,
+  onboardingStep1Schema,
+  updateInterestsSchema,
+  updateProfileSchema,
+  updateNotificationSettingsSchema,
+  updateConsentsSchema,
+  updateActivitySchema,
+  threadIdParamSchema,
+} from "./schemas/user.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
 import {
   handleInsertUserReport,
@@ -277,10 +286,11 @@ app.get("/users/me/letters/stats", isLogin, isRestricted, handleGetUserLetterSta
 app.get("/home/summary", isLogin, isRestricted, HandleGetHomeDashboard);  // 홈 대시보드 조회
 
 // 온보딩 설정
-app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1);
+app.patch("/users/me/onboarding", isLogin, validate(onboardingStep1Schema), handlePatchOnboardingStep1);
 app.put(
   "/users/me/onboarding/interests",
   isLogin,
+  validate(updateInterestsSchema),
   handleUpdateMyOnboardingInterests
 );
 
@@ -292,6 +302,7 @@ app.get("/interests", isLogin, handleGetMyInterests); // 내 선택 목록 (로�
 app.patch(
   "/users/me/notification-settings",
   isLogin,
+  validate(updateNotificationSettingsSchema),
   handleUpdateMyNotificationSettings
 );
 app.get(
@@ -310,7 +321,7 @@ app.get("/notices/:noticeId", handleGetNoticeDetail);
 
 // 동의 설정
 app.get("/users/me/consents", isLogin, handleGetMyConsents);
-app.patch("/users/me/consents", isLogin, handlePatchMyConsents);
+app.patch("/users/me/consents", isLogin, validate(updateConsentsSchema), handlePatchMyConsents);
 
 // 디바이스 토큰
 app.put("/users/me/push-subscriptions", isLogin, validate(pushSubscriptionSchema), handlePutMyPushSubscription);
@@ -320,6 +331,7 @@ app.get("/mailbox/anonymous", isLogin, handleGetAnonymousThreads);
 app.get(
   "/mailbox/anonymous/threads/:threadId/letters",
   isLogin,
+  validate(threadIdParamSchema),
   handleGetAnonymousThreadLetters
 );
 app.get(
@@ -332,11 +344,11 @@ app.get("/mailbox/self", isLogin, handleGetSelfMailbox);
 
 // 프로필
 app.get("/users/me/profile", isLogin, handleGetMyProfile);
-app.patch("/users/me/profile", isLogin, handlePatchMyProfile);
+app.patch("/users/me/profile", isLogin, validate(updateProfileSchema), handlePatchMyProfile);
 app.post("/users/me/profile/image", isLogin, upload.single("image"), handlePostMyProfileImage);
 
 // 활동 시간 추적
-app.post("/users/me/activity", isLogin, handleUpdateActivity);
+app.post("/users/me/activity", isLogin, validate(updateActivitySchema), handleUpdateActivity);
 
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
