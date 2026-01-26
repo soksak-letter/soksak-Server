@@ -158,12 +158,13 @@ export const findWeeklyReportKeywordByReportId = async(rId) => {
     return result;
 }
 
-export const findWeeklyReportByUserIdAndDate = async(uId, year, week) => {
+export const findWeeklyReportByUserIdAndDate = async(uId) => {
     return await prisma.WeeklyReport.findFirst({
         where: {
             userId: uId,
-            year: year,
-            week: week
+        },
+        orderBy: {
+          generatedAt: "desc",
         }
     })
 }
