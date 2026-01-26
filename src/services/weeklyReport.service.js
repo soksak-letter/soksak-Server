@@ -127,14 +127,14 @@ await insertWeeklyReportEmotions(emotionRows);
         week,
       });
     } else if (error?.code === "P2002") {
-      throw new WeeklyReportAlreadyExistsError({
+      throw new WeeklyReportAlreadyExistsError(undefined, undefined, {
         userId,
         year,
         week,
       });
     }
 
-    throw new WeeklyReportInternalError({
+    throw new WeeklyReportInternalError(undefined, undefined, {
       reason: error.message,
       action: "CREATE_WEEKLY_REPORT",
       userId,
@@ -194,9 +194,9 @@ const emotionsByIndex = (emotionsRaw ?? []).reduce((acc, e) => {
     };
   } catch (error) {
     if (error?.code === "P2025") {
-      throw new WeeklyReportNotFoundError({ userId, year, week });
+      throw new WeeklyReportNotFoundError(undefined, undefined, { userId, year, week });
     }
-    throw new WeeklyReportInternalError({
+    throw new WeeklyReportInternalError(undefined, undefined, {
       reason: error.message,
       action: "READ_WEEKLY_REPORT",
       userId,
