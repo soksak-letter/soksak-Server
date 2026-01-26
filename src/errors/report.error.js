@@ -6,13 +6,13 @@ export class ReportUnexpectedArgumentError extends BadRequestError {
   }
 }
 
-export class ReportInternalError extends BadRequestError {
-  constructor(code = "REPORT_500", message="db 에러입니다.", data = null) {
+export class ReportInternalError extends InternalServerError {
+  constructor(code = "REPORT_INTERNAL_ERROR", message="db 에러입니다.", data = null) {
     super(code, message, data); 
   }
 }
 
-export class UnExpectedReportReasonError extends InternalServerError {
+export class UnExpectedReportReasonError extends BadRequestError {
   constructor(code = "REPORT_UNEXPECTEDREASON_ERROR", message="잘못된 report reason입니다.", data = null) {
     super(code, message, data);
   }
