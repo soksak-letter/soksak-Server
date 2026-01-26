@@ -25,7 +25,7 @@ export class WeeklyReportAlreadyExistsError extends ConflictError {
  * 500: 주간 리포트 처리 중 서버 오류 (WEEKLY_REPORT_500_01)
  */
 export class WeeklyReportInternalError extends InternalServerError {
-  constructor(code = "WEEKLYREPORT_500", message = "주간 리포트 처리 중 서버 오류가 발생했습니다.", data = null) {
+  constructor(code = "WEEKLYREPORT_INTERNALSERVER_ERROR", message = "주간 리포트 처리 중 서버 오류가 발생했습니다.", data = null) {
     super(code, message, data);
   }
 }
