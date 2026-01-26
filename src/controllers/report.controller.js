@@ -20,7 +20,7 @@ export const handleGetUserReports = async (req, res, next) => {
     const result = await selectUserReport(userId);
     res
       .status(200)
-      .success({ data: result, message: "신고 출력이 성공적으로 처리되었습니다." });
+      .success({ message: "신고 출력이 성공적으로 처리되었습니다.", result });
   } catch (error) {
     next(error);
   }
