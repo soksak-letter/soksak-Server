@@ -76,7 +76,7 @@ export class FriendDeletingNotFoundError extends NotFoundError {
  */
 export class FriendInternalError extends InternalServerError {
   constructor(
-    code = "FRIEND_500",
+    code = "FRIEND_INTERNALSERVER_ERROR",
     message = "친구 처리 중 서버 오류가 발생했습니다.",
     data = null
   ) {
