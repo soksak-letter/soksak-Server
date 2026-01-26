@@ -12,6 +12,7 @@ import {
   getMyProfile,
   updateMyNickname,
   updateMyProfileImage,
+  updateActivity,
 } from "../services/user.service.js";
 import {
   ProfileUnauthorizedError,
@@ -192,5 +193,19 @@ export const handlePostMyProfileImage = async (req, res, next) => {
     return res.status(200).success(result);
   } catch (e) {
     next(e);
+  }
+};
+
+// ========== Activity Controller ==========
+export const handleUpdateActivity = async (req, res) => {
+  try {
+    const userId = req?.user?.id;
+    if (!userId) throw new ProfileUnauthorizedError();
+
+    const result = await updateActivity(userId);
+
+    return ok(res, result);
+  } catch (e) {
+    return fail(res, e);
   }
 };

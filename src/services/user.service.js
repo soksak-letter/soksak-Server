@@ -50,6 +50,7 @@ import {
   getTotalUsageMinutes,
   updateUserNicknameById,
   updateUserProfileImageUrlById,
+  incrementTotalUsageMinutes,
 } from "../repositories/user.repository.js";
 import {
   ALLOWED_GENDERS,
@@ -394,4 +395,15 @@ export const updateMyProfileImage = async ({ userId, file }) => {
   await updateUserProfileImageUrlById({ userId, profileImageUrl: publicUrl });
 
   return { updated: true, profileImageUrl: publicUrl };
+};
+
+// ========== Activity Service ==========
+export const updateActivity = async (userId) => {
+  const user = await incrementTotalUsageMinutes(userId);
+  
+  if (!user) {
+    throw new ProfileUserNotFoundError("USER_NOT_FOUND", "사용자를 찾을 수 없습니다.");
+  }
+
+  return { message: "Activity updated successfully" };
 };
