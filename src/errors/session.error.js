@@ -19,7 +19,7 @@ export class SessionParticipantNotFoundError extends NotFoundError {
  * 500: 세션 처리 중 서버 오류 (SESSION_500_01)
  */
 export class SessionInternalError extends InternalServerError {
-  constructor(code = "SESSION_500", message = "친구 처리 중 서버 오류가 발생했습니다.", data = null) {
+  constructor(code = "SESSION_INTERNALSERVER_ERROR", message = "친구 처리 중 서버 오류가 발생했습니다.", data = null) {
         super(code, message, data);
   }
 }
