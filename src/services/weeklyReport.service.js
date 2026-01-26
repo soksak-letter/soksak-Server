@@ -159,7 +159,7 @@ export const createWeeklyReport = async (userId, year, week) => {
   try {
     // 0) 중복 리포트 방지
     const existing = await findWeeklyReportByUserIdAndDate(userId, year, week);
-    if (existing) throw new WeeklyReportAlreadyExistsError({ userId, year, week });
+    if (existing) return;
 
     // 1) 키워드 집계
     const rawCounts = await countSentLettersAiKeywordsByUserId(userId);
@@ -216,11 +216,11 @@ export const createWeeklyReport = async (userId, year, week) => {
   }
 };
 
-export const readWeeklyReport = async (userId, year, week) => {
+export const readWeeklyReport = async (userId) => {
   try {
-    const weeklyReport = await findWeeklyReportByUserIdAndDate(userId, year, week);
+    const weeklyReport = await findWeeklyReportByUserIdAndDate(userId);
     if (!weeklyReport) {
-      throw new WeeklyReportNotFoundError({ userId, year, week });
+      throw new WeeklyReportNotFoundError({ userId });
     }
 
     const keywords = await findWeeklyReportKeywordByReportId(weeklyReport.id);
