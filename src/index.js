@@ -42,8 +42,8 @@ import {
   updateNotificationSettingsSchema,
   updateConsentsSchema,
   updateActivitySchema,
-  threadIdParamSchema,
 } from "./schemas/user.schema.js";
+import { threadIdParamSchema } from "./schemas/mailbox.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
 import {
   handleInsertUserReport,
