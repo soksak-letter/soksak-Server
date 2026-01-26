@@ -36,7 +36,7 @@ export const handlePatchMatchingSessionStatusDiscarded = async(req, res, next) =
 
 export const handlePostSessionReview = async(req, res, next) => {
     const userId = req.user.id;
-    const { sessionId } = re.params;
+    const { sessionId } = req.params;
     const { temperatureScore } = req.body;
     const { reviewTag } = req.body;    
     try{
