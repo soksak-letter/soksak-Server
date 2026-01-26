@@ -47,7 +47,7 @@ export const createWeeklyReport = async (userId, year, week) => {
       week
     );
     if (weeklyReport != null)
-      throw new WeeklyReportAlreadyExistsError({ userId, year, week });
+      throw new WeeklyReportAlreadyExistsError(undefined, undefined, { userId, year, week });
     const keyWordResult = await countSentLettersAiKeywordsByUserId(userId);
     const keyWordResultAsString = weeklyReportKeywordsToString(keyWordResult);
     //위의 weeklyReportKeyword 기반 ai 처리로 텍스트 return -> WeeklyReport의 summaryText에 저장
