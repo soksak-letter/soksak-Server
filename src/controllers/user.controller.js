@@ -197,15 +197,15 @@ export const handlePostMyProfileImage = async (req, res, next) => {
 };
 
 // ========== Activity Controller ==========
-export const handleUpdateActivity = async (req, res) => {
+export const handleUpdateActivity = async (req, res, next) => {
   try {
     const userId = req?.user?.id;
     if (!userId) throw new ProfileUnauthorizedError();
 
     const result = await updateActivity(userId);
 
-    return ok(res, result);
+    return res.status(200).success(result);
   } catch (e) {
-    return fail(res, e);
+    next(e);
   }
 };
