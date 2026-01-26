@@ -25,7 +25,7 @@ async function assertUsersExistOrThrow(userId) {
   ]);
 
   if (!userById)
-    throw new InvalidUserError(userId, "잘못된 유저 정보 입력입니다.");
+    throw new InvalidUserError(undefined, undefined, userId);
 }
 
 export function validateTag(tag) {
