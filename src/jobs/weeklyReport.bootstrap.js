@@ -1,32 +1,42 @@
 // jobs/weeklyReport.bootstrap.js
-import { prisma } from "../db.config.js";
+import { prisma } from "../configs/db.config.js";
 import { getCurrentISOYear, getCurrentISOWeek } from "../jobs/date.js";
-import { createWeeklyReport } from "../services/weeklyReport.service.js"; 
-// ↑ 너가 올린 createWeeklyReport(서비스) 함수 이름을 이렇게 바꾸는 걸 추천
+import { createWeeklyReport } from "../services/weeklyReport.service.js";
+
+// 동시에 몇 명까지 처리할지(너무 크게 잡으면 DB 터짐)
+const CONCURRENCY = Number(15);
 
 export const bootstrapWeeklyReports = async () => {
   const year = getCurrentISOYear();
   const week = getCurrentISOWeek();
 
-  const users = await prisma.User.findMany({
+  const users = await prisma.user.findMany({
     where: { isDeleted: false },
     select: { id: true },
   });
 
-  for (const u of users) {
-    try {
-      await createWeeklyReport(u.id, year, week);
-    } catch (e) {
-      // 이미 존재/중복이면 조용히 스킵 (너 로직에서 이미 막음)
-      if (e?.code === "P2002") continue;
-      // 도메인 에러라면 errorCode로도 스킵 가능
-      if (e?.errorCode === "WEEKLY_REPORT_409_01") continue;
+  const logError = (userId, e) => {
+    console.error("[BOOTSTRAP_WEEKLY_REPORT_ERROR]", {
+      userId,
+      year,
+      week,
+      name: e?.name,
+      message: e?.message,
+      stack: e?.stack,
+      cause: e?.cause,
+    });
+  };
 
-      console.error("[BOOTSTRAP_WEEKLY_REPORT_ERROR]", {
-        userId: u.id,
-        message: e?.message,
-        code: e?.code,
-      });
-    }
+  for (let i = 0; i < users.length; i += CONCURRENCY) {
+    const batch = users.slice(i, i + CONCURRENCY);
+
+      const results = await Promise.allSettled(
+        batch.map(({ id }) =>
+          createWeeklyReport(id, year, week).catch((e) => {
+            logError(id, e);
+            throw e;
+          })
+        )
+      );
   }
 };

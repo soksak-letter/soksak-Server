@@ -1,3 +1,4 @@
+// src/services/friend.service.js
 import { findUserById } from "../repositories/user.repository.js";
 import {
   insertFriendRequest,
@@ -218,12 +219,12 @@ export const acceptFriendRequest = async (receiverUserId, requesterUserId) => {
 };
 
 // 6) 친구 신청 거절
-export const rejectFriendRequest = async (receiverUserId, requesterUserId) => {
-  await assertUsersExistOrThrow(receiverUserId, requesterUserId);
+export const rejectFriendRequest = async (requesterUserId, receiverUserId) => {
+  await assertUsersExistOrThrow(requesterUserId, receiverUserId);
 
   try {
     const rejectedFriendRequest = await updateFriendRequestRejectTx(
-      receiverUserId, requesterUserId
+      requesterUserId, receiverUserId
     );
     return {
       data: rejectedFriendRequest,
@@ -244,17 +245,15 @@ export const rejectFriendRequest = async (receiverUserId, requesterUserId) => {
 
 // 7) 친구 삭제
 export const deleteFriendRequestData = async (requesterUserId, receiverUserId) => {
-  await assertUsersExistOrThrow(receiverUserId, requesterUserId);
+  await assertUsersExistOrThrow(requesterUserId, receiverUserId);
 
   try {
     const result = await deleteFriendRequest(requesterUserId, receiverUserId);
-    return {
-      data: result,
-    };
+    return { data: result };
   } catch (error) {
-     if (error instanceof FriendRequestNotFoundError) throw error;
+    if (error instanceof FriendRequestNotFoundError) throw error;
     if (error?.code === "P2025") {
-      throw new FriendNotFoundError(undefined, undefined, {
+      throw new FriendRequestNotFoundError(undefined, undefined, {
         requesterUserId,
         receiverUserId,
       });
@@ -265,3 +264,4 @@ export const deleteFriendRequestData = async (requesterUserId, receiverUserId) =
     });
   }
 };
+

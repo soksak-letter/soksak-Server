@@ -1,6 +1,6 @@
 // src/index.js
 import cors from "cors";
-import dotenv from "dotenv";
+import "dotenv/config";
 import express from "express";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
@@ -26,7 +26,7 @@ import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js"
 import { handleGetTodayQuestion } from "./controllers/question.controller.js";
 import { validate } from "./middlewares/validate.middleware.js";
 import { emailSchema, loginSchema, passwordSchema, SignUpSchema, usernameSchema, verificationConfirmCodeSchema, verificationSendCodeSchema } from "./schemas/auth.schema.js";
-import { handleInsertInquiryAsUser, handleInsertInquiryAsAdmin, handleGetInquiry } from "./controllers/inquiry.controller.js";
+import { handleInsertInquiryAsUser, handleInsertInquiryAsAdmin, handleGetInquiry, handleGetInquiryDetail } from "./controllers/inquiry.controller.js";
 import { isLogin } from "./middlewares/auth.middleware.js";
 import { isRestricted } from "./middlewares/restriction.middleware.js";
 import { letterToMeSchema, letterToOtherSchema } from "./schemas/letter.schema.js";
@@ -35,11 +35,15 @@ import { pushSubscriptionSchema, onboardingStep1Schema, updateInterestsSchema, u
 import { threadIdParamSchema } from "./schemas/mailbox.schema.js";
 import { noticeIdParamSchema } from "./schemas/notice.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
-import { handleInsertUserReport, handleGetUserReports } from "./controllers/report.controller.js";
-import { insertUserReportSchema } from "./schemas/report.schema.js";
+
+import { handleInsertUserReport, handleGetUserReports, handleGetUserReport } from "./controllers/report.controller.js";
+import { insertUserReportSchema, getUserReportSchema } from "./schemas/report.schema.js";
 import { postTargetUserIdAndSIdSchema, requesterUserIdSchema, targetUserIdSchema } from "./schemas/friend.schema.js";
-import { insertInquiryAsAdminSchema, insertInquiryAsUserSchema } from "./schemas/inquiry.schema.js";
+import { getInquiryDetailSchema, insertInquiryAsAdminSchema, insertInquiryAsUserSchema } from "./schemas/inquiry.schema.js";
 import { postMatchingSessionSchema, postSessionReviewSchema, patchMatchingSessionStatusSchema} from "./schemas/session.schema.js";
+import { postBlockUserSchema } from "./schemas/block.schema.js";
+import { handleGetBlock, handlePostBlock } from "./controllers/block.controller.js";
+import { handleGetRestrict } from "./controllers/restrict.controller.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -82,8 +86,14 @@ app.use((req, res, next) => {
   next();
 });
 
+let weeklyReportTrigger = false;
+app.post("/trigger", (req) => {
+  if(req.body.trigger = true) {weeklyReportTrigger = true;} else {weeklyReportTrigger = false;}
+})
+if(weeklyReportTrigger) {
 await bootstrapWeeklyReports();
 startWeeklyReportCron();
+}
 
 // 비동기 에러 래퍼
 const asyncHandler = (fn) => (req, res, next) => {
@@ -109,32 +119,7 @@ app.get("/auth/oauth/:provider", (req, res, next) => {
 });
 
 
-app.get("/auth/callback/:provider", (req, res, next) => {
-    const { provider } = req.params;
-
-    const auth = passport.authenticate(provider, {
-      session: false,
-      // failureRedirect: "/login-failed" // 추후 구현
-    });
-
-    auth(req, res, next);
-  },
-
-  (req, res) => {
-    const { id, jwtAccessToken, jwtRefreshToken } = req.user;
-    const { provider } = req.params;
-
-    res.status(200).json({
-      resultType: "SUCCESS",
-      error: null,
-      success: {
-        message: `${provider} 로그인 성공!`,
-        id: id,
-        tokens: { jwtAccessToken, jwtRefreshToken },
-      },
-    });
-  }
-);
+app.get("/auth/callback/:provider", (req, res, next) => { const { provider } = req.params; const auth = passport.authenticate(provider, { session: false }); auth(req, res, next); }, (req, res) => { const { id, jwtAccessToken, jwtRefreshToken } = req.user; const { provider } = req.params; res.status(200).json({ resultType: "SUCCESS", error: null, success: { message: `${provider} 로그인 성공!`, id: id, tokens: { jwtAccessToken, jwtRefreshToken }, }, }); });
 
 app.get("/mypage", isLogin, (req, res) => {
   res.status(200).success({
@@ -144,26 +129,39 @@ app.get("/mypage", isLogin, (req, res) => {
 });
 
 app.get("/friends", isLogin, isRestricted, asyncHandler(handleGetFriendsList)); //친구 목록 불러오기
+
 app.post("/friends/requests", isLogin, isRestricted, validate(postTargetUserIdAndSIdSchema), asyncHandler(handlePostFriendsRequest)); //친구 신청
 app.get("/friends/requests/incoming", isLogin, isRestricted, asyncHandler(handleGetIncomingFriendRequests)); //들어온 친구 신청 불러오기
 app.get("/friends/requests/outgoing", isLogin, isRestricted, asyncHandler(handleGetOutgoingFriendRequests)); //보낸 친구 신청 불러오기
-app.post("/friends/requests/accept", isLogin, isRestricted, validate(requesterUserIdSchema), asyncHandler(handleAcceptFriendRequest)); //들어온 친구 신청 수락
+app.post("/friends/requests/accept/:requesterUserId", isLogin, isRestricted, validate(requesterUserIdSchema), asyncHandler(handleAcceptFriendRequest)); //들어온 친구 신청 수락
 app.post("/friends/requests/reject/:targetUserId", isLogin, isRestricted, validate(targetUserIdSchema), asyncHandler(handleRejectFriendRequest)); //들어온 친구 신청 거절
 app.delete("/friends/requests/:targetUserId", isLogin, isRestricted, validate(targetUserIdSchema), asyncHandler(handleDeleteFriendRequest)); //보낸 친구 신청 삭제
+
 
 app.post("/matching/sessions/:questionId", isLogin, isRestricted, validate(postMatchingSessionSchema), asyncHandler(handlePostMatchingSession)); //세션 생성
 app.patch("/matching/sessions/:sessionId/friends", isLogin, isRestricted, validate(patchMatchingSessionStatusSchema), asyncHandler(handlePatchMatchingSessionStatusFriends)); //세션 친구됨으로 변경
 app.patch("/matching/sessions/:sessionId/discards", isLogin, isRestricted, validate(patchMatchingSessionStatusSchema), asyncHandler(handlePatchMatchingSessionStatusDiscarded)); //세션 삭제됨으로 변경
 app.post("/matching/sessions/:sessionId/reviews", isLogin, isRestricted, validate(postSessionReviewSchema), asyncHandler(handlePostSessionReview)); //세션 리뷰 작성
 
-app.post("/reports", isLogin, isRestricted, validate(insertUserReportSchema), asyncHandler(handleInsertUserReport));
-app.get("/reports", isLogin, isRestricted, asyncHandler(handleGetUserReports));
 
-app.get("/reports/weekly/:year/:week", isLogin, isRestricted, asyncHandler(handleGetWeeklyReport));
+app.post("/block/:targetUserId", isLogin, isRestricted, validate(postBlockUserSchema), asyncHandler(handlePostBlock));
+app.get("/block", isLogin, isRestricted, asyncHandler(handleGetBlock));
+
+app.get("/restrict", isLogin, asyncHandler(handleGetRestrict));
+
+app.post("/reports", isLogin, isRestricted, validate(insertUserReportSchema), asyncHandler(handleInsertUserReport));
+
+app.get("/reports", isLogin, isRestricted, asyncHandler(handleGetUserReports));
+app.get("/reports/:reportId", isLogin, isRestricted, validate(getUserReportSchema), asyncHandler(handleGetUserReport));
+
+
+app.get("/weekly/reports", isLogin, isRestricted, asyncHandler(handleGetWeeklyReport));
+
 
 app.post("/inquiries", isLogin, validate(insertInquiryAsUserSchema), asyncHandler(handleInsertInquiryAsUser));
 app.post("/inquiries/admin", isLogin, validate(insertInquiryAsAdminSchema), asyncHandler(handleInsertInquiryAsAdmin));
 app.get("/inquiries", isLogin, asyncHandler(handleGetInquiry));
+app.get("/inquiries/:inquiryId", isLogin, validate(getInquiryDetailSchema), asyncHandler(handleGetInquiryDetail));
 
 app.post("/auth/signup", validate(SignUpSchema), handleSignUp);                     // 회원가입
 app.post("/auth/login", validate(loginSchema), handleLogin);                        // 로그인

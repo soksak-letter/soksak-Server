@@ -73,3 +73,12 @@ export const updateActivitySchema = z.object({
   )
 });
 
+// ========== User Agreements Schema ==========
+export const createUserAgreementsSchema = z.object({
+  body: z.object({
+    termsAgreed: z.boolean("termsAgreed는 필수입니다."),
+    privacyAgreed: z.boolean("privacyAgreed는 필수입니다."),
+    ageOver14Agreed: z.boolean("ageOver14Agreed는 필수입니다."),
+    marketingAgreed: z.boolean("marketingAgreed는 boolean이어야 합니다.").optional()
+  })
+});
