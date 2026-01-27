@@ -47,7 +47,8 @@ import { postTargetUserIdAndSIdSchema, requesterUserIdSchema, targetUserIdSchema
 import { insertInquiryAsAdminSchema, insertInquiryAsUserSchema } from "./schemas/inquiry.schema.js";
 import { postMatchingSessionSchema, postSessionReviewSchema, patchMatchingSessionStatusSchema} from "./schemas/session.schema.js";
 import { postBlockUserSchema } from "./schemas/block.schema.js";
-import { handlePostBlock } from "./controllers/block.controller.js";
+import { handleGetBlock, handlePostBlock } from "./controllers/block.controller.js";
+import { handleGetRestrict } from "./controllers/restrict.controller.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -249,7 +250,10 @@ app.post(
   asyncHandler(handlePostSessionReview)
 ); //세션 리뷰 작성
 
-app.post("/block/:targetUserId", isLogin, isRestricted, validate(postBlockUserSchema), asyncHandler(handlePostBlock))
+app.post("/block/:targetUserId", isLogin, isRestricted, validate(postBlockUserSchema), asyncHandler(handlePostBlock));
+app.get("/block", isLogin, isRestricted, asyncHandler(handleGetBlock));
+
+app.get("/restrict", isLogin, asyncHandler(handleGetRestrict));
 
 app.post(
   "/reports",
