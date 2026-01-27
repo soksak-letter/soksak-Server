@@ -1,3 +1,14 @@
+/* =========================
+ * 친구 (friends)
+ * ========================= */
+
+/**
+ * @swagger
+ * tags:
+ *   - name: 친구
+ *     description: 친구/친구요청 관련 API
+ */
+
 /**
  * @swagger
  * /friends:
@@ -8,13 +19,14 @@
  *       - bearerAuth: []
  *     responses:
  *       201:
- *         description: 친구 목록 조회 성공 (컨트롤러 코드 기준 201 반환)
+ *         description: 친구 목록 조회 성공 (현재 컨트롤러가 201 반환)
  *         content:
  *           application/json:
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     success:
  *                       type: object
  *                       properties:
@@ -28,7 +40,46 @@
  *                               type: array
  *                               items:
  *                                 type: object
- *                               example: [{ "id": 1, "nickname": "친구A" }]
+ *                                 properties:
+ *                                   id:
+ *                                     type: integer
+ *                                     example: 1
+ *                                   friendUserId:
+ *                                     type: integer
+ *                                     example: 2
+ *                                   nickname:
+ *                                     type: string
+ *                                     nullable: true
+ *                                     example: "친구A"
+ *                                   letterCount:
+ *                                     type: integer
+ *                                     example: 3
+ *                                   recentLetter:
+ *                                     nullable: true
+ *                                     type: object
+ *                                     properties:
+ *                                       createdAt:
+ *                                         type: string
+ *                                         format: date-time
+ *                                         nullable: true
+ *                                         example: "2026-01-21T13:49:32.735Z"
+ *                                       design:
+ *                                         nullable: true
+ *                                         type: object
+ *       401:
+ *         description: 인증 필요 (UNAUTHORIZED)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "UNAUTHORIZED"
+ *                         reason:
+ *                           example: "인증이 필요합니다"
  *       404:
  *         description: 친구 없음 (FRIEND_NOTFOUND_ERROR)
  *         content:
@@ -89,7 +140,8 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     success:
  *                       type: object
  *                       properties:
@@ -101,23 +153,46 @@
  *                           properties:
  *                             data:
  *                               type: object
- *                               example: { "id": 123, "requesterUserId": 1, "targetUserId": 2, "status": "PENDING" }
+ *                               example:
+ *                                 { "id": 123, "requesterUserId": 1, "receiverUserId": 2, "sessionId": 10, "status": "PENDING" }
  *       400:
- *         description: 자기 자신에게 신청 (FRIEND_SELFREQUEST_ERROR)
+ *         description: 입력값 검증 실패(REQ_BAD_REQUEST) 또는 자기 자신에게 신청(FRIEND_SELFREQUEST_ERROR)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "REQ_BAD_REQUEST"
+ *                           reason:
+ *                             example: "입력값이 잘못되었습니다"
+ *                           data:
+ *                             example:
+ *                               [
+ *                                 { "field": "body.targetUserId", "message": "숫자여야 합니다." }
+ *                               ]
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "FRIEND_SELFREQUEST_ERROR"
+ *                           reason:
+ *                             example: "자기 자신과는 친구 신청을 할 수 없습니다."
+ *       401:
+ *         description: 인증 필요 (UNAUTHORIZED)
  *         content:
  *           application/json:
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
- *                     error:
- *                       properties:
- *                         errorCode:
- *                           example: "FRIEND_SELFREQUEST_ERROR"
- *                         reason:
- *                           example: "자기 자신과는 친구 신청을 할 수 없습니다."
  *       409:
- *         description: 이미 요청 존재/이미 친구
+ *         description: 이미 요청 존재(FRIEND_ALREADYEXISTS_ERROR) 또는 이미 친구(FRIEND_ALREADY_ERROR)
  *         content:
  *           application/json:
  *             schema:
@@ -147,13 +222,6 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
- *                     error:
- *                       properties:
- *                         errorCode:
- *                           example: "FRIEND_INTERNALSERVER_ERROR"
- *                         reason:
- *                           example: "친구 처리 중 서버 오류가 발생했습니다."
  */
 
 /**
@@ -172,7 +240,8 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     success:
  *                       type: object
  *                       properties:
@@ -186,7 +255,16 @@
  *                               type: array
  *                               items:
  *                                 type: object
- *                               example: [{ "id": 55, "requesterUserId": 2, "targetUserId": 1, "status": "PENDING" }]
+ *                               example:
+ *                                 [
+ *                                   { "id": 55, "requesterUserId": 2, "receiverUserId": 1, "status": "PENDING" }
+ *                                 ]
+ *       401:
+ *         description: 인증 필요 (UNAUTHORIZED)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: 요청 없음 (FRIEND_REQUESTNOTFOUND_ERROR)
  *         content:
@@ -206,15 +284,7 @@
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
- *                     error:
- *                       properties:
- *                         errorCode:
- *                           example: "FRIEND_INTERNALSERVER_ERROR"
- *                         reason:
- *                           example: "친구 처리 중 서버 오류가 발생했습니다."
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 /**
@@ -233,7 +303,8 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     success:
  *                       type: object
  *                       properties:
@@ -247,7 +318,16 @@
  *                               type: array
  *                               items:
  *                                 type: object
- *                               example: [{ "id": 77, "requesterUserId": 1, "targetUserId": 3, "status": "PENDING" }]
+ *                               example:
+ *                                 [
+ *                                   { "id": 77, "requesterUserId": 1, "receiverUserId": 3, "status": "PENDING" }
+ *                                 ]
+ *       401:
+ *         description: 인증 필요 (UNAUTHORIZED)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: 요청 없음 (FRIEND_REQUESTNOTFOUND_ERROR)
  *         content:
@@ -267,15 +347,7 @@
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
- *                     error:
- *                       properties:
- *                         errorCode:
- *                           example: "FRIEND_INTERNALSERVER_ERROR"
- *                         reason:
- *                           example: "친구 처리 중 서버 오류가 발생했습니다."
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 /**
@@ -301,7 +373,8 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     success:
  *                       type: object
  *                       properties:
@@ -313,7 +386,19 @@
  *                           properties:
  *                             data:
  *                               type: object
- *                               example: { "friendshipId": 999, "userA": 1, "userB": 2 }
+ *                               example: { "id": 999, "userAId": 1, "userBId": 2 }
+ *       400:
+ *         description: 입력값 검증 실패(REQ_BAD_REQUEST)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 인증 필요 (UNAUTHORIZED)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: 처리할 요청 없음 (FRIEND_REQUESTNOTFOUND_ERROR)
  *         content:
@@ -347,17 +432,8 @@
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
- *                     error:
- *                       properties:
- *                         errorCode:
- *                           example: "FRIEND_INTERNALSERVER_ERROR"
- *                         reason:
- *                           example: "친구 처리 중 서버 오류가 발생했습니다."
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
-
 
 /**
  * @swagger
@@ -382,7 +458,8 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     success:
  *                       type: object
  *                       properties:
@@ -394,35 +471,31 @@
  *                           properties:
  *                             data:
  *                               type: object
- *                               example: { "id": 55, "status": "REJECTED" }
+ *                               example: { "id": 55, "requesterUserId": 2, "receiverUserId": 1, "status": "REJECTED" }
+ *       400:
+ *         description: 입력값 검증 실패(REQ_BAD_REQUEST)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 인증 필요 (UNAUTHORIZED)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: 처리할 요청 없음 (FRIEND_REQUESTNOTFOUND_ERROR)
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
- *                     error:
- *                       properties:
- *                         errorCode:
- *                           example: "FRIEND_REQUESTNOTFOUND_ERROR"
- *                         reason:
- *                           example: "처리할 수 있는 친구 요청이 없습니다."
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: 친구 처리 중 서버 오류 (FRIEND_INTERNALSERVER_ERROR)
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
- *                     error:
- *                       properties:
- *                         errorCode:
- *                           example: "FRIEND_INTERNALSERVER_ERROR"
- *                         reason:
- *                           example: "친구 처리 중 서버 오류가 발생했습니다."
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 /**
@@ -442,13 +515,14 @@
  *         example: 2
  *     responses:
  *       200:
- *         description: 취소 성공
+ *         description: 취소 성공 (상태가 DELETED로 업데이트됨)
  *         content:
  *           application/json:
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     success:
  *                       type: object
  *                       properties:
@@ -460,33 +534,21 @@
  *                           properties:
  *                             data:
  *                               type: object
- *                               example: { "deleted": true }
- *       404:
- *         description: 대상 없음/요청 없음
+ *                               example: { "id": 123, "status": "DELETED" }
+ *       400:
+ *         description: 입력값 검증 실패(REQ_BAD_REQUEST)
  *         content:
  *           application/json:
  *             schema:
- *               oneOf:
- *                 - allOf:
- *                   - $ref: '#/components/schemas/ErrorResponse'
- *                   - properties:
- *                       error:
- *                         properties:
- *                           errorCode:
- *                             example: "FRIEND_NOTFOUND_ERROR"
- *                           reason:
- *                             example: "친구를 찾을 수 없습니다."
- *                 - allOf:
- *                   - $ref: '#/components/schemas/ErrorResponse'
- *                   - properties:
- *                       error:
- *                         properties:
- *                           errorCode:
- *                             example: "FRIEND_REQUESTNOTFOUND_ERROR"
- *                           reason:
- *                             example: "처리할 수 있는 친구 요청이 없습니다."
- *       500:
- *         description: 친구 처리 중 서버 오류 (FRIEND_INTERNALSERVER_ERROR)
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 인증 필요 (UNAUTHORIZED)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 삭제할 요청 없음 (FRIEND_REQUESTNOTFOUND_ERROR)
  *         content:
  *           application/json:
  *             schema:
@@ -496,7 +558,13 @@
  *                     error:
  *                       properties:
  *                         errorCode:
- *                           example: "FRIEND_INTERNALSERVER_ERROR"
+ *                           example: "FRIEND_REQUESTNOTFOUND_ERROR"
  *                         reason:
- *                           example: "친구 처리 중 서버 오류가 발생했습니다."
+ *                           example: "처리할 수 있는 친구 요청이 없습니다."
+ *       500:
+ *         description: 친구 처리 중 서버 오류 (FRIEND_INTERNALSERVER_ERROR)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */

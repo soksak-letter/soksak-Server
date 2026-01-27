@@ -15,14 +15,17 @@
  *         example: 1
  *     requestBody:
  *       required: false
+ *       description: |
+ *         현재 구현은 body를 사용하지 않습니다.
+ *         (컨트롤러에서 targetUserId를 읽지만 서비스 로직에서 무시됩니다.)
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             description: "현재 서비스 로직은 targetUserId를 사용하지 않지만, 컨트롤러에 필드가 있어 문서화"
  *             properties:
  *               targetUserId:
  *                 type: integer
+ *                 description: "(무시됨) 특정 유저 지정 매칭용 필드 - 현재 로직 미사용"
  *                 example: 2
  *     responses:
  *       201:
@@ -32,7 +35,8 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     success:
  *                       type: object
  *                       properties:
@@ -43,8 +47,9 @@
  *                           type: object
  *                           properties:
  *                             data:
- *                               type: object
- *                               example: { "sessionId": 10, "status": "CHATING", "questionId": 1 }
+ *                               type: integer
+ *                               description: "생성된 sessionId"
+ *                               example: 10
  *       404:
  *         description: 질문 없음 (QUESTION_NOTFOUND_ERROR)
  *         content:
@@ -52,8 +57,10 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     error:
+ *                       type: object
  *                       properties:
  *                         errorCode:
  *                           example: "QUESTION_NOTFOUND_ERROR"
@@ -67,8 +74,10 @@
  *               oneOf:
  *                 - allOf:
  *                   - $ref: '#/components/schemas/ErrorResponse'
- *                   - properties:
+ *                   - type: object
+ *                     properties:
  *                       error:
+ *                         type: object
  *                         properties:
  *                           errorCode:
  *                             example: "SESSION_COUNTOVER_ERROR"
@@ -76,14 +85,17 @@
  *                             example: "세션이 10개 이상입니다."
  *                 - allOf:
  *                   - $ref: '#/components/schemas/ErrorResponse'
- *                   - properties:
+ *                   - type: object
+ *                     properties:
  *                       error:
+ *                         type: object
  *                         properties:
  *                           errorCode:
  *                             example: "SESSION_INTERNALSERVER_ERROR"
  *                           reason:
  *                             example: "친구 처리 중 서버 오류가 발생했습니다."
  */
+
 
 /**
  * @swagger
@@ -108,7 +120,8 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     success:
  *                       type: object
  *                       properties:
@@ -120,7 +133,9 @@
  *                           properties:
  *                             data:
  *                               type: object
- *                               example: { "sessionId": 10, "status": "FRIENDS" }
+ *                               description: "업데이트된 matchingSession"
+ *                               example:
+ *                                 { "id": 10, "questionId": 1, "status": "FRIENDS", "maxTurns": 10, "startedAt": "2026-01-21T13:49:32.735Z", "endedAt": null }
  *       404:
  *         description: 세션 참가자 없음 (SESSION_PARTICIPANTNOTFOUND_ERROR)
  *         content:
@@ -128,8 +143,10 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     error:
+ *                       type: object
  *                       properties:
  *                         errorCode:
  *                           example: "SESSION_PARTICIPANTNOTFOUND_ERROR"
@@ -142,14 +159,17 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     error:
+ *                       type: object
  *                       properties:
  *                         errorCode:
  *                           example: "SESSION_INTERNALSERVER_ERROR"
  *                         reason:
  *                           example: "친구 처리 중 서버 오류가 발생했습니다."
  */
+
 
 /**
  * @swagger
@@ -174,7 +194,8 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     success:
  *                       type: object
  *                       properties:
@@ -186,7 +207,9 @@
  *                           properties:
  *                             data:
  *                               type: object
- *                               example: { "sessionId": 10, "status": "DISCARDED" }
+ *                               description: "업데이트된 matchingSession"
+ *                               example:
+ *                                 { "id": 10, "questionId": 1, "status": "DISCARDED", "maxTurns": 10, "startedAt": "2026-01-21T13:49:32.735Z", "endedAt": null }
  *       404:
  *         description: 세션 참가자 없음 (SESSION_PARTICIPANTNOTFOUND_ERROR)
  *         content:
@@ -194,8 +217,10 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     error:
+ *                       type: object
  *                       properties:
  *                         errorCode:
  *                           example: "SESSION_PARTICIPANTNOTFOUND_ERROR"
@@ -208,14 +233,17 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     error:
+ *                       type: object
  *                       properties:
  *                         errorCode:
  *                           example: "SESSION_INTERNALSERVER_ERROR"
  *                         reason:
  *                           example: "친구 처리 중 서버 오류가 발생했습니다."
  */
+
 
 /**
  * @swagger
@@ -256,7 +284,8 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     success:
  *                       type: object
  *                       properties:
@@ -268,7 +297,9 @@
  *                           properties:
  *                             data:
  *                               type: object
- *                               example: { "id": 1, "sessionId": 10, "reviewerUserId": 1, "temperatureScore": 85, "reviewTag": "좋아요!" }
+ *                               description: "생성된 sessionReview"
+ *                               example:
+ *                                 { "id": 1, "sessionId": 10, "reviewerUserId": 1, "targetUserId": 2, "temperatureScore": 85, "reviewTag": "좋아요!" }
  *       400:
  *         description: 입력값 오류(태그/점수)
  *         content:
@@ -277,8 +308,10 @@
  *               oneOf:
  *                 - allOf:
  *                   - $ref: '#/components/schemas/ErrorResponse'
- *                   - properties:
+ *                   - type: object
+ *                     properties:
  *                       error:
+ *                         type: object
  *                         properties:
  *                           errorCode:
  *                             example: "SESSION_WRONGTAG_ERROR"
@@ -286,8 +319,10 @@
  *                             example: "잘못된 리뷰 태그 입력입니다."
  *                 - allOf:
  *                   - $ref: '#/components/schemas/ErrorResponse'
- *                   - properties:
+ *                   - type: object
+ *                     properties:
  *                       error:
+ *                         type: object
  *                         properties:
  *                           errorCode:
  *                             example: "SESSION_SCORERANGE_ERROR"
@@ -300,8 +335,10 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     error:
+ *                       type: object
  *                       properties:
  *                         errorCode:
  *                           example: "SESSION_INTERNALSERVER_ERROR"

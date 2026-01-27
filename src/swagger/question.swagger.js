@@ -16,7 +16,8 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     success:
  *                       type: object
  *                       properties:
@@ -29,6 +30,7 @@
  *                         expiredAt:
  *                           type: string
  *                           format: date-time
+ *                           example: "2026-01-27T14:59:59.999Z"
  *       404:
  *         description: 오늘의 질문 없음 (QUESTION_NOTFOUND_ERROR)
  *         content:
@@ -36,11 +38,16 @@
  *             schema:
  *               allOf:
  *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
+ *                 - type: object
+ *                   properties:
  *                     error:
+ *                       type: object
  *                       properties:
  *                         errorCode:
  *                           example: "QUESTION_NOTFOUND_ERROR"
  *                         reason:
- *                           example: "질문을 찾을 수 없습니다."
+ *                           example: "오늘의 질문이 없습니다."
+ *                         data:
+ *                           nullable: true
+ *                           example: null
  */
