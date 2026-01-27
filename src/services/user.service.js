@@ -266,7 +266,7 @@ const getObjectStorageClient = () => {
   const fingerprint = requiredEnv("OCI_FINGERPRINT");
   const privateKeyPath = requiredEnv("OCI_PRIVATE_KEY_PATH");
   const passphrase = process.env.OCI_PRIVATE_KEY_PASSPHRASE || null;
-  const regionId = requiredEnv("OCI_REGION"); // 예: 'ap-seoul-1'
+  const regionId = requiredEnv("OCI_REGION");
 
   const privateKey = fs
     .readFileSync(privateKeyPath, "utf8")
@@ -300,18 +300,14 @@ export const uploadUserProfileImage = async ({ userId, fileBuffer, mimeType }) =
   if (fileBuffer.length > MAX_PROFILE_IMAGE_SIZE) {
     throw new ProfileFileTooLargeError();
   }
-  console.log("파일은 받음");
+
   const namespaceName = requiredEnv("OCI_NAMESPACE");
   const bucketName = requiredEnv("OCI_BUCKET_NAME");
   const regionId = requiredEnv("OCI_REGION");
-  console.log(namespaceName);
-  console.log(bucketName);
-  console.log(regionId);
   const ext = mimeToExt(mimeType);
   if (!ext) {
     throw new ProfileUnsupportedImageTypeError();
   }
-  console.log("여기까지");
   const objectName = `profiles/${userId}/profile${ext}`;
 
   const client = getObjectStorageClient();
@@ -326,11 +322,6 @@ export const uploadUserProfileImage = async ({ userId, fileBuffer, mimeType }) =
       putObjectBody: fileBuffer,
     });
   } catch (error) {
-    console.error("❌ OCI 상세 에러 발생:");
-    console.error("상태 코드:", error.statusCode);
-    console.error("에러 코드:", error.code);
-    console.error("메시지:", error.message);
-    console.error("요청 ID:", error.opcRequestId);
     throw error;
   }
 
