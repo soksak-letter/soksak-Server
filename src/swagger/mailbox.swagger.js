@@ -13,50 +13,74 @@
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 resultType:
- *                   type: string
- *                   example: SUCCESS
- *                 error:
- *                   type: object
- *                   nullable: true
- *                   example: null
- *                 success:
- *                   type: object
- *                   properties:
- *                     items:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           threadId:
- *                             type: integer
- *                             description: 스레드 ID (senderUserId)
- *                           sender:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - properties:
+ *                     success:
+ *                       type: object
+ *                       properties:
+ *                         items:
+ *                           type: array
+ *                           items:
  *                             type: object
  *                             properties:
- *                               id:
+ *                               threadId:
  *                                 type: integer
- *                               nickname:
+ *                                 description: 스레드 ID (senderUserId)
+ *                               sender:
+ *                                 type: object
+ *                                 properties:
+ *                                   id:
+ *                                     type: integer
+ *                                   nickname:
+ *                                     type: string
+ *                                     nullable: true
+ *                               lastLetterId:
+ *                                 type: integer
+ *                               lastLetterTitle:
  *                                 type: string
+ *                               lastLetterPreview:
+ *                                 type: string
+ *                               updatedAt:
+ *                                 type: string
+ *                                 format: date-time
  *                                 nullable: true
- *                           lastLetterId:
- *                             type: integer
- *                           lastLetterTitle:
- *                             type: string
- *                           lastLetterPreview:
- *                             type: string
- *                           updatedAt:
- *                             type: string
- *                             format: date-time
- *                             nullable: true
- *                           paperId:
- *                             type: integer
- *                             nullable: true
- *                             description: 편지통 색상
+ *                               paperId:
+ *                                 type: integer
+ *                                 nullable: true
+ *                                 description: 편지통 색상
  *       401:
- *         description: 인증 실패
+ *         description: |
+ *           인증 실패:
+ *           - `AUTH_TOKEN_EXPIRED`: 토큰이 만료되었습니다.
+ *           - `AUTH_INVALID_TOKEN`: 액세스 토큰이 아니거나 유효하지 않습니다.
+ *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
+ *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
+ *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *           - `MAILBOX_UNAUTHORIZED`: 인증이 필요합니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_TOKEN_EXPIRED"
+ *                           reason:
+ *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "MAILBOX_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "인증이 필요합니다."
  */
 
 /**
@@ -81,53 +105,111 @@
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 resultType:
- *                   type: string
- *                   example: SUCCESS
- *                 error:
- *                   type: object
- *                   nullable: true
- *                   example: null
- *                 success:
- *                   type: object
- *                   properties:
- *                     items:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: integer
- *                           title:
- *                             type: string
- *                           content:
- *                             type: string
- *                           deliveredAt:
- *                             type: string
- *                             format: date-time
- *                             nullable: true
- *                           createdAt:
- *                             type: string
- *                             format: date-time
- *                             nullable: true
- *                           design:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - properties:
+ *                     success:
+ *                       type: object
+ *                       properties:
+ *                         firstQuestion:
+ *                           type: string
+ *                           nullable: true
+ *                           description: 첫 번째 편지의 질문
+ *                         letters:
+ *                           type: array
+ *                           items:
  *                             type: object
  *                             properties:
- *                               paperId:
+ *                               id:
  *                                 type: integer
+ *                               title:
+ *                                 type: string
+ *                               deliveredAt:
+ *                                 type: string
+ *                                 format: date-time
  *                                 nullable: true
- *                               stampId:
- *                                 type: integer
- *                                 nullable: true
- *                               fontId:
- *                                 type: integer
- *                                 nullable: true
+ *                               design:
+ *                                 type: object
+ *                                 properties:
+ *                                   paper:
+ *                                     type: object
+ *                                     nullable: true
+ *                                     properties:
+ *                                       id:
+ *                                         type: integer
+ *                                       name:
+ *                                         type: string
+ *                                       assetUrl:
+ *                                         type: string
+ *                                   stamp:
+ *                                     type: object
+ *                                     nullable: true
+ *                                     properties:
+ *                                       id:
+ *                                         type: integer
+ *                                       name:
+ *                                         type: string
+ *                                       assetUrl:
+ *                                         type: string
  *       400:
- *         description: 잘못된 threadId
+ *         description: |
+ *           잘못된 요청:
+ *           - `REQ_BAD_REQUEST`: 요청 유효성 검사 실패
+ *           - `MAILBOX_INVALID_THREAD_ID`: threadId가 올바르지 않습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "REQ_BAD_REQUEST"
+ *                           reason:
+ *                             example: "입력값이 잘못되었습니다"
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "MAILBOX_INVALID_THREAD_ID"
+ *                           reason:
+ *                             example: "threadId가 올바르지 않습니다."
  *       401:
- *         description: 인증 실패
+ *         description: |
+ *           인증 실패:
+ *           - `AUTH_TOKEN_EXPIRED`: 토큰이 만료되었습니다.
+ *           - `AUTH_INVALID_TOKEN`: 액세스 토큰이 아니거나 유효하지 않습니다.
+ *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
+ *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
+ *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *           - `MAILBOX_UNAUTHORIZED`: 인증이 필요합니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_TOKEN_EXPIRED"
+ *                           reason:
+ *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "MAILBOX_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "인증이 필요합니다."
  */
 
 /**
@@ -217,35 +299,59 @@
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 resultType:
- *                   type: string
- *                   example: SUCCESS
- *                 error:
- *                   type: object
- *                   nullable: true
- *                   example: null
- *                 success:
- *                   type: object
- *                   properties:
- *                     items:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: integer
- *                           title:
- *                             type: string
- *                           createdAt:
- *                             type: string
- *                             format: date-time
- *                             nullable: true
- *                           paperId:
- *                             type: integer
- *                             nullable: true
- *                             description: 편지통 색상
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - properties:
+ *                     success:
+ *                       type: object
+ *                       properties:
+ *                         items:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: integer
+ *                               title:
+ *                                 type: string
+ *                               createdAt:
+ *                                 type: string
+ *                                 format: date-time
+ *                                 nullable: true
+ *                               paperId:
+ *                                 type: integer
+ *                                 nullable: true
+ *                                 description: 편지통 색상
  *       401:
- *         description: 인증 실패
+ *         description: |
+ *           인증 실패:
+ *           - `AUTH_TOKEN_EXPIRED`: 토큰이 만료되었습니다.
+ *           - `AUTH_INVALID_TOKEN`: 액세스 토큰이 아니거나 유효하지 않습니다.
+ *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
+ *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
+ *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *           - `MAILBOX_UNAUTHORIZED`: 인증이 필요합니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_TOKEN_EXPIRED"
+ *                           reason:
+ *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "MAILBOX_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "인증이 필요합니다."
  */

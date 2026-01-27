@@ -34,6 +34,7 @@ export const findInquiryByUserId = async(userId) => {
     const result = await prisma.inquiry.findMany({
         where: { userId },
         select : {
+            id: true,
             title: true,
             content: true,
             answerContent: true,
@@ -42,4 +43,21 @@ export const findInquiryByUserId = async(userId) => {
         }
     })
     return result;
+}
+
+export const findInquiryDetail = async(userId, id) => {
+    return await prisma.inquiry.findFirst({
+        where: {
+            userId,
+            id,
+        }
+    })
+}
+
+export const findInquiryById = async(id) => {
+    return await prisma.inquiry.findFirst({
+        where: {
+            id
+        }
+    })
 }

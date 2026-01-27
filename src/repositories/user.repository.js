@@ -2,6 +2,7 @@ import { prisma } from "../configs/db.config.js";
 import { xprisma } from "../xprisma.js";
 import { DuplicatedValueError } from "../errors/base.error.js";
 import { UserNotFoundError } from "../errors/user.error.js";
+import { SessionNotFoundError, SessionFullError } from "../errors/session.error.js";
 
 export const findUserByEmail = async (email) => {
     try{
@@ -170,27 +171,79 @@ export const softDeleteUser = async (id) => {
 
 export const findRandomUserByPool = async (id) => {
   const poolRaw = await prisma.user.findFirst({
+    where: { id },
+    select: { pool: true },
+  });
+
+  const sessions = await prisma.matchingSession.findMany({
     where: {
-        id
+      status: "CHATING",
+      participants: { some: { userId: id } },
     },
     select: {
-        pool: true
-    }
-  })
+      participants: {
+        where: { userId: { not: id } },
+        select: { userId: true },
+      },
+    },
+  });
+
+  const sessionOtherUserIds = sessions.flatMap((s) =>
+    s.participants.map((p) => p.userId)
+  );
+
+  const friendIdsRaw = await prisma.friend.findMany({
+    where: { OR: [{ userAId: id }, { userBId: id }] },
+    select: { userAId: true, userBId: true },
+  });
+
+  const friendIds = friendIdsRaw
+    .map((r) => (r.userAId === id ? r.userBId : r.userAId))
+    .filter((x) => x != null);
+
+  const excludeIds = [...new Set([id, ...friendIds, ...sessionOtherUserIds])];
+
   const pool = poolRaw?.pool;
+
   const rows = await xprisma.user.findMany({
     where: {
-        blockerUserId: id,
-        pool,
-        id: { not: id }
+      blockerUserId: id,
+      pool,
+      id: { notIn: excludeIds },
     },
-    select: {
-        id: true
-    }
-  })
-  const length = rows.length;
-  const randomNum = Math.floor(Math.random() * length);
-  return rows[randomNum]?.id ?? null;
+    select: { id: true },
+  });
+
+  const candidateIds = rows.map((r) => r.id);
+  if (candidateIds.length === 0) return null;
+    
+  const counts = await prisma.sessionParticipant.groupBy({
+    by: ["userId"],
+    where: {
+      userId: { in: candidateIds },
+      session: { status: "CHATING" }, 
+    },
+    _count: { sessionId: true },
+  });
+
+  const countMap = new Map(counts.map((r) => [r.userId, r._count.sessionId]));
+
+  const availableIds = candidateIds.filter(
+    (uid) => (countMap.get(uid) ?? 0) <= 10
+  );
+
+  if (availableIds.length === 0) {
+    throw new SessionFullError();
+  }
+
+  const randomId = availableIds[Math.floor(Math.random() * availableIds.length)];
+
+  const pickedCount = countMap.get(randomId) ?? 0;
+  if (pickedCount > 10) {
+    throw new SessionNotFoundError(undefined, undefined, randomId);
+  }
+
+  return randomId;
 };
 
 
@@ -232,23 +285,24 @@ export const upsertUserAgreement = async ({ userId, data }) => {
   });
 };
 
-// ========== DeviceToken Repository ==========
-export const upsertUserDeviceToken = async ({ userId, deviceToken, deviceType = "FCM" }) => {
-  // userId가 @unique라서 where에 userId 사용 가능
-  return prisma.userDeviceToken.upsert({
-    where: { userId },
+// ========== PushSubscription Repository ==========
+export const upsertPushSubscription = async ({ userId, endpoint, p256dh, auth }) => {
+  // endpoint가 @unique라서 where에 endpoint 사용 가능
+  // 같은 endpoint가 다른 userId에 있으면 업데이트, 없으면 생성
+  return prisma.pushSubscription.upsert({
+    where: { endpoint },
     update: {
-      deviceToken,
-      deviceType,
-      lastSeenAt: new Date(),
+      userId,
+      p256dh,
+      auth,
     },
     create: {
       userId,
-      deviceToken,
-      deviceType,
-      lastSeenAt: new Date(),
+      endpoint,
+      p256dh,
+      auth,
     },
-    select: { id: true, userId: true },
+    select: { id: true, userId: true, endpoint: true },
   });
 };
 
@@ -310,12 +364,48 @@ export const replaceUserInterests = async ({ userId, interestIds }) => {
  * - receiverUserId = me
  * - letterType = ANON_SESSION
  * - senderUserId별 최신 편지 1개씩 뽑기 위해, 일단 최신순 전체를 가져오고 service에서 group 처리
+ * - 세션 상태가 "PENDING" 또는 "CHATING"인 세션의 편지만 조회
+ * - senderUserId가 해당 세션의 참가자인지 확인
  */
 export const findReceivedLettersForThreads = async ({ userId, letterType }) => {
-  return prisma.letter.findMany({
+  // 먼저 세션 상태가 PENDING 또는 CHATING인 세션들을 조회
+  // receiver(userId)가 참가자인 세션만 조회
+  const validSessions = await prisma.matchingSession.findMany({
+    where: {
+      status: { in: ["PENDING", "CHATING"] },
+      participants: {
+        some: {
+          userId: userId // receiver가 참가자인 세션
+        }
+      }
+    },
+    select: {
+      id: true,
+      participants: {
+        select: {
+          userId: true
+        }
+      }
+    }
+  });
+
+  // 유효한 세션이 없으면 빈 배열 반환
+  if (validSessions.length === 0) {
+    return [];
+  }
+
+  const validSessionIds = new Set(validSessions.map(s => s.id));
+  const sessionParticipantMap = new Map();
+  validSessions.forEach(session => {
+    sessionParticipantMap.set(session.id, new Set(session.participants.map(p => p.userId)));
+  });
+
+  // 해당 세션에 연결된 편지들을 조회
+  const letters = await prisma.letter.findMany({
     where: {
       receiverUserId: userId,
       letterType,
+      sessionId: { in: Array.from(validSessionIds) },
     },
     orderBy: [{ deliveredAt: "desc" }, { createdAt: "desc" }],
     select: {
@@ -325,10 +415,33 @@ export const findReceivedLettersForThreads = async ({ userId, letterType }) => {
       content: true,
       deliveredAt: true,
       createdAt: true,
+      sessionId: true,
       design: {
-        select: { paperId: true }, // 편지통 색상용
+        select: {
+          paper: {
+            select: {
+              id: true,
+              color: true,
+              assetUrl: true,
+            }
+          },
+          stamp: {
+            select: {
+              id: true,
+              name: true,
+              assetUrl: true,
+            }
+          },
+        },
       },
     },
+  });
+
+  // senderUserId가 세션 참가자인지 확인하여 필터링
+  return letters.filter(letter => {
+    if (!letter.sessionId || !letter.senderUserId) return false;
+    const participantUserIds = sessionParticipantMap.get(letter.sessionId);
+    return participantUserIds && participantUserIds.has(letter.senderUserId);
   });
 };
 
@@ -349,8 +462,28 @@ export const findReceivedLettersBySender = async ({ userId, senderUserId, letter
       content: true,
       deliveredAt: true,
       createdAt: true,
+      question: {
+        select: {
+          content: true
+        }
+      },
       design: {
-        select: { paperId: true, stampId: true, fontId: true },
+        select: {
+          paper: {
+            select: {
+              id: true,
+              color: true,
+              assetUrl: true
+            }
+          },
+          stamp: {
+            select: {
+              id: true,
+              name: true,
+              assetUrl: true
+            }
+          },
+        },
       },
     },
   });
@@ -391,6 +524,17 @@ export const findUsersNicknameByIds = async (userIds) => {
   for (const r of rows) map.set(r.id, r.nickname ?? null);
   return map;
 };
+
+export const findUserNicknameById = async(id) => {
+  return await prisma.user.findFirst({
+    where: {
+      id,
+    },
+    select: {
+      nickname: true,
+    }
+  })
+}
 
 // ========== Notice Repository ==========
 export const findActiveNotices = async () => {
@@ -563,28 +707,16 @@ export const getAverageTemperatureScore = async (userId) => {
   return result?._avg?.temperatureScore ?? null;
 };
 
-//  이용시간(분): matching_session started_at~ended_at 합 (참여한 세션 기준)
+//  이용시간(분): 실제 웹사이트 사용 시간 (totalUsageMinutes 필드 사용)
 export const getTotalUsageMinutes = async (userId) => {
-  const participants = await prisma.sessionParticipant.findMany({
-    where: { userId },
-    select: {
-      session: {
-        select: { startedAt: true, endedAt: true },
-      },
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { 
+      totalUsageMinutes: true,
     },
   });
 
-  let totalMs = 0;
-  for (const p of participants) {
-    const startedAt = p?.session?.startedAt;
-    const endedAt = p?.session?.endedAt;
-    if (!startedAt || !endedAt) continue;
-
-    const diff = new Date(endedAt).getTime() - new Date(startedAt).getTime();
-    if (diff > 0) totalMs += diff;
-  }
-
-  return Math.floor(totalMs / 1000 / 60);
+  return user?.totalUsageMinutes ?? 0;
 };
 
 export const updateUserNicknameById = async ({ userId, nickname }) => {
@@ -615,5 +747,20 @@ export const updateUserOnboardingStep1 = async ({ userId, gender, job }) => {
   return prisma.user.update({
     where: { id: userId },
     data: { gender, job },
+  });
+};
+
+export const incrementTotalUsageMinutes = async (userId) => {
+  return prisma.user.update({
+    where: { id: userId },
+    data: {
+      totalUsageMinutes: {
+        increment: 1,
+      },
+    },
+    select: {
+      id: true,
+      totalUsageMinutes: true,
+    },
   });
 };

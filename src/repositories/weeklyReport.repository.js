@@ -1,4 +1,4 @@
-import { prisma } from "../db.config.js";
+import { prisma } from "../configs/db.config.js";
 import { WeeklyReportInternalError } from "../errors/weeklyReport.error.js"
 
 export async function countSentLettersAiKeywordsByUserId(userId) {
@@ -158,12 +158,13 @@ export const findWeeklyReportKeywordByReportId = async(rId) => {
     return result;
 }
 
-export const findWeeklyReportByUserIdAndDate = async(uId, year, week) => {
+export const findWeeklyReportByUserIdAndDate = async(uId) => {
     return await prisma.WeeklyReport.findFirst({
         where: {
             userId: uId,
-            year: year,
-            week: week
+        },
+        orderBy: {
+          generatedAt: "desc",
         }
     })
 }
@@ -172,6 +173,11 @@ export const findWeeklyReportHighlightByRId = async(rId) => {
     return await prisma.WeeklyReportHighlight.findMany({
         where: {
             reportId: rId
+        },
+        orderBy: {
+          letter: {
+            createdAt: "desc"
+          }
         },
         select: {
             letterId: true

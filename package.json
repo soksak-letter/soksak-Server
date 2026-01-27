@@ -21,7 +21,6 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.955.0",
-    "@huggingface/inference": "^4.13.5",
     "@prisma/client": "^6.15.0",
     "axios": "^1.13.2",
     "badwords-ko": "^1.0.4",
@@ -50,6 +49,7 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^13.0.0",
+    "web-push": "^3.6.7",
     "zod": "^4.3.5"
   },
   "devDependencies": {

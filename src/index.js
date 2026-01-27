@@ -1,7 +1,6 @@
 // src/index.js
-import "dotenv/config";
 import cors from "cors";
-// import dotenv from "dotenv";
+import "dotenv/config";
 import express from "express";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
@@ -15,19 +14,17 @@ import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
 import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriendRequest } from "./controllers/friend.controller.js";
 import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats, handleGetLetterAssets } from "./controllers/letter.controller.js";
-import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername } from "./controllers/auth.controller.js";
+import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername, handleSocialLogin, handleSocialLoginCertification, handleSocialLoginCallback } from "./controllers/auth.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
-import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyDeviceToken, handleGetMyConsents, handlePatchMyConsents, } from "./controllers/user.controller.js";
+import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyPushSubscription, handleGetMyConsents, handlePatchMyConsents, handleUpdateActivity, } from "./controllers/user.controller.js";
+import { handleGetAnonymousThreads, handleGetAnonymousThreadLetters, handleGetSelfMailbox, handleGetLetterFromFriend, } from "./controllers/mailbox.controller.js";
 import { handleGetNotices, handleGetNoticeDetail, } from "./controllers/notice.controller.js";
 import { handleGetCommunityGuidelines, handleGetTerms, handleGetPrivacy, } from "./controllers/policy.controller.js";
-import { bootstrapWeeklyReports } from "./jobs/weeklyReport.bootstrap.js";
-import { startWeeklyReportCron } from "./jobs/weeklyReport.cron.js";
 import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js";
 import { handleGetTodayQuestion } from "./controllers/question.controller.js";
-
 import { validate } from "./middlewares/validate.middleware.js";
 import { emailSchema, loginSchema, passwordSchema, SignUpSchema, usernameSchema, verificationConfirmCodeSchema, verificationSendCodeSchema } from "./schemas/auth.schema.js";
-
+import { handleInsertInquiryAsUser, handleInsertInquiryAsAdmin, handleGetInquiry, handleGetInquiryDetail } from "./controllers/inquiry.controller.js";
 import { isLogin } from "./middlewares/auth.middleware.js";
 import { isRestricted } from "./middlewares/restriction.middleware.js";
 import {
@@ -35,24 +32,34 @@ import {
   letterToOtherSchema,
 } from "./schemas/letter.schema.js";
 import { idParamSchema } from "./schemas/common.schema.js";
-import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
 import {
-  handleGetAnonymousThreads,
-  handleGetAnonymousThreadLetters,
-  handleGetSelfMailbox,
-  handleGetLetterFromFriend
-} from "./controllers/mailbox.controller.js";
+  pushSubscriptionSchema,
+  onboardingStep1Schema,
+  updateInterestsSchema,
+  updateProfileSchema,
+  updateNotificationSettingsSchema,
+  updateConsentsSchema,
+  updateActivitySchema,
+} from "./schemas/user.schema.js";
+import { threadIdParamSchema } from "./schemas/mailbox.schema.js";
+import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
+import { startBatch } from "./jobs/index.job.js";
 import {
   handleInsertUserReport,
   handleGetUserReports,
+  handleGetUserReport
 } from "./controllers/report.controller.js";
-import { handleGetInquiry, handleInsertInquiryAsAdmin, handleInsertInquiryAsUser } from "./controllers/inquiry.controller.js";
-
-//dotenv.config();
-
+import { insertUserReportSchema, getUserReportSchema } from "./schemas/report.schema.js";
+import { postTargetUserIdAndSIdSchema, requesterUserIdSchema, targetUserIdSchema } from "./schemas/friend.schema.js";
+import { getInquiryDetailSchema, insertInquiryAsAdminSchema, insertInquiryAsUserSchema } from "./schemas/inquiry.schema.js";
+import { postMatchingSessionSchema, postSessionReviewSchema, patchMatchingSessionStatusSchema} from "./schemas/session.schema.js";
+import { postBlockUserSchema } from "./schemas/block.schema.js";
+import { handleGetBlock, handlePostBlock } from "./controllers/block.controller.js";
+import { handleGetRestrict } from "./controllers/restrict.controller.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
+const allowed_origins = process.env.ALLOWED_ORIGINS?.split(',') || ["http://localhost:3000"];
 
 app.use((req, res, next) => {
   console.log("[REQ]", req.method, req.originalUrl);
@@ -63,7 +70,7 @@ app.use((req, res, next) => {
 app.use(morgan("dev"));
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: allowed_origins,
     credentials: true,
   })
 );
@@ -113,9 +120,6 @@ app.use((req, res, next) => {
   next();
 });
 
-await bootstrapWeeklyReports();
-startWeeklyReportCron();
-
 // 비동기 에러 래퍼
 const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
@@ -129,44 +133,6 @@ app.get("/", (req, res) => {
   res.send("Hello World! Server is running.");
 });
 
-// 로그인/회원가입
-app.get("/auth/oauth/:provider", (req, res, next) => {
-  const { provider } = req.params;
-  const auth = passport.authenticate(provider, {
-    session: false,
-  });
-
-  auth(req, res, next);
-});
-
-
-app.get("/auth/callback/:provider", (req, res, next) => {
-    const { provider } = req.params;
-
-    const auth = passport.authenticate(provider, {
-      session: false,
-      // failureRedirect: "/login-failed" // 추후 구현
-    });
-
-    auth(req, res, next);
-  },
-
-  (req, res) => {
-    const { id, jwtAccessToken, jwtRefreshToken } = req.user;
-    const { provider } = req.params;
-
-    res.status(200).json({
-      resultType: "SUCCESS",
-      error: null,
-      success: {
-        message: `${provider} 로그인 성공!`,
-        id: id,
-        tokens: { jwtAccessToken, jwtRefreshToken },
-      },
-    });
-  }
-);
-
 app.get("/mypage", isLogin, (req, res) => {
   res.status(200).success({
     message: `인증 성공! ${req.user.name}님의 마이페이지입니다.`,
@@ -179,6 +145,7 @@ app.post(
   "/friends/requests",
   isLogin,
   isRestricted,
+  validate(postTargetUserIdAndSIdSchema),
   asyncHandler(handlePostFriendsRequest)
 ); //친구 신청
 app.get(
@@ -194,21 +161,24 @@ app.get(
   asyncHandler(handleGetOutgoingFriendRequests)
 ); //보낸 친구 신청 불러오기
 app.post(
-  "/friends/requests/accept",
+  "/friends/requests/accept/:requesterUserId",
   isLogin,
   isRestricted,
+  validate(requesterUserIdSchema),
   asyncHandler(handleAcceptFriendRequest)
 ); //들어온 친구 신청 수락
 app.post(
-  "/friends/requests/reject",
+  "/friends/requests/reject/:targetUserId",
   isLogin,
   isRestricted,
+  validate(targetUserIdSchema),
   asyncHandler(handleRejectFriendRequest)
 ); //들어온 친구 신청 거절
 app.delete(
   "/friends/requests/:targetUserId",
   isLogin,
   isRestricted,
+  validate(targetUserIdSchema),
   asyncHandler(handleDeleteFriendRequest)
 ); //보낸 친구 신청 삭제
 
@@ -216,54 +186,68 @@ app.post(
   "/matching/sessions/:questionId",
   isLogin,
   isRestricted,
+  validate(postMatchingSessionSchema),
   asyncHandler(handlePostMatchingSession)
 ); //세션 생성
 app.patch(
   "/matching/sessions/:sessionId/friends",
   isLogin,
   isRestricted,
+  validate(patchMatchingSessionStatusSchema),
   asyncHandler(handlePatchMatchingSessionStatusFriends)
 ); //세션 친구됨으로 변경
 app.patch(
   "/matching/sessions/:sessionId/discards",
   isLogin,
   isRestricted,
+  validate(patchMatchingSessionStatusSchema),
   asyncHandler(handlePatchMatchingSessionStatusDiscarded)
 ); //세션 삭제됨으로 변경
 app.post(
   "/matching/sessions/:sessionId/reviews",
   isLogin,
   isRestricted,
+  validate(postSessionReviewSchema),
   asyncHandler(handlePostSessionReview)
 ); //세션 리뷰 작성
+
+app.post("/block/:targetUserId", isLogin, isRestricted, validate(postBlockUserSchema), asyncHandler(handlePostBlock));
+app.get("/block", isLogin, isRestricted, asyncHandler(handleGetBlock));
+
+app.get("/restrict", isLogin, asyncHandler(handleGetRestrict));
 
 app.post(
   "/reports",
   isLogin,
   isRestricted,
+  validate(insertUserReportSchema),
   asyncHandler(handleInsertUserReport)
 );
 app.get("/reports", isLogin, isRestricted, asyncHandler(handleGetUserReports));
+app.get("/reports/:reportId", isLogin, isRestricted, validate(getUserReportSchema), asyncHandler(handleGetUserReport));
 
 app.get(
-  "/reports/weekly/:year/:week",
+  "/weekly/reports",
   isLogin,
   isRestricted,
   asyncHandler(handleGetWeeklyReport)
 );
 
-app.post("/inquiries", isLogin, asyncHandler(handleInsertInquiryAsUser));
-app.post("/inquiries/admin", isLogin, asyncHandler(handleInsertInquiryAsAdmin));
+app.post("/inquiries", isLogin, validate(insertInquiryAsUserSchema), asyncHandler(handleInsertInquiryAsUser));
+app.post("/inquiries/admin", isLogin, validate(insertInquiryAsAdminSchema), asyncHandler(handleInsertInquiryAsAdmin));
 app.get("/inquiries", isLogin, asyncHandler(handleGetInquiry));
+app.get("/inquiries/:inquiryId", isLogin, validate(getInquiryDetailSchema), asyncHandler(handleGetInquiryDetail));
 
 app.post("/auth/signup", validate(SignUpSchema), handleSignUp);                     // 회원가입
 app.post("/auth/login", validate(loginSchema), handleLogin);                        // 로그인
-app.post("/auth/username/exists", validate(usernameSchema), handleCheckDuplicatedUsername);   // 아이디 중복 확인
+app.get("/auth/oauth/:provider", handleSocialLogin);                                // 소셜 로그인
+app.get("/auth/callback/:provider", handleSocialLoginCertification, handleSocialLoginCallback); // 소셜 로그인 응답
+app.post("/auth/username/exists", validate(usernameSchema), handleCheckDuplicatedUsername);     // 아이디 중복 확인
 app.post("/auth/email/exists", validate(emailSchema), handleCheckDuplicatedEmail);  // 이메일 중복 확인
 app.get("/auth/refresh", handleRefreshToken);                                       // 액세스 토큰 재발급
 app.post("/auth/:type/verification-codes", validate(verificationSendCodeSchema), handleSendVerifyEmailCode);       // 이메일 인증번호 전송
 app.post("/auth/:type/verification-codes/confirm", validate(verificationConfirmCodeSchema), handleCheckEmailCode); // 이메일 인증번호 확인
-app.get("/auth/find-id", validate(emailSchema), handleGetAccountInfo);                        // 아이디 찾기
+app.post("/auth/find-id", validate(emailSchema), handleGetAccountInfo);                        // 아이디 찾기
 app.patch("/auth/reset-password", isLogin, validate(passwordSchema), handleResetPassword);    // 비밀번호 찾기
 app.post("/auth/logout", isLogin, handleLogout);                            // 로그아웃
 app.delete("/users", isLogin, handleWithdrawUser);                          // 탈퇴
@@ -284,10 +268,11 @@ app.get("/users/me/letters/stats", isLogin, isRestricted, handleGetUserLetterSta
 app.get("/home/summary", isLogin, isRestricted, HandleGetHomeDashboard);  // 홈 대시보드 조회
 
 // 온보딩 설정
-app.patch("/users/me/onboarding", isLogin, handlePatchOnboardingStep1);
+app.patch("/users/me/onboarding", isLogin, validate(onboardingStep1Schema), handlePatchOnboardingStep1);
 app.put(
   "/users/me/onboarding/interests",
   isLogin,
+  validate(updateInterestsSchema),
   handleUpdateMyOnboardingInterests
 );
 
@@ -299,6 +284,7 @@ app.get("/interests", isLogin, handleGetMyInterests); // 내 선택 목록 (로�
 app.patch(
   "/users/me/notification-settings",
   isLogin,
+  validate(updateNotificationSettingsSchema),
   handleUpdateMyNotificationSettings
 );
 app.get(
@@ -317,16 +303,17 @@ app.get("/notices/:noticeId", handleGetNoticeDetail);
 
 // 동의 설정
 app.get("/users/me/consents", isLogin, handleGetMyConsents);
-app.patch("/users/me/consents", isLogin, handlePatchMyConsents);
+app.patch("/users/me/consents", isLogin, validate(updateConsentsSchema), handlePatchMyConsents);
 
 // 디바이스 토큰
-app.put("/users/me/device-tokens", isLogin, handlePutMyDeviceToken);
+app.put("/users/me/push-subscriptions", isLogin, validate(pushSubscriptionSchema), handlePutMyPushSubscription);
 
 // / 편지함
 app.get("/mailbox/anonymous", isLogin, handleGetAnonymousThreads);
 app.get(
   "/mailbox/anonymous/threads/:threadId/letters",
   isLogin,
+  validate(threadIdParamSchema),
   handleGetAnonymousThreadLetters
 );
 app.get(
@@ -339,8 +326,11 @@ app.get("/mailbox/self", isLogin, handleGetSelfMailbox);
 
 // 프로필
 app.get("/users/me/profile", isLogin, handleGetMyProfile);
-app.patch("/users/me/profile", isLogin, handlePatchMyProfile);
+app.patch("/users/me/profile", isLogin, validate(updateProfileSchema), handlePatchMyProfile);
 app.post("/users/me/profile/image", isLogin, upload.single("image"), handlePostMyProfileImage);
+
+// 활동 시간 추적
+app.post("/users/me/activity", isLogin, validate(updateActivitySchema), handleUpdateActivity);
 
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
@@ -361,4 +351,7 @@ app.use((err, req, res, next) => {
 // 서버 실행
 app.listen(port, async () => {
   console.log(`Server is running on port ${port}`);
+  startBatch();
 });
+
+startBatch();

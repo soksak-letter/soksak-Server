@@ -15,13 +15,13 @@ import { getFriendLetters, getMyLettersWithFriend } from "../repositories/letter
 // ------------------------------
 
 export const getAnonymousThreads = async (userId) => {
-  const letters = await findReceivedLettersForThreads({
+  const receivedLetters = await findReceivedLettersForThreads({
     userId,
     letterType: LETTER_TYPE_ANON,
   });
 
   const latestBySender = new Map(); // senderUserId -> letter
-  for (const l of letters) {
+  for (const l of receivedLetters) {
     if (!l.senderUserId) continue;
     if (!latestBySender.has(l.senderUserId)) {
       latestBySender.set(l.senderUserId, l);
@@ -31,39 +31,53 @@ export const getAnonymousThreads = async (userId) => {
   const senderIds = Array.from(latestBySender.keys());
   const nicknameMap = senderIds.length ? await findUsersNicknameByIds(senderIds) : new Map();
 
-  const items = senderIds.map((senderId) => {
+  const letters = senderIds.map((senderId) => {
     const l = latestBySender.get(senderId);
-    const updatedAt = l.deliveredAt ?? l.createdAt ?? null;
 
     return {
       threadId: senderId, // threadId = senderUserId
       lastLetterId: l.id,
       lastLetterTitle: l.title,
       lastLetterPreview: makePreview(l.content, 30),
-      updatedAt,
-
+      deliveredAt: l.deliveredAt ?? null,
       sender: {
         id: senderId,
         nickname: nicknameMap.get(senderId) ?? null,
       },
-
-      paperId: l.design?.paperId ?? null,
+      design: l.design
+        ? {
+            paper: l.design.paper
+              ? {
+                  id: l.design.paper.id,
+                  name: l.design.paper.color, // color를 name으로 매핑
+                  assetUrl: l.design.paper.assetUrl,
+                }
+              : null,
+            stamp: l.design.stamp
+              ? {
+                  id: l.design.stamp.id,
+                  name: l.design.stamp.name,
+                  assetUrl: l.design.stamp.assetUrl,
+                }
+              : null,
+          }
+        : { paper: null, stamp: null },
     };
   });
 
-  items.sort((a, b) => {
-    const ta = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-    const tb = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+  letters.sort((a, b) => {
+    const ta = a.deliveredAt ? new Date(a.deliveredAt).getTime() : 0;
+    const tb = b.deliveredAt ? new Date(b.deliveredAt).getTime() : 0;
     return tb - ta;
   });
 
-  return { items };
+  return { letters };
 };
 
 export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
   const threadId = Number(threadIdRaw);
   if (!Number.isFinite(threadId) || threadId <= 0) {
-    throw new MailboxInvalidThreadIdError("MAILBOX_400_01", "threadId가 올바르지 않습니다.", { threadId: threadIdRaw });
+    throw new MailboxInvalidThreadIdError("MAILBOX_INVALID_THREAD_ID", "threadId가 올바르지 않습니다.", { threadId: threadIdRaw });
   }
 
   const letters = await findReceivedLettersBySender({
@@ -72,22 +86,36 @@ export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
     letterType: LETTER_TYPE_ANON,
   });
 
-  const items = letters.map((l) => ({
+  const firstQuestion = letters[0]?.question?.content ?? null;
+
+  const lettersData = letters.map((l) => ({
     id: l.id,
     title: l.title,
-    content: l.content,
     deliveredAt: l.deliveredAt ?? null,
-    createdAt: l.createdAt ?? null,
     design: l.design
       ? {
-          paperId: l.design.paperId ?? null,
-          stampId: l.design.stampId ?? null,
-          fontId: l.design.fontId ?? null,
+          paper: l.design.paper
+            ? {
+                id: l.design.paper.id,
+                name: l.design.paper.color, // color를 name으로 매핑
+                assetUrl: l.design.paper.assetUrl,
+              }
+            : null,
+          stamp: l.design.stamp
+            ? {
+                id: l.design.stamp.id,
+                name: l.design.stamp.name,
+                assetUrl: l.design.stamp.assetUrl,
+              }
+            : null,
         }
-      : { paperId: null, stampId: null, fontId: null },
+      : { paper: null, stamp: null },
   }));
 
-  return { items };
+  return {
+    firstQuestion,
+    letters: lettersData,
+  };
 };
 
 export const getLetterFromFriend = async ({userId, friendId}) => {
