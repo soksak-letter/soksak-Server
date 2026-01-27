@@ -217,7 +217,7 @@
  *                           reason:
  *                             example: "토큰이 만료되었습니다."
  *       404:
- *         description: 참조 데이터 없음 (REF_404)
+ *         description: 질문 없음 (QUESTION_NOT_FOUND)
  *         content:
  *           application/json:
  *             schema:
@@ -227,9 +227,9 @@
  *                     error:
  *                       properties:
  *                         errorCode:
- *                           example: "REF_404"
+ *                           example: "QUESTION_NOT_FOUND"
  *                         reason:
- *                           example: "question_id 정보를 찾을 수 없습니다."
+ *                           example: "해당 질문을 찾을 수 없습니다."
  */
 
 /**
@@ -329,8 +329,25 @@
  *                             example: "AUTH_TOKEN_EXPIRED"
  *                           reason:
  *                             example: "토큰이 만료되었습니다."
+ *       403:
+ *         description: 편지 발송 한도 달성 (SESSION_MAX_TURN) 
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error: 
+ *                       properties:
+ *                         errorCode:
+ *                           example: "SESSION_MAX_TURN"
+ *                         reason:
+ *                           example: "편지 주고 받은 횟수가 10번이 되었습니다."
  *       404:
- *         description: 받는 사람 찾을 수 없음 (USER_404_02)
+ *         description: |
+ *           조회 실패:
+ *           - `USER_NOT_FOUND`: 해당 정보로 가입된 계정을 찾을 수 없습니다.
+ *           - `QUESTION_NOT_FOUND`: 해당 질문을 찾을 수 없습니다.
  *         content:
  *           application/json:
  *             schema:
@@ -340,11 +357,11 @@
  *                     error:
  *                       properties:
  *                         errorCode:
- *                           example: "USER_404_02"
+ *                           example: "USER_NOT_FOUND"
  *                         reason:
  *                           example: "해당 정보로 가입된 계정을 찾을 수 없습니다."
  *       409:
- *         description: 자신에게 전송 시도 (USER_409_04)
+ *         description: 자신에게 전송 시도 (USER_DUPLICATED_ID)
  *         content:
  *           application/json:
  *             schema:
@@ -354,9 +371,9 @@
  *                     error:
  *                       properties:
  *                         errorCode:
- *                           example: "USER_409_04"
+ *                           example: "USER_DUPLICATED_ID"
  *                         reason:
- *                           example: "전송하는 유저와 전달받는 유저의 id가 같습니다"
+ *                           example: "전송하는 유저와 전달받는 유저의 ID가 같습니다"
  */
 
 /**

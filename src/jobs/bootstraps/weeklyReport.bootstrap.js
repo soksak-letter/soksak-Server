@@ -1,7 +1,7 @@
 // jobs/weeklyReport.bootstrap.js
-import { prisma } from "../configs/db.config.js";
-import { getCurrentISOYear, getCurrentISOWeek } from "../jobs/date.js";
-import { createWeeklyReport } from "../services/weeklyReport.service.js";
+import { prisma } from "../../configs/db.config.js";
+import { getISOWeek, getISOYear } from "../../utils/date.util.js";
+import { createWeeklyReport } from "../../services/weeklyReport.service.js";
 
 const CONCURRENCY = Number(process.env.WEEKLY_REPORT_CONCURRENCY ?? 2);
 
@@ -10,8 +10,8 @@ function sleep(ms) {
 }
 
 export const bootstrapWeeklyReports = async () => {
-  const year = getCurrentISOYear();
-  const week = getCurrentISOWeek();
+  const year = getISOYear();
+  const week = getISOWeek();
 
   const users = await prisma.user.findMany({
     where: { isDeleted: false },

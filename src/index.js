@@ -14,14 +14,12 @@ import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
 import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriendRequest } from "./controllers/friend.controller.js";
 import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats, handleGetLetterAssets } from "./controllers/letter.controller.js";
-import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername } from "./controllers/auth.controller.js";
+import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername, handleSocialLogin, handleSocialLoginCertification, handleSocialLoginCallback } from "./controllers/auth.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
 import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyPushSubscription, handleGetMyConsents, handlePatchMyConsents, handleUpdateActivity, } from "./controllers/user.controller.js";
 import { handleGetAnonymousThreads, handleGetAnonymousThreadLetters, handleGetSelfMailbox, handleGetLetterFromFriend, } from "./controllers/mailbox.controller.js";
 import { handleGetNotices, handleGetNoticeDetail, } from "./controllers/notice.controller.js";
 import { handleGetCommunityGuidelines, handleGetTerms, handleGetPrivacy, } from "./controllers/policy.controller.js";
-import { bootstrapWeeklyReports } from "./jobs/weeklyReport.bootstrap.js";
-import { startWeeklyReportCron } from "./jobs/weeklyReport.cron.js";
 import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js";
 import { handleGetTodayQuestion } from "./controllers/question.controller.js";
 import { validate } from "./middlewares/validate.middleware.js";
@@ -45,6 +43,7 @@ import {
 } from "./schemas/user.schema.js";
 import { threadIdParamSchema } from "./schemas/mailbox.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
+import { startBatch } from "./jobs/index.job.js";
 import {
   handleInsertUserReport,
   handleGetUserReports,
@@ -60,6 +59,7 @@ import { handleGetRestrict } from "./controllers/restrict.controller.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
+const allowed_origins = process.env.ALLOWED_ORIGINS?.split(',') || ["http://localhost:3000"];
 
 app.use((req, res, next) => {
   console.log("[REQ]", req.method, req.originalUrl);
@@ -70,7 +70,7 @@ app.use((req, res, next) => {
 app.use(morgan("dev"));
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: allowed_origins,
     credentials: true,
   })
 );
@@ -132,44 +132,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.get("/", (req, res) => {
   res.send("Hello World! Server is running.");
 });
-
-// 로그인/회원가입
-app.get("/auth/oauth/:provider", (req, res, next) => {
-  const { provider } = req.params;
-  const auth = passport.authenticate(provider, {
-    session: false,
-  });
-
-  auth(req, res, next);
-});
-
-
-app.get("/auth/callback/:provider", (req, res, next) => {
-    const { provider } = req.params;
-
-    const auth = passport.authenticate(provider, {
-      session: false,
-      // failureRedirect: "/login-failed" // 추후 구현
-    });
-
-    auth(req, res, next);
-  },
-
-  (req, res) => {
-    const { id, jwtAccessToken, jwtRefreshToken } = req.user;
-    const { provider } = req.params;
-
-    res.status(200).json({
-      resultType: "SUCCESS",
-      error: null,
-      success: {
-        message: `${provider} 로그인 성공!`,
-        id: id,
-        tokens: { jwtAccessToken, jwtRefreshToken },
-      },
-    });
-  }
-);
 
 app.get("/mypage", isLogin, (req, res) => {
   res.status(200).success({
@@ -278,7 +240,9 @@ app.get("/inquiries/:inquiryId", isLogin, validate(getInquiryDetailSchema), asyn
 
 app.post("/auth/signup", validate(SignUpSchema), handleSignUp);                     // 회원가입
 app.post("/auth/login", validate(loginSchema), handleLogin);                        // 로그인
-app.post("/auth/username/exists", validate(usernameSchema), handleCheckDuplicatedUsername);   // 아이디 중복 확인
+app.get("/auth/oauth/:provider", handleSocialLogin);                                // 소셜 로그인
+app.get("/auth/callback/:provider", handleSocialLoginCertification, handleSocialLoginCallback); // 소셜 로그인 응답
+app.post("/auth/username/exists", validate(usernameSchema), handleCheckDuplicatedUsername);     // 아이디 중복 확인
 app.post("/auth/email/exists", validate(emailSchema), handleCheckDuplicatedEmail);  // 이메일 중복 확인
 app.get("/auth/refresh", handleRefreshToken);                                       // 액세스 토큰 재발급
 app.post("/auth/:type/verification-codes", validate(verificationSendCodeSchema), handleSendVerifyEmailCode);       // 이메일 인증번호 전송
@@ -387,6 +351,5 @@ app.use((err, req, res, next) => {
 // 서버 실행
 app.listen(port, async () => {
   console.log(`Server is running on port ${port}`);
-  await bootstrapWeeklyReports();
-startWeeklyReportCron();
+  startBatch();
 });

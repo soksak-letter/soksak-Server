@@ -19,7 +19,7 @@ import {
 } from "../errors/weeklyReport.error.js";
 import { generateKoreanLetterFromKeywords } from "../utils/ai/letterFromKeywords.ai.js";
 import { analyzeWeeklyReportEmotionByKeywords } from "../utils/weeklyEmotion.util.js";
-import { yearWeekToMonthWeek } from "../utils/day.util.js";
+import { yearWeekToMonthWeek } from "../utils/date.util.js";
 
 /** @typedef {Record<string, number>} KeywordCountMap */
 
