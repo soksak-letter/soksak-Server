@@ -64,7 +64,7 @@ export const createUserReport = async (reporterUserId, letterId, reasons) => {
       userReport.id,
       reasons
     );
-    if (userReportReason == 0) throw new ReportInternalError();
+    if (!userReportReason || userReportReason.count === 0) throw new ReportInternalError();
     return {
       status: 201,
       message: "신고가 성공적으로 처리되었습니다.",
@@ -95,7 +95,7 @@ export const selectUserReport = async(userId, reportId) => {
   const user = await findUserById(userId);
   if (user == null) throw new UserNotFoundError();
   try {
-    const result = await getUserReportAndReasonByReportId(userId);
+    const result = await getUserReportAndReasonByReportId(userId, reportId);
     return result;
   } catch (error) {
     if (error instanceof NotFoundError) {

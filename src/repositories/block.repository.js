@@ -17,8 +17,16 @@ export const findBlockByUserId = async(blockerUserId) => {
             blockerUserId
         },
         select: {
-            blockeruserId: true,
+            blockedUserId: true,
             createdAt: true,
+        }
+    })
+}
+
+export const findBlockByTargetUserId = async(blockedUserId) => {
+    return await prisma.block.findFirst({
+        where: {
+            blockedUserId
         }
     })
 }

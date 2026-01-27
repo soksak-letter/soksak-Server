@@ -6,4 +6,5 @@ export const findRestrictById = async(userId) => {
             userId
         }
     })
+    return result;
 }

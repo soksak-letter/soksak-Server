@@ -1,7 +1,7 @@
-import { findBlockByUserId, insertUserBlock } from "../repositories/block.repository.js";
+import { findBlockByUserId, insertUserBlock, findBlockByTargetUserId } from "../repositories/block.repository.js";
 import { findUserById } from "../repositories/user.repository.js";
 import { InvalidUserError } from "../errors/user.error.js";
-import { BlockInternalServerError } from "../errors/block.error.js";
+import { BlockAlreadyExistsError, BlockInternalServerError } from "../errors/block.error.js";
 
 export const createBlockUser = async(userId, targetUserId) => {
     const user = await findUserById(userId);
@@ -11,6 +11,8 @@ export const createBlockUser = async(userId, targetUserId) => {
     } else if(target==null) {
         throw new InvalidUserError(undefined, undefined, targetUserId);
     }
+    const block = await findBlockByTargetUserId(targetUserId);
+    if(block != null) throw new BlockAlreadyExistsError(undefined, undefined, targetUserId);
     try {
         const result = await insertUserBlock(userId, targetUserId);
         return result;
