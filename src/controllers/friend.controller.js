@@ -7,17 +7,13 @@ import {
   rejectFriendRequest,
   deleteFriendRequestData as deleteFriendRequest,
 } from "../services/friend.service.js";
+import { InvalidUserError } from "../errors/user.error.js";
 
 function userIsNull(...users) {
   const isInvalid = users.some((u) => !u || u.isNull);
 
   if (isInvalid) {
-    throw {
-      status: 400,
-      errorCode: "FRIEND_400",
-      reason: "유저 정보가 올바르지 않습니다.",
-      data: null,
-    };
+    throw new InvalidUserError(undefined, undefined, users);
   }
 }
 
@@ -39,8 +35,7 @@ export const handleGetFriendsList = async (req, res, next) => {
 
 export const handlePostFriendsRequest = async (req, res, next) => {
   const userId = req.user.id;
-  const targetUserId = req.body.targetUserId;
-  const sessionId = req.body.sessionId;
+  const { targetUserId, sessionId } = req.body;
 
   userIsNull(userId, targetUserId);
 
@@ -86,7 +81,7 @@ export const handleGetOutgoingFriendRequests = async (req, res, next) => {
 export const handleAcceptFriendRequest = async (req, res, next) => {
   // 친구 신청 수락 로직 구현
   const receiverUserId = req.user.id;
-  const requesterUserId = req.body.targetUserId;
+  const { requesterUserId } = req.body;
   userIsNull(receiverUserId, requesterUserId);
   try {
     const result = await acceptFriendRequest(receiverUserId, requesterUserId);
@@ -101,7 +96,7 @@ export const handleAcceptFriendRequest = async (req, res, next) => {
 export const handleRejectFriendRequest = async (req, res, next) => {
   // 친구 신청 거절 로직 구현
   const userId = req.user.id;
-  const targetUserId = req.body.targetUserId;
+  const { targetUserId } = req.params;
   userIsNull(userId, targetUserId);
   try {
     const result = await rejectFriendRequest(userId, targetUserId);
@@ -116,7 +111,7 @@ export const handleRejectFriendRequest = async (req, res, next) => {
 export const handleDeleteFriendRequest = async (req, res, next) => {
   // 친구 신청 취소 로직
   const userId = req.user.id;
-  const targetUserId = Number(req.params.targetUserId);
+  const { targetUserId } = req.params;
   userIsNull(userId, targetUserId);
   try {
     const result = await deleteFriendRequest(userId, targetUserId);

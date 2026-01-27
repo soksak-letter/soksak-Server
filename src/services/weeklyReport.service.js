@@ -47,7 +47,7 @@ export const createWeeklyReport = async (userId, year, week) => {
       week
     );
     if (weeklyReport != null)
-      throw new WeeklyReportAlreadyExistsError({ userId, year, week });
+      throw new WeeklyReportAlreadyExistsError(undefined, undefined, { userId, year, week });
     const keyWordResult = await countSentLettersAiKeywordsByUserId(userId);
     const keyWordResultAsString = weeklyReportKeywordsToString(keyWordResult);
     //위의 weeklyReportKeyword 기반 ai 처리로 텍스트 return -> WeeklyReport의 summaryText에 저장
@@ -121,20 +121,20 @@ await insertWeeklyReportEmotions(emotionRows);
     return weeklyReportResult;
   } catch (error) {
     if (error?.code === "P2025") {
-      throw new WeeklyReportNotFoundError({
+      throw new WeeklyReportNotFoundError(undefined, undefined, {
         userId,
         year,
         week,
       });
     } else if (error?.code === "P2002") {
-      throw new WeeklyReportAlreadyExistsError({
+      throw new WeeklyReportAlreadyExistsError(undefined, undefined, {
         userId,
         year,
         week,
       });
     }
 
-    throw new WeeklyReportInternalError({
+    throw new WeeklyReportInternalError(undefined, undefined, {
       reason: error.message,
       action: "CREATE_WEEKLY_REPORT",
       userId,
@@ -148,7 +148,7 @@ export const readWeeklyReport = async (userId, year, week) => {
   try {
     const weeklyReport = await findWeeklyReportByUserIdAndDate(userId, year, week);
     if (!weeklyReport) {
-      throw new WeeklyReportNotFoundError({ userId, year, week });
+      throw new WeeklyReportNotFoundError(undefined, undefined, { userId, year, week });
     }
 
     console.log("DDD" + JSON.stringify(weeklyReport));
@@ -194,9 +194,9 @@ const emotionsByIndex = (emotionsRaw ?? []).reduce((acc, e) => {
     };
   } catch (error) {
     if (error?.code === "P2025") {
-      throw new WeeklyReportNotFoundError({ userId, year, week });
+      throw new WeeklyReportNotFoundError(undefined, undefined, { userId, year, week });
     }
-    throw new WeeklyReportInternalError({
+    throw new WeeklyReportInternalError(undefined, undefined, {
       reason: error.message,
       action: "READ_WEEKLY_REPORT",
       userId,

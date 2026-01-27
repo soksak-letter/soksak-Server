@@ -1,16 +1,8 @@
 import { createUserReport, selectUserReport } from "../services/report.service.js";
-import { UnexpectedArgumentError } from "../errors/report.error.js";
 
 export const handleInsertUserReport = async (req, res, next) => {
   const reporterUserId = req.user.id; 
-  const letterId = Number(req.body.letterId); 
-  const reasons = req.body.reasons;
-
-  if (
-    reporterUserId == null || letterId == null || reasons.isNull
-  ) {
-    throw new UnexpectedArgumentError();
-  }
+  const { letterId, reasons } = req.body;
 
   try {
     const result = await createUserReport(reporterUserId, letterId, reasons);

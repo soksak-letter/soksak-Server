@@ -49,9 +49,10 @@ import {
   handleInsertUserReport,
   handleGetUserReports,
 } from "./controllers/report.controller.js";
-
-//dotenv.config();
-
+import { insertUserReportSchema } from "./schemas/report.schema.js";
+import { postTargetUserIdAndSIdSchema, requesterUserIdSchema, targetUserIdSchema } from "./schemas/friend.schema.js";
+import { insertInquiryAsAdminSchema, insertInquiryAsUserSchema } from "./schemas/inquiry.schema.js";
+import { postMatchingSessionSchema, postSessionReviewSchema, patchMatchingSessionStatusSchema} from "./schemas/session.schema.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -181,6 +182,7 @@ app.post(
   "/friends/requests",
   isLogin,
   isRestricted,
+  validate(postTargetUserIdAndSIdSchema),
   asyncHandler(handlePostFriendsRequest)
 ); //친구 신청
 app.get(
@@ -199,18 +201,21 @@ app.post(
   "/friends/requests/accept",
   isLogin,
   isRestricted,
+  validate(requesterUserIdSchema),
   asyncHandler(handleAcceptFriendRequest)
 ); //들어온 친구 신청 수락
 app.post(
-  "/friends/requests/reject",
+  "/friends/requests/reject/:targetUserId",
   isLogin,
   isRestricted,
+  validate(targetUserIdSchema),
   asyncHandler(handleRejectFriendRequest)
 ); //들어온 친구 신청 거절
 app.delete(
   "/friends/requests/:targetUserId",
   isLogin,
   isRestricted,
+  validate(targetUserIdSchema),
   asyncHandler(handleDeleteFriendRequest)
 ); //보낸 친구 신청 삭제
 
@@ -218,24 +223,28 @@ app.post(
   "/matching/sessions/:questionId",
   isLogin,
   isRestricted,
+  validate(postMatchingSessionSchema),
   asyncHandler(handlePostMatchingSession)
 ); //세션 생성
 app.patch(
   "/matching/sessions/:sessionId/friends",
   isLogin,
   isRestricted,
+  validate(patchMatchingSessionStatusSchema),
   asyncHandler(handlePatchMatchingSessionStatusFriends)
 ); //세션 친구됨으로 변경
 app.patch(
   "/matching/sessions/:sessionId/discards",
   isLogin,
   isRestricted,
+  validate(patchMatchingSessionStatusSchema),
   asyncHandler(handlePatchMatchingSessionStatusDiscarded)
 ); //세션 삭제됨으로 변경
 app.post(
   "/matching/sessions/:sessionId/reviews",
   isLogin,
   isRestricted,
+  validate(postSessionReviewSchema),
   asyncHandler(handlePostSessionReview)
 ); //세션 리뷰 작성
 
@@ -243,6 +252,7 @@ app.post(
   "/reports",
   isLogin,
   isRestricted,
+  validate(insertUserReportSchema),
   asyncHandler(handleInsertUserReport)
 );
 app.get("/reports", isLogin, isRestricted, asyncHandler(handleGetUserReports));
@@ -254,8 +264,8 @@ app.get(
   asyncHandler(handleGetWeeklyReport)
 );
 
-app.post("/inquiries", isLogin, asyncHandler(handleInsertInquiryAsUser));
-app.post("/inquiries/admin", isLogin, asyncHandler(handleInsertInquiryAsAdmin));
+app.post("/inquiries", isLogin, validate(insertInquiryAsUserSchema), asyncHandler(handleInsertInquiryAsUser));
+app.post("/inquiries/admin", isLogin, validate(insertInquiryAsAdminSchema), asyncHandler(handleInsertInquiryAsAdmin));
 app.get("/inquiries", isLogin, asyncHandler(handleGetInquiry));
 
 app.post("/auth/signup", validate(SignUpSchema), handleSignUp);                     // 회원가입
