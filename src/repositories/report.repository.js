@@ -1,4 +1,4 @@
-import { prisma } from "../db.config.js";
+import { prisma } from "../configs/db.config.js";
 import { xprisma } from "../xprisma.js";
 
 export const insertUserReport = async (reporterUserId, targetUserId, letterId) => {

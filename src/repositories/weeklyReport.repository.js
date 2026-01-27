@@ -1,4 +1,4 @@
-import { prisma } from "../db.config.js";
+import { prisma } from "../configs/db.config.js";
 import { WeeklyReportInternalError } from "../errors/weeklyReport.error.js"
 
 export async function countSentLettersAiKeywordsByUserId(userId) {
