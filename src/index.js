@@ -40,8 +40,9 @@ import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
 import {
   handleInsertUserReport,
   handleGetUserReports,
+  handleGetUserReport
 } from "./controllers/report.controller.js";
-import { insertUserReportSchema } from "./schemas/report.schema.js";
+import { insertUserReportSchema, getUserReportSchema } from "./schemas/report.schema.js";
 import { postTargetUserIdAndSIdSchema, requesterUserIdSchema, targetUserIdSchema } from "./schemas/friend.schema.js";
 import { insertInquiryAsAdminSchema, insertInquiryAsUserSchema } from "./schemas/inquiry.schema.js";
 import { postMatchingSessionSchema, postSessionReviewSchema, patchMatchingSessionStatusSchema} from "./schemas/session.schema.js";
@@ -196,7 +197,7 @@ app.get(
   asyncHandler(handleGetOutgoingFriendRequests)
 ); //보낸 친구 신청 불러오기
 app.post(
-  "/friends/requests/accept",
+  "/friends/requests/accept/:requesterUserId",
   isLogin,
   isRestricted,
   validate(requesterUserIdSchema),
@@ -254,9 +255,10 @@ app.post(
   asyncHandler(handleInsertUserReport)
 );
 app.get("/reports", isLogin, isRestricted, asyncHandler(handleGetUserReports));
+app.get("/reports/:reportId", isLogin, isRestricted, validate(getUserReportSchema), asyncHandler(handleGetUserReport));
 
 app.get(
-  "/reports/weekly/:year/:week",
+  "/weekly/reports",
   isLogin,
   isRestricted,
   asyncHandler(handleGetWeeklyReport)
