@@ -218,18 +218,24 @@ export async function selectAllFriendsByUserId(userId) {
   });
 }
 
-export async function deleteFriendRequest(receiverUserId, requesterUserId) {
-  const result = await prisma.FriendRequest.updateMany({
+export async function deleteFriendRequest(requesterUserId, receiverUserId) {
+  const updated = await prisma.FriendRequest.updateMany({
     where: {
       requesterUserId,
       receiverUserId,
-      status: "PENDING"
+      status: "PENDING",
     },
-    data: {
-      status: "DELETED"
-    }
+    data: { status: "DELETED" },
   });
-  return result;
+
+  if (updated.count === 0) {
+    throw new FriendRequestNotFoundError(null, "삭제할 PENDING 친구 신청이 없습니다.");
+  }
+
+  return prisma.FriendRequest.findFirst({
+    where: { requesterUserId, receiverUserId, status: "DELETED" },
+    orderBy: { id: "desc" },
+  });
 } // 친구 신청 삭제
 
 export const findFriendById = async (userId, friendId) => {
