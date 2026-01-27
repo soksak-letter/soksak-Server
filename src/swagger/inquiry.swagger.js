@@ -1,0 +1,378 @@
+/* =========================
+ * 문의 (inquiries)
+ * ========================= */
+
+/**
+ * @swagger
+ * tags:
+ *   - name: 문의
+ *     description: 문의 등록/답변/조회 API
+ */
+
+/**
+ * @swagger
+ * /inquiries:
+ *   post:
+ *     summary: 문의 등록 (유저)
+ *     tags: [문의]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [title, content]
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: "문의 제목"
+ *               content:
+ *                 type: string
+ *                 example: "문의 내용"
+ *     responses:
+ *       201:
+ *         description: 문의 등록 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     success:
+ *                       type: object
+ *                       properties:
+ *                         message:
+ *                           type: string
+ *                           example: "문의 입력이 성공적으로 처리되었습니다."
+ *                         result:
+ *                           type: object
+ *                           description: 생성된 inquiry row(일부 필드 생략 가능)
+ *                           example:
+ *                             { "id": 1, "category": "INQUIRY", "status": "PENDING", "title": "문의 제목", "content": "문의 내용", "userId": 14 }
+ *       400:
+ *         description: 입력값 검증 실패(REQ_BAD_REQUEST) 또는 잘못된 요청(INQUIRY_BADREQUEST_ERROR)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - type: object
+ *                     properties:
+ *                       error:
+ *                         type: object
+ *                         properties:
+ *                           errorCode:
+ *                             example: "REQ_BAD_REQUEST"
+ *                           reason:
+ *                             example: "입력값이 잘못되었습니다"
+ *                           data:
+ *                             example:
+ *                               [
+ *                                 { "field": "body.title", "message": "제목은 필수입니다." }
+ *                               ]
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - type: object
+ *                     properties:
+ *                       error:
+ *                         type: object
+ *                         properties:
+ *                           errorCode:
+ *                             example: "INQUIRY_BADREQUEST_ERROR"
+ *                           reason:
+ *                             example: "대상이 존재하지 않습니다."
+ *       401:
+ *         description: 인증 필요 (UNAUTHORIZED)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       409:
+ *         description: 중복 문의 (INQUIRY_ALREADYEXISTS_ERROR)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - type: object
+ *                   properties:
+ *                     error:
+ *                       type: object
+ *                       properties:
+ *                         errorCode:
+ *                           example: "INQUIRY_ALREADYEXISTS_ERROR"
+ *                         reason:
+ *                           example: "이미 존재하는 문의입니다."
+ *       500:
+ *         description: 문의 생성 중 서버 오류 (INQUIRY_INTERNALSERVER_ERROR)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - type: object
+ *                   properties:
+ *                     error:
+ *                       type: object
+ *                       properties:
+ *                         errorCode:
+ *                           example: "INQUIRY_INTERNALSERVER_ERROR"
+ *                         reason:
+ *                           example: "문의 생성 중 서버 오류가 발생하였습니다."
+ */
+
+/**
+ * @swagger
+ * /inquiries/admin:
+ *   post:
+ *     summary: 문의 답변 등록 (관리자)
+ *     tags: [문의]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [inquiryId, answerContent]
+ *             properties:
+ *               inquiryId:
+ *                 type: integer
+ *                 example: 1
+ *               answerContent:
+ *                 type: string
+ *                 example: "답변 내용"
+ *     responses:
+ *       201:
+ *         description: 답변 등록 성공 (updateMany 결과 반환)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     success:
+ *                       type: object
+ *                       properties:
+ *                         message:
+ *                           type: string
+ *                           example: "문의 답변이 성공적으로 처리되었습니다."
+ *                         result:
+ *                           type: object
+ *                           description: Prisma updateMany 결과
+ *                           example: { "count": 1 }
+ *       400:
+ *         description: 입력값 검증 실패(REQ_BAD_REQUEST) 또는 잘못된 요청(INQUIRY_BADREQUEST_ERROR)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - type: object
+ *                     properties:
+ *                       error:
+ *                         type: object
+ *                         properties:
+ *                           errorCode:
+ *                             example: "REQ_BAD_REQUEST"
+ *                           reason:
+ *                             example: "입력값이 잘못되었습니다"
+ *                           data:
+ *                             example:
+ *                               [
+ *                                 { "field": "body.inquiryId", "message": "숫자여야 합니다." }
+ *                               ]
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - type: object
+ *                     properties:
+ *                       error:
+ *                         type: object
+ *                         properties:
+ *                           errorCode:
+ *                             example: "INQUIRY_BADREQUEST_ERROR"
+ *                           reason:
+ *                             example: "대상이 존재하지 않습니다."
+ *       401:
+ *         description: 인증 필요 (UNAUTHORIZED)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       409:
+ *         description: 중복 처리 (INQUIRY_ALREADYEXISTS_ERROR)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 문의 처리 중 서버 오류 (INQUIRY_INTERNALSERVER_ERROR)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+
+/**
+ * @swagger
+ * /inquiries:
+ *   get:
+ *     summary: 내 문의 목록 조회
+ *     tags: [문의]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       201:
+ *         description: 문의 조회 성공 (현재 컨트롤러가 201 반환)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     success:
+ *                       type: object
+ *                       properties:
+ *                         message:
+ *                           type: string
+ *                           example: "문의 조회가 성공적으로 처리되었습니다."
+ *                         result:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: integer
+ *                                 example: 1
+ *                               title:
+ *                                 type: string
+ *                                 example: "문의 제목"
+ *                               content:
+ *                                 type: string
+ *                                 example: "문의 내용"
+ *                               answerContent:
+ *                                 type: string
+ *                                 nullable: true
+ *                                 example: null
+ *                               createdAt:
+ *                                 type: string
+ *                                 format: date-time
+ *                                 example: "2026-01-21T13:49:32.735Z"
+ *                               status:
+ *                                 type: string
+ *                                 example: "PENDING"
+ *       401:
+ *         description: 인증 필요 (UNAUTHORIZED)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 유저 없음 등 (INVALID_USER_ERROR 등 - 프로젝트 설계에 따라)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 문의 처리 중 서버 오류 (INQUIRY_INTERNALSERVER_ERROR)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+
+/**
+ * @swagger
+ * /inquiries/{inquiryId}:
+ *   get:
+ *     summary: 문의 상세 조회
+ *     tags: [문의]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: inquiryId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: 문의 상세 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     success:
+ *                       type: object
+ *                       properties:
+ *                         message:
+ *                           type: string
+ *                           example: "문의 상세 조회가 성공적으로 처리되었습니다."
+ *                         result:
+ *                           type: object
+ *                           description: inquiry row
+ *                           example:
+ *                             { "id": 1, "userId": 14, "category": "INQUIRY", "status": "PENDING", "title": "문의 제목", "content": "문의 내용", "answerContent": null, "createdAt": "2026-01-21T13:49:32.735Z", "answeredAt": null }
+ *       400:
+ *         description: 입력값 검증 실패 (REQ_BAD_REQUEST)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - type: object
+ *                   properties:
+ *                     error:
+ *                       type: object
+ *                       properties:
+ *                         errorCode:
+ *                           example: "REQ_BAD_REQUEST"
+ *                         reason:
+ *                           example: "입력값이 잘못되었습니다"
+ *                         data:
+ *                           example:
+ *                             [
+ *                               { "field": "params.inquiryId", "message": "숫자여야 합니다." }
+ *                             ]
+ *       401:
+ *         description: 인증 필요 (UNAUTHORIZED)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 문의를 찾을 수 없음 (INQUIRY_NOTFOUND_ERROR)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - type: object
+ *                   properties:
+ *                     error:
+ *                       type: object
+ *                       properties:
+ *                         errorCode:
+ *                           example: "INQUIRY_NOTFOUND_ERROR"
+ *                         reason:
+ *                           example: "대상이 존재하지 않습니다."
+ *       500:
+ *         description: 문의 처리 중 서버 오류 (INQUIRY_INTERNALSERVER_ERROR)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
