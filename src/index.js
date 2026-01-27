@@ -120,9 +120,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// await bootstrapWeeklyReports();
-startBatch();
-
 // 비동기 에러 래퍼
 const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
@@ -355,3 +352,5 @@ app.use((err, req, res, next) => {
 app.listen(port, async () => {
   console.log(`Server is running on port ${port}`);
 });
+
+startBatch();
