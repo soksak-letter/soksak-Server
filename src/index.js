@@ -28,7 +28,7 @@ import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js"
 import { handleGetTodayQuestion } from "./controllers/question.controller.js";
 import { validate } from "./middlewares/validate.middleware.js";
 import { emailSchema, loginSchema, passwordSchema, SignUpSchema, usernameSchema, verificationConfirmCodeSchema, verificationSendCodeSchema } from "./schemas/auth.schema.js";
-import { handleInsertInquiryAsUser, handleInsertInquiryAsAdmin, handleGetInquiry } from "./controllers/inquiry.controller.js";
+import { handleInsertInquiryAsUser, handleInsertInquiryAsAdmin, handleGetInquiry, handleGetInquiryDetail } from "./controllers/inquiry.controller.js";
 import { isLogin } from "./middlewares/auth.middleware.js";
 import { isRestricted } from "./middlewares/restriction.middleware.js";
 import {
@@ -44,7 +44,7 @@ import {
 } from "./controllers/report.controller.js";
 import { insertUserReportSchema, getUserReportSchema } from "./schemas/report.schema.js";
 import { postTargetUserIdAndSIdSchema, requesterUserIdSchema, targetUserIdSchema } from "./schemas/friend.schema.js";
-import { insertInquiryAsAdminSchema, insertInquiryAsUserSchema } from "./schemas/inquiry.schema.js";
+import { getInquiryDetailSchema, insertInquiryAsAdminSchema, insertInquiryAsUserSchema } from "./schemas/inquiry.schema.js";
 import { postMatchingSessionSchema, postSessionReviewSchema, patchMatchingSessionStatusSchema} from "./schemas/session.schema.js";
 import { postBlockUserSchema } from "./schemas/block.schema.js";
 import { handleGetBlock, handlePostBlock } from "./controllers/block.controller.js";
@@ -275,6 +275,7 @@ app.get(
 app.post("/inquiries", isLogin, validate(insertInquiryAsUserSchema), asyncHandler(handleInsertInquiryAsUser));
 app.post("/inquiries/admin", isLogin, validate(insertInquiryAsAdminSchema), asyncHandler(handleInsertInquiryAsAdmin));
 app.get("/inquiries", isLogin, asyncHandler(handleGetInquiry));
+app.get("/inquiries/:inquiryId", isLogin, validate(getInquiryDetailSchema), asyncHandler(handleGetInquiryDetail));
 
 app.post("/auth/signup", validate(SignUpSchema), handleSignUp);                     // 회원가입
 app.post("/auth/login", validate(loginSchema), handleLogin);                        // 로그인

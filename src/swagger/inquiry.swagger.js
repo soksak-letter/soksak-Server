@@ -214,3 +214,134 @@
  *                         reason:
  *                           example: "문의 생성 중 서버 오류가 발생하였습니다."
  */
+
+/* =========================
+ * 문의 (inquiry)
+ * ========================= */
+
+/**
+ * @swagger
+ * /inquiries/{inquiryId}:
+ *   get:
+ *     summary: 문의 상세 조회
+ *     tags: [문의]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: inquiryId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: 문의 상세 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - properties:
+ *                     success:
+ *                       type: object
+ *                       properties:
+ *                         message:
+ *                           type: string
+ *                           example: "문의 상세 조회가 성공적으로 처리되었습니다."
+ *                         result:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: integer
+ *                               example: 1
+ *                             userId:
+ *                               type: integer
+ *                               example: 14
+ *                             category:
+ *                               type: string
+ *                               example: "INQUIRY"
+ *                             status:
+ *                               type: string
+ *                               example: "PENDING"
+ *                             title:
+ *                               type: string
+ *                               example: "문의 제목입니다"
+ *                             content:
+ *                               type: string
+ *                               example: "문의 본문입니다"
+ *                             answerContent:
+ *                               type: string
+ *                               nullable: true
+ *                               example: null
+ *                             createdAt:
+ *                               type: string
+ *                               format: date-time
+ *                               example: "2026-01-21T13:49:32.735Z"
+ *                             answeredAt:
+ *                               type: string
+ *                               format: date-time
+ *                               nullable: true
+ *                               example: null
+ *       400:
+ *         description: 입력값 검증 실패 (REQ_BAD_REQUEST)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "REQ_BAD_REQUEST"
+ *                         reason:
+ *                           example: "입력값이 잘못되었습니다"
+ *                         data:
+ *                           example:
+ *                             [
+ *                               { "field": "params.inquiryId", "message": "숫자여야 합니다." }
+ *                             ]
+ *       401:
+ *         description: 인증 필요 (UNAUTHORIZED)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "UNAUTHORIZED"
+ *                         reason:
+ *                           example: "인증이 필요합니다"
+ *       404:
+ *         description: 문의를 찾을 수 없음 (INQUIRY_NOTFOUND_ERROR)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "INQUIRY_NOTFOUND_ERROR"
+ *                         reason:
+ *                           example: "대상이 존재하지 않습니다."
+ *       500:
+ *         description: 문의 처리 중 서버 오류 (INQUIRY_INTERNALSERVER_ERROR)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "INQUIRY_INTERNALSERVER_ERROR"
+ *                         reason:
+ *                           example: "문의 생성 중 서버 오류가 발생하였습니다."
+ */

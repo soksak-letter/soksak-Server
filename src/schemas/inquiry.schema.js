@@ -19,3 +19,11 @@ export const insertInquiryAsAdminSchema = z.object({
     query: z.object({}).strict().optional().default({}),
     params: z.object({}).strict().optional().default({}),
 })
+
+export const getInquiryDetailSchema = z.object({
+    params: z.object({
+        inquiryId: z.coerce.number("숫자여야 합니다.").int("정수여야 합니다.").positive(),
+    }).strict(),
+    query: z.object({}).strict().optional().default({}),
+    body: z.object({}).strict().optional().default({}),
+})

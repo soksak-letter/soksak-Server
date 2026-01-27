@@ -1,4 +1,4 @@
-import { BadRequestError, ConflictError, InternalServerError } from "./base.error.js";
+import { BadRequestError, ConflictError, InternalServerError, NotFoundError } from "./base.error.js";
 
 export class InquiryAlreadyExistsError extends ConflictError {
     constructor(
@@ -13,6 +13,16 @@ export class InquiryAlreadyExistsError extends ConflictError {
 export class InquiryBadRequestError extends BadRequestError {
     constructor(
         code = "INQUIRY_BADREQUEST_ERROR",
+        message = "대상이 존재하지 않습니다.",
+        data = null
+    ) {
+        super(code, message, data)
+    }
+}
+
+export class InquiryNotFoundError extends NotFoundError {
+    constructor(
+        code = "INQUIRY_NOTFOUND_ERROR",
         message = "대상이 존재하지 않습니다.",
         data = null
     ) {
