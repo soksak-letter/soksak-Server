@@ -14,3 +14,11 @@ export const insertUserReportSchema = z.object({
   query: z.object({}).strict(),  // ✅ 쿼리 받지 않음 (들어오면 에러)
   params: z.object({}).strict(), // ✅ params 받지 않음 (들어오면 에러)
 });
+
+export const getUserReportSchema = z.object({
+  params: z.object({
+    reportId: z.coerce.number("숫자여야 합니다.").int("정수여야 합니다.").positive("양수여야 합니다."),
+  }).strict(),
+  query: z.object({}).strict(),
+  body: z.object({}).strict(),
+})
