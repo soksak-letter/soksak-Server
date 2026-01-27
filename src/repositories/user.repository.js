@@ -525,6 +525,17 @@ export const findUsersNicknameByIds = async (userIds) => {
   return map;
 };
 
+export const findUserNicknameById = async(id) => {
+  return await prisma.user.findFirst({
+    where: {
+      id,
+    },
+    select: {
+      nickname: true,
+    }
+  })
+}
+
 // ========== Notice Repository ==========
 export const findActiveNotices = async () => {
 
