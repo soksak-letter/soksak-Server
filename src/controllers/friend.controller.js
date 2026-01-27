@@ -14,7 +14,7 @@ function userIsNull(...users) {
   const isInvalid = users.some((u) => !u || u.isNull);
 
   if (isInvalid) {
-    throw new InvalidUserError(undefined, undefined, users);
+    throw new InvalidUserError(undefined, undefined, {users})
   }
 }
 
