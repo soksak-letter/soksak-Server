@@ -12,12 +12,12 @@ export const getNotices = async () => {
 export const getNoticeDetail = async (noticeId) => {
   const id = Number(noticeId);
   if (!Number.isInteger(id) || id <= 0) {
-    throw new InvalidNoticeIdError("NOTICE_400_01", `noticeId는 양의 정수여야 합니다. noticeId=${noticeId}`, { noticeId });
+    throw new InvalidNoticeIdError("NOTICE_INVALID_ID", `noticeId는 양의 정수여야 합니다. noticeId=${noticeId}`, { noticeId });
   }
 
   const notice = await findNoticeById(id);
   if (!notice) {
-    throw new NoticeNotFoundError("NOTICE_404_01", `해당 공지사항을 찾을 수 없습니다. noticeId=${id}`, { noticeId: id });
+    throw new NoticeNotFoundError("NOTICE_NOT_FOUND", `해당 공지사항을 찾을 수 없습니다. noticeId=${id}`, { noticeId: id });
   }
 
   return notice;

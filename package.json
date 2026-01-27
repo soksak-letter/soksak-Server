@@ -21,7 +21,6 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.955.0",
-    "@huggingface/inference": "^4.13.5",
     "@prisma/client": "^6.15.0",
     "axios": "^1.13.2",
     "badwords-ko": "^1.0.4",

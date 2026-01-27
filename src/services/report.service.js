@@ -2,6 +2,7 @@ import {
   insertUserReport,
   getUserReportAndReasonByUserId,
   insertUserReportReason,
+  getUserReportAndReasonByReportId
 } from "../repositories/report.repository.js";
 import { selectSenderUserIdByLetterIdAndReceiverUserId } from "../repositories/letter.repository.js";
 import { LetterNotFoundError } from "../errors/letter.error.js";
@@ -29,7 +30,7 @@ const ALLOWED_REASONS = new Set([
 
 export function validateReasons(reasons) {
   if (!Array.isArray(reasons)) {
-    return { ok: false, message: "reasons는 문자열 배열이어야 합니다." };
+    return false;
   }
   const normalized = reasons
     .map((x) => (typeof x === "string" ? x.trim() : x))
@@ -63,7 +64,7 @@ export const createUserReport = async (reporterUserId, letterId, reasons) => {
       userReport.id,
       reasons
     );
-    if (userReportReason == 0) throw new ReportInternalError();
+    if (!userReportReason || userReportReason.count === 0) throw new ReportInternalError();
     return {
       status: 201,
       message: "신고가 성공적으로 처리되었습니다.",
@@ -76,7 +77,7 @@ export const createUserReport = async (reporterUserId, letterId, reasons) => {
   }
 };
 
-export const selectUserReport = async (userId) => {
+export const selectUserReports = async (userId) => {
   const user = await findUserById(userId);
   if (user == null) throw new UserNotFoundError();
   try {
@@ -89,3 +90,17 @@ export const selectUserReport = async (userId) => {
     throw new ReportInternalError();
   }
 };
+
+export const selectUserReport = async(userId, reportId) => {
+  const user = await findUserById(userId);
+  if (user == null) throw new UserNotFoundError();
+  try {
+    const result = await getUserReportAndReasonByReportId(userId, reportId);
+    return result;
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new ReportInternalError();
+  }
+}

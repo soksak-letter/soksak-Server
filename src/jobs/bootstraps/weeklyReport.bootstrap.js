@@ -1,8 +1,9 @@
 // jobs/weeklyReport.bootstrap.js
-import { prisma } from "../../db.config.js";
-import { createWeeklyReport } from "../../services/weeklyReport.service.js"; 
+import { prisma } from "../configs/db.config.js";
 import { getISOWeek, getISOYear } from "../../utils/date.util.js";
-// ↑ 너가 올린 createWeeklyReport(서비스) 함수 이름을 이렇게 바꾸는 걸 추천
+import { createWeeklyReport } from "../services/weeklyReport.service.js";
+
+const FAIL_FAST = (process.env.WEEKLY_REPORT_FAIL_FAST ?? "false") === "true";
 
 export const bootstrapWeeklyReports = async () => {
   const year = getISOYear();
@@ -17,16 +18,18 @@ export const bootstrapWeeklyReports = async () => {
     try {
       await createWeeklyReport(u.id, year, week);
     } catch (e) {
-      // 이미 존재/중복이면 조용히 스킵 (너 로직에서 이미 막음)
-      if (e?.code === "P2002") continue;
-      // 도메인 에러라면 errorCode로도 스킵 가능
-      if (e?.errorCode === "WEEKLY_REPORT_409_01") continue;
-
       console.error("[BOOTSTRAP_WEEKLY_REPORT_ERROR]", {
         userId: u.id,
+        year,
+        week,
+        name: e?.name,
         message: e?.message,
-        code: e?.code,
+        stack: e?.stack,
+        cause: e?.cause,
       });
+
+      if (FAIL_FAST) throw e;
+      continue;
     }
   }
 };
