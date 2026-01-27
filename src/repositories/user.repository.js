@@ -285,23 +285,24 @@ export const upsertUserAgreement = async ({ userId, data }) => {
   });
 };
 
-// ========== DeviceToken Repository ==========
-export const upsertUserDeviceToken = async ({ userId, deviceToken, deviceType = "FCM" }) => {
-  // userId가 @unique라서 where에 userId 사용 가능
-  return prisma.userDeviceToken.upsert({
-    where: { userId },
+// ========== PushSubscription Repository ==========
+export const upsertPushSubscription = async ({ userId, endpoint, p256dh, auth }) => {
+  // endpoint가 @unique라서 where에 endpoint 사용 가능
+  // 같은 endpoint가 다른 userId에 있으면 업데이트, 없으면 생성
+  return prisma.pushSubscription.upsert({
+    where: { endpoint },
     update: {
-      deviceToken,
-      deviceType,
-      lastSeenAt: new Date(),
+      userId,
+      p256dh,
+      auth,
     },
     create: {
       userId,
-      deviceToken,
-      deviceType,
-      lastSeenAt: new Date(),
+      endpoint,
+      p256dh,
+      auth,
     },
-    select: { id: true, userId: true },
+    select: { id: true, userId: true, endpoint: true },
   });
 };
 
