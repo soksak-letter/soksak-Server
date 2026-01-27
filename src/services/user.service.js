@@ -221,16 +221,6 @@ export const updateMyOnboardingInterests = async ({ userId, interestIds }) => {
 // Notification
 // ------------------------------
 export const updateMyNotificationSettings = async ({ userId, letter, marketing }) => {
-  if (typeof letter !== "boolean" && typeof marketing !== "boolean") {
-    throw new NotificationSettingsInvalidBodyError("USER_NOTIFICATION_SETTINGS_INVALID_BODY", '요청 바디에 "letter" 또는 "marketing" 중 하나 이상이 boolean으로 필요합니다.');
-  }
-  if (typeof letter !== "undefined" && typeof letter !== "boolean") {
-    throw new NotificationSettingsInvalidBodyError("USER_NOTIFICATION_SETTINGS_INVALID_BODY", '"letter"는 boolean이어야 합니다.');
-  }
-  if (typeof marketing !== "undefined" && typeof marketing !== "boolean") {
-    throw new NotificationSettingsInvalidBodyError("USER_NOTIFICATION_SETTINGS_INVALID_BODY", '"marketing"은 boolean이어야 합니다.');
-  }
-
   await upsertNotificationSetting({
     userId,
     letterEnabled: letter,
