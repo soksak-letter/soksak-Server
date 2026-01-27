@@ -3,6 +3,8 @@ import { xprisma } from "../xprisma.js";
 import { DuplicatedValueError } from "../errors/base.error.js";
 import { UserNotFoundError } from "../errors/user.error.js";
 import { SessionNotFoundError, SessionFullError } from "../errors/session.error.js";
+import { getObjectStorageClient } from "../configs/objectStorage.config.js";
+import { requiredEnv } from "../utils/user.util.js";
 
 export const findUserByEmail = async (email) => {
     try{
@@ -752,4 +754,28 @@ export const incrementTotalUsageMinutes = async (userId) => {
       totalUsageMinutes: true,
     },
   });
+};
+
+// ========== Object Storage Repository ==========
+export const uploadProfileImageToStorage = async ({ objectName, fileBuffer, contentType }) => {
+  const namespaceName = requiredEnv("OCI_NAMESPACE");
+  const bucketName = requiredEnv("OCI_BUCKET_NAME");
+  const regionId = requiredEnv("OCI_REGION");
+
+  const client = getObjectStorageClient();
+
+  await client.putObject({
+    namespaceName,
+    bucketName,
+    objectName,
+    contentType,
+    contentLength: fileBuffer.length,
+    putObjectBody: fileBuffer,
+  });
+
+  const publicUrl =
+    `https://objectstorage.${regionId}.oraclecloud.com` +
+    `/n/${namespaceName}/b/${bucketName}/o/${encodeURIComponent(objectName)}`;
+
+  return { objectName, publicUrl };
 };

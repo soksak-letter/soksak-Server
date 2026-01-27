@@ -1,7 +1,3 @@
-import fs from "fs";
-import * as common from "oci-common";
-import * as objectstorage from "oci-objectstorage";
-
 import { RequiredTermAgreementError } from "../errors/auth.error.js";
 import { BadRequestError } from "../errors/base.error.js";
 import {
@@ -51,6 +47,7 @@ import {
   updateUserNicknameById,
   updateUserProfileImageUrlById,
   incrementTotalUsageMinutes,
+  uploadProfileImageToStorage,
 } from "../repositories/user.repository.js";
 import {
   ALLOWED_GENDERS,
@@ -256,43 +253,6 @@ export const getMyNotificationSettings = async ({ userId }) => {
 // Object Storage
 // ------------------------------
 
-let cachedClient = null;
-
-const getObjectStorageClient = () => {
-  if (cachedClient) return cachedClient;
-
-  const tenancyId = requiredEnv("OCI_TENANCY_OCID");
-  const userId = requiredEnv("OCI_USER_OCID");
-  const fingerprint = requiredEnv("OCI_FINGERPRINT");
-  const privateKeyPath = requiredEnv("OCI_PRIVATE_KEY_PATH");
-  const passphrase = process.env.OCI_PRIVATE_KEY_PASSPHRASE || null;
-  const regionId = requiredEnv("OCI_REGION");
-
-  const privateKey = fs
-    .readFileSync(privateKeyPath, "utf8")
-    .replace(/\r/g, "")
-    .trim();
-
-  const regionObj = common.Region.fromRegionId(regionId);
-
-  const provider = new common.SimpleAuthenticationDetailsProvider(
-    tenancyId,
-    userId,
-    fingerprint,
-    privateKey,
-    passphrase,
-    regionObj
-  );
-
-  const client = new objectstorage.ObjectStorageClient({
-    authenticationDetailsProvider: provider,
-    region: regionObj,
-  });
-
-  cachedClient = client;
-  return client;
-};
-
 export const uploadUserProfileImage = async ({ userId, fileBuffer, mimeType }) => {
   if (!fileBuffer || fileBuffer.length === 0) {
     throw new ProfileFileRequiredError("USER_PROFILE_FILE_REQUIRED", "업로드할 파일이 비어있습니다.");
@@ -301,33 +261,17 @@ export const uploadUserProfileImage = async ({ userId, fileBuffer, mimeType }) =
     throw new ProfileFileTooLargeError();
   }
 
-  const namespaceName = requiredEnv("OCI_NAMESPACE");
-  const bucketName = requiredEnv("OCI_BUCKET_NAME");
-  const regionId = requiredEnv("OCI_REGION");
   const ext = mimeToExt(mimeType);
   if (!ext) {
     throw new ProfileUnsupportedImageTypeError();
   }
   const objectName = `profiles/${userId}/profile${ext}`;
 
-  const client = getObjectStorageClient();
-
-  try {
-    await client.putObject({
-      namespaceName,
-      bucketName,
-      objectName,
-      contentType: mimeType,
-      contentLength: fileBuffer.length,
-      putObjectBody: fileBuffer,
-    });
-  } catch (error) {
-    throw error;
-  }
-
-  const publicUrl =
-    `https://objectstorage.${regionId}.oraclecloud.com` +
-    `/n/${namespaceName}/b/${bucketName}/o/${encodeURIComponent(objectName)}`;
+  const { publicUrl } = await uploadProfileImageToStorage({
+    objectName,
+    fileBuffer,
+    contentType: mimeType,
+  });
 
   return { objectName, publicUrl };
 };
