@@ -1,6 +1,6 @@
 // src/services/weeklyReport.service.js
 
-import { findUserById } from "../repositories/user.repository.js";
+import { findUserById, findUserNicknameById } from "../repositories/user.repository.js";
 import { InvalidUserError } from "../errors/user.error.js";
 import {
   countSentLettersAiKeywordsByUserId,
@@ -19,6 +19,7 @@ import {
 } from "../errors/weeklyReport.error.js";
 import { generateKoreanLetterFromKeywords } from "../utils/ai/letterFromKeywords.ai.js";
 import { analyzeWeeklyReportEmotionByKeywords } from "../utils/weeklyEmotion.util.js";
+import { yearWeekToMonthWeek } from "../utils/day.util.js";
 
 /** @typedef {Record<string, number>} KeywordCountMap */
 
@@ -220,7 +221,7 @@ export const readWeeklyReport = async (userId) => {
   try {
     const weeklyReport = await findWeeklyReportByUserIdAndDate(userId);
     if (!weeklyReport) {
-      throw new WeeklyReportNotFoundError({ userId });
+      throw new WeeklyReportNotFoundError(undefined, undefined, userId );
     }
 
     const keywords = await findWeeklyReportKeywordByReportId(weeklyReport.id);
@@ -251,13 +252,17 @@ export const readWeeklyReport = async (userId) => {
       }
     }
 
+    const { month, weekOfMonth } = yearWeekToMonthWeek(weeklyReport.year, weeklyReport.week);
+    const userNickname = await findUserNicknameById(weeklyReport.userId);
+
     return {
       data: {
         report: {
           id: weeklyReport.id,
           userId: weeklyReport.userId,
-          year: weeklyReport.year,
-          week: weeklyReport.week,
+          nickname: userNickname.nickname ?? null,
+          month: month,
+          week: weekOfMonth,
           summaryText,
           generatedAt: weeklyReport.generatedAt,
         },
@@ -276,7 +281,7 @@ export const readWeeklyReport = async (userId) => {
     };
   } catch (error) {
     if (error?.code === "P2025") {
-      throw new WeeklyReportNotFoundError({ userId });
+      throw new WeeklyReportNotFoundError(undefined, undefined, userId );
     }
     throw new WeeklyReportInternalError(undefined, undefined, {
       reason: error.message,

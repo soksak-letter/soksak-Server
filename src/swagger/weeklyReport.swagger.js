@@ -42,12 +42,15 @@
  *                                     userId:
  *                                       type: integer
  *                                       example: 1
- *                                     year:
+ *                                     nickname:
+ *                                       type: string
+ *                                       example: "닉네임" 
+ *                                     month:
  *                                       type: integer
- *                                       example: 2026
+ *                                       example: 2
  *                                     week:
  *                                       type: integer
- *                                       example: 4
+ *                                       example: 3
  *                                     summaryText:
  *                                       oneOf:
  *                                         - type: string

@@ -120,7 +120,7 @@ app.use((req, res, next) => {
   next();
 });
 
-let weeklyReportTrigger = true;
+let weeklyReportTrigger = false;
 app.post("/trigger", (req) => {
   if(req.body.trigger = true) {weeklyReportTrigger = true;} else {weeklyReportTrigger = false;}
 })
