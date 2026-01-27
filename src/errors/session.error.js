@@ -24,22 +24,9 @@ export class SessionInternalError extends InternalServerError {
   }
 }
 
-<<<<<<< HEAD
-/**
- * 500: 편지 주고 받은 횟수 초과 (SESSION_500_02)
- */
-export class MaxTurnIsOver extends ForbiddenError {
-  constructor(
-    code = "SESSION_500_02",
-    message = "편지 주고 받은 횟수가 10번이 되었습니다.",
-    data = null
-  ) {
-    super(code, message, data);
-=======
 export class MaxTurnIsOver extends BadRequestError {
   constructor(code = "SESSION_TURNOVER_ERROR", message = "편지 주고 받은 횟수가 10번이 되었습니다.", data = null) {
         super(code, message, data);
->>>>>>> dev
   }
 }
 

@@ -13,8 +13,7 @@ import { countMatchingSessionByUserId, decrementSessionTurn, existsMatchingSessi
 import { createMatchingSession } from "./session.service.js";
 import { QuestionNotFoundError } from "../errors/question.error.js";
 import { findQuestionByQuestionId } from "../repositories/question.repository.js";
-import { prisma } from "../db.config.js";
-import { text } from "express";
+import { prisma } from "../configs/db.config.js";
 import { MaxTurnIsOver, SessionCountOverError, SessionNotFoundError } from "../errors/session.error.js";
 
 export const getLetter = async (id) => {
