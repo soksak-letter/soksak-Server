@@ -1,4 +1,4 @@
-import { BadRequestError, NotFoundError, InternalServerError, ForbiddenError } from "./base.error.js";
+import { BadRequestError, NotFoundError, InternalServerError } from "./base.error.js";
 
 /**
  * 400: 올바르지 않은 Arguments 입력 (SESSION_400_01)

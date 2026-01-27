@@ -1,4 +1,4 @@
-import passport from "passport";
+import { token } from "morgan";
 import { getTTLFromToken } from "../Auths/token.js";
 import { checkDuplicatedEmail, checkDuplicatedUsername, signUpUser, loginUser, updateRefreshToken, SendVerifyEmailCode, checkEmailCode, getAccountInfo, resetPassword, logoutUser, withdrawUser } from "../services/auth.service.js";
 
@@ -23,50 +23,6 @@ export const handleLogin = async (req, res, next) => {
     } catch(err) {
         next(err);
     }
-}
-
-export const handleSocialLogin = async (req, res, next) => {
-    const { provider } = req.params;
-    const auth = passport.authenticate(provider, {
-        session: false,
-    });
-
-    auth(req, res, next);
-}
-
-export const handleSocialLoginCertification = async (req, res, next) => {
-    const { provider } = req.params;
-
-    const auth = passport.authenticate(provider, {
-      session: false,
-      // failureRedirect: "/login-failed" // 추후 구현
-    });
-
-    auth(req, res, next);
-}
-
-export const handleSocialLoginCallback = (req, res) => {
-    const { id, jwtAccessToken, jwtRefreshToken } = req.user;
-    const { provider } = req.params;
-    console.log(id);
-
-    res.cookie('accessToken', jwtAccessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',      // CSRF 보호 및 교차 사이트 요청 허용 설정
-      maxAge: 3600000       // 한 시간
-    });
-
-    res.cookie('refreshToken', jwtRefreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 14 * 24 * 3600000 // 14일
-    });
-    
-    const frontendUrl = `${process.env.FRONTEND_CALLBACK_URL}?userId=${id}&provider=${provider}`;
-
-    res.redirect(frontendUrl);
 }
 
 export const handleLogout = async (req, res, next) => {

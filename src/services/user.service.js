@@ -50,7 +50,6 @@ import {
   getTotalUsageMinutes,
   updateUserNicknameById,
   updateUserProfileImageUrlById,
-  findRandomUserByPool,
   incrementTotalUsageMinutes,
 } from "../repositories/user.repository.js";
 import {
@@ -398,11 +397,6 @@ export const updateMyProfileImage = async ({ userId, file }) => {
   return { updated: true, profileImageUrl: publicUrl };
 };
 
-export const selectRandomUser = async (userId) => {
-  const receiverUserId = await findRandomUserByPool(userId);
-  
-  return receiverUserId;
-}
 // ========== Activity Service ==========
 export const updateActivity = async (userId) => {
   const user = await incrementTotalUsageMinutes(userId);
