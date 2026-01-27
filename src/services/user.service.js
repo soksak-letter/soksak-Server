@@ -2,26 +2,19 @@ import { RequiredTermAgreementError } from "../errors/auth.error.js";
 import { BadRequestError } from "../errors/base.error.js";
 import {
   ConsentUnauthorizedError,
-  ConsentInvalidBodyError,
   PushSubscriptionUnauthorizedError,
-  PushSubscriptionInvalidBodyError,
   ProfileUnauthorizedError,
   ProfileUserNotFoundError,
-  ProfileInvalidNicknameError,
   ProfileFileRequiredError,
   ProfileUnsupportedImageTypeError,
-  ProfileInvalidImageUrlError,
   ProfileFileTooLargeError,
   ProfileFileBufferMissingError,
   UserNotFoundError,
-  OnboardingInvalidGenderError,
-  OnboardingInvalidJobError,
   OnboardingAlreadyCompletedError,
   InterestIdsNotArrayError,
   InterestIdsInvalidFormatError,
   InterestIdsMinCountError,
   InterestIdsInvalidError,
-  NotificationSettingsInvalidBodyError,
 } from "../errors/user.error.js";
 
 import {
@@ -50,9 +43,6 @@ import {
   uploadProfileImageToStorage,
 } from "../repositories/user.repository.js";
 import {
-  ALLOWED_GENDERS,
-  ALLOWED_JOBS,
-  isBooleanOrUndefined,
   mimeToExt,
   requiredEnv,
   toIntArray,
@@ -64,14 +54,6 @@ import {
 // ------------------------------
 
 export const updateOnboardingStep1 = async ({ userId, gender, job }) => {
-  // validation 
-  if (!gender || !ALLOWED_GENDERS.has(gender)) {
-    throw new OnboardingInvalidGenderError();
-  }
-  if (!job || !ALLOWED_JOBS.has(job)) {
-    throw new OnboardingInvalidJobError();
-  }
-
   const user = await getUserForOnboarding(userId);
   if (!user) {
     throw new UserNotFoundError("USER_NOT_FOUND", "유저를 찾을 수 없습니다.");
@@ -90,8 +72,6 @@ export const updateOnboardingStep1 = async ({ userId, gender, job }) => {
 export const createUserAgreements = async (data) => {
   const user = await findUserById(data.userId);
   if(!user) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
-
-  if(!data?.body?.termsAgreed || !data?.body?.privacyAgreed || !data?.body?.ageOver14Agreed) throw new RequiredTermAgreementError("TERM_BAD_REQUEST", "필수 약관에 모두 동의해주세요.");
 
   await createUserAgreement({
     userId: data.userId,
@@ -125,15 +105,6 @@ export const patchMyConsents = async ({ userId, payload }) => {
 
   const { termsAgreed, privacyAgreed, marketingAgreed, ageOver14Agreed } = payload ?? {};
 
-  if (
-    !isBooleanOrUndefined(termsAgreed) ||
-    !isBooleanOrUndefined(privacyAgreed) ||
-    !isBooleanOrUndefined(marketingAgreed) ||
-    !isBooleanOrUndefined(ageOver14Agreed)
-  ) {
-    throw new ConsentInvalidBodyError();
-  }
-
   const updateData = {};
   if (typeof termsAgreed === "boolean") updateData.termsAgreed = termsAgreed;
   if (typeof privacyAgreed === "boolean") updateData.privacyAgreed = privacyAgreed;
@@ -153,16 +124,6 @@ export const updateMyPushSubscription = async ({ userId, subscription }) => {
   
   const { endpoint, keys } = subscription || {};
   const { p256dh, auth } = keys || {};
-
-  if (!endpoint || typeof endpoint !== "string" || endpoint.trim().length === 0) {
-    throw new PushSubscriptionInvalidBodyError("USER_PUSH_SUBSCRIPTION_INVALID", "endpoint는 필수입니다.");
-  }
-  if (!p256dh || typeof p256dh !== "string" || p256dh.trim().length === 0) {
-    throw new PushSubscriptionInvalidBodyError("USER_PUSH_SUBSCRIPTION_INVALID", "keys.p256dh는 필수입니다.");
-  }
-  if (!auth || typeof auth !== "string" || auth.trim().length === 0) {
-    throw new PushSubscriptionInvalidBodyError("USER_PUSH_SUBSCRIPTION_INVALID", "keys.auth는 필수입니다.");
-  }
 
   await upsertPushSubscription({
     userId,
@@ -296,9 +257,7 @@ export const getMyProfile = async ({ userId }) => {
 };
 
 export const updateMyNickname = async ({ userId, nickname }) => {
-  if (typeof nickname !== "string") throw new ProfileInvalidNicknameError();
   const trimmed = nickname.trim();
-  if (trimmed.length < 2 || trimmed.length > 20) throw new ProfileInvalidNicknameError();
 
   await updateUserNicknameById({ userId, nickname: trimmed });
   return { updated: true };

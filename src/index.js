@@ -31,8 +31,9 @@ import { isLogin } from "./middlewares/auth.middleware.js";
 import { isRestricted } from "./middlewares/restriction.middleware.js";
 import { letterToMeSchema, letterToOtherSchema } from "./schemas/letter.schema.js";
 import { idParamSchema } from "./schemas/common.schema.js";
-import { pushSubscriptionSchema, onboardingStep1Schema, updateInterestsSchema, updateProfileSchema, updateNotificationSettingsSchema, updateConsentsSchema, updateActivitySchema } from "./schemas/user.schema.js";
+import { pushSubscriptionSchema, onboardingStep1Schema, updateInterestsSchema, updateProfileSchema, updateNotificationSettingsSchema, updateConsentsSchema, updateActivitySchema, createUserAgreementsSchema } from "./schemas/user.schema.js";
 import { threadIdParamSchema } from "./schemas/mailbox.schema.js";
+import { noticeIdParamSchema } from "./schemas/notice.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
 import { handleInsertUserReport, handleGetUserReports } from "./controllers/report.controller.js";
 import { insertUserReportSchema } from "./schemas/report.schema.js";
@@ -175,7 +176,7 @@ app.get("/auth/find-id", validate(emailSchema), handleGetAccountInfo);          
 app.patch("/auth/reset-password", isLogin, validate(passwordSchema), handleResetPassword);    // 비밀번호 찾기
 app.post("/auth/logout", isLogin, handleLogout);                            // 로그아웃
 app.delete("/users", isLogin, handleWithdrawUser);                          // 탈퇴
-app.post("/users/me/agreements", isLogin, handleCreateUserAgreements)    // 이용약관 동의
+app.post("/users/me/agreements", isLogin, validate(createUserAgreementsSchema), handleCreateUserAgreements)    // 이용약관 동의
 
 app.get("/letter-assets", isLogin, isRestricted, handleGetLetterAssets);        // 편지 꾸미기 리소스 목록 조회
 app.post("/letter/me", isLogin, isRestricted, validate(letterToMeSchema), handleSendMyLetter);                      // 나에게 편지 전송
@@ -209,7 +210,7 @@ app.get("/policies/terms", handleGetTerms);
 app.get("/policies/privacy", handleGetPrivacy);
 
 app.get("/notices", handleGetNotices);
-app.get("/notices/:noticeId", handleGetNoticeDetail);
+app.get("/notices/:noticeId", validate(noticeIdParamSchema), handleGetNoticeDetail);
 
 // 동의 설정
 app.get("/users/me/consents", isLogin, handleGetMyConsents);
