@@ -46,7 +46,6 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
     await saveRefreshToken({id: user.id, jwtRefreshToken});
     
     return {
-        userId: payload.id,
         tokens: {
             jwtAccessToken,
             jwtRefreshToken

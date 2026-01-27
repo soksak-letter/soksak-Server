@@ -16,10 +16,9 @@ export const googleStrategy = new GoogleStrategy(
 
     async (accessToken, refreshToken, profile, cb) => {
         try{
-            const {userId, tokens} = await verifySocialAccount(createSocialUserDTO(profile));
+            const {tokens} = await verifySocialAccount(createSocialUserDTO(profile));
 
             return cb(null, {
-                id: userId,
                 jwtAccessToken: tokens.jwtAccessToken,
                 jwtRefreshToken: tokens.jwtRefreshToken
             });

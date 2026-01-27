@@ -51,9 +51,6 @@
  *                             message:
  *                               type: string
  *                               example: "꾸준히 마음을 전하고 계시네요!"
- *                         sessionCount:
- *                           type: integer
- *                           example: 2
  *       401:
  *         description: |
  *           인증 실패:
