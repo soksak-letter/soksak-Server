@@ -220,7 +220,7 @@ export const readWeeklyReport = async (userId) => {
   try {
     const weeklyReport = await findWeeklyReportByUserIdAndDate(userId);
     if (!weeklyReport) {
-      throw new WeeklyReportNotFoundError({ userId });
+      throw new WeeklyReportNotFoundError(undefined, undefined, userId );
     }
 
     const keywords = await findWeeklyReportKeywordByReportId(weeklyReport.id);
@@ -276,9 +276,9 @@ export const readWeeklyReport = async (userId) => {
     };
   } catch (error) {
     if (error?.code === "P2025") {
-      throw new WeeklyReportNotFoundError({ userId });
+      throw new WeeklyReportNotFoundError(undefined, undefined, userId );
     }
-    throw new WeeklyReportInternalError({
+    throw new WeeklyReportInternalError(undefined, undefined, {
       reason: error.message,
       action: "READ_WEEKLY_REPORT",
       userId,

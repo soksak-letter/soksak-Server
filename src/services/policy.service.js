@@ -13,7 +13,7 @@ const POLICY_KEYS = {
 export const getCommunityGuidelines = async () => {
   const doc = await findPolicyDocumentByKey(POLICY_KEYS.COMMUNITY_GUIDELINES);
   if (!doc) {
-    throw new PolicyNotFoundError("POLICY_404_01", `해당 정책 문서를 찾을 수 없습니다. key=${POLICY_KEYS.COMMUNITY_GUIDELINES}`, { key: POLICY_KEYS.COMMUNITY_GUIDELINES });
+    throw new PolicyNotFoundError("POLICY_NOT_FOUND", `해당 정책 문서를 찾을 수 없습니다. key=${POLICY_KEYS.COMMUNITY_GUIDELINES}`, { key: POLICY_KEYS.COMMUNITY_GUIDELINES });
   }
 
   return {
@@ -25,7 +25,7 @@ export const getCommunityGuidelines = async () => {
 export const getTerms = async () => {
   const doc = await findPolicyDocumentByKey(POLICY_KEYS.TERMS);
   if (!doc) {
-    throw new PolicyNotFoundError("POLICY_404_01", `해당 정책 문서를 찾을 수 없습니다. key=${POLICY_KEYS.TERMS}`, { key: POLICY_KEYS.TERMS });
+    throw new PolicyNotFoundError("POLICY_NOT_FOUND", `해당 정책 문서를 찾을 수 없습니다. key=${POLICY_KEYS.TERMS}`, { key: POLICY_KEYS.TERMS });
   }
 
   return {
@@ -37,7 +37,7 @@ export const getTerms = async () => {
 export const getPrivacy = async () => {
   const doc = await findPolicyDocumentByKey(POLICY_KEYS.PRIVACY);
   if (!doc) {
-    throw new PolicyNotFoundError("POLICY_404_01", `해당 정책 문서를 찾을 수 없습니다. key=${POLICY_KEYS.PRIVACY}`, { key: POLICY_KEYS.PRIVACY });
+    throw new PolicyNotFoundError("POLICY_NOT_FOUND", `해당 정책 문서를 찾을 수 없습니다. key=${POLICY_KEYS.PRIVACY}`, { key: POLICY_KEYS.PRIVACY });
   }
 
   return {

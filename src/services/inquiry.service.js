@@ -5,7 +5,7 @@ import { InquiryAlreadyExistsError, InquiryBadRequestError, InquiryInternalError
 
 export const insertInquiryAsUser = async(userId, title, content) => {
     const user = await findUserById(userId);
-    if(!user) throw new InvalidUserError();
+    if(!user) throw new InvalidUserError(undefined, undefined, userId);
     try{
         const result = await createInquiryAsUser(userId, title, content);
         return result;
