@@ -4,20 +4,19 @@ import {
   updateMatchingSessionToDiscard,
   updateMatchingSessionToFriends,
   findSessionParticipantByUserIdAndSessionId,
-  findMatchingSessionBySessionId,
   countMatchingSessionByUserId
 } from "../repositories/session.repository.js";
 import {
   SessionCountOverError,
   SessionInternalError,
   SessionParticipantNotFoundError,
-  UnExpectArgumentsError,
+  UnExpectTagError,
+  TemperatureRangeError,
 } from "../errors/session.error.js";
 import { InvalidUserError } from "../errors/user.error.js";
 import { findUserById } from "../repositories/user.repository.js";
 import { findQuestionByQuestionId } from "../repositories/question.repository.js";
 import { QuestionNotFoundError } from "../errors/question.error.js";
-import { UnExpectedReportReasonError } from "../errors/report.error.js";
 import { BadRequestError, NotFoundError, InternalServerError } from "../errors/base.error.js";
 
 async function assertUsersExistOrThrow(userId) {
@@ -26,7 +25,7 @@ async function assertUsersExistOrThrow(userId) {
   ]);
 
   if (!userById)
-    throw new InvalidUserError(userId, "잘못된 유저 정보 입력입니다.");
+    throw new InvalidUserError(undefined, undefined, userId);
 }
 
 export function validateTag(tag) {
@@ -117,11 +116,11 @@ export const createSessionReview = async (
   tag
 ) => {
   if (!validateTag(tag)) {
-    throw new UnExpectArgumentsError(undefined, undefined, { tag });
+    throw new UnExpectTagError(undefined, undefined, { tag });
   }
 
   if (!validateTemperatureScore(temperatureScore)) {
-    throw new UnExpectArgumentsError(undefined, undefined, { temperatureScore });
+    throw new TemperatureRangeError(undefined, undefined, { temperatureScore });
   }
   const targetUserId = await findSessionParticipantByUserIdAndSessionId(userId, id);
   assertUsersExistOrThrow(userId, targetUserId);
