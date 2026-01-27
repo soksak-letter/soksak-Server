@@ -1,4 +1,4 @@
-import { insertUserBlock } from "../repositories/block.repository.js";
+import { findBlockByUserId, insertUserBlock } from "../repositories/block.repository.js";
 import { findUserById } from "../repositories/user.repository.js";
 import { InvalidUserError } from "../errors/user.error.js";
 import { BlockInternalServerError } from "../errors/block.error.js";
@@ -13,6 +13,15 @@ export const createBlockUser = async(userId, targetUserId) => {
     }
     try {
         const result = await insertUserBlock(userId, targetUserId);
+        return result;
+    } catch (error) {
+        throw new BlockInternalServerError();
+    }
+}
+
+export const findBlock = async(userId) => {
+    try{
+        const result = await findBlockByUserId(userId);
         return result;
     } catch (error) {
         throw new BlockInternalServerError();

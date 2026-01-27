@@ -10,3 +10,15 @@ export const insertUserBlock = async(blockerUserId, blockedUserId) => {
     if(block == null) return false;
     return true;
 }
+
+export const findBlockByUserId = async(blockerUserId) => {
+    return await prisma.block.findMany({
+        where: {
+            blockerUserId
+        },
+        select: {
+            blockeruserId: true,
+            createdAt: true,
+        }
+    })
+}
