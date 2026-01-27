@@ -174,6 +174,11 @@ export const findWeeklyReportHighlightByRId = async(rId) => {
         where: {
             reportId: rId
         },
+        orderBy: {
+          letter: {
+            createdAt: "desc"
+          }
+        },
         select: {
             letterId: true
         }

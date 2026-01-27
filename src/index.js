@@ -120,15 +120,6 @@ app.use((req, res, next) => {
   next();
 });
 
-let weeklyReportTrigger = false;
-app.post("/trigger", (req) => {
-  if(req.body.trigger = true) {weeklyReportTrigger = true;} else {weeklyReportTrigger = false;}
-})
-if(weeklyReportTrigger) {
-await bootstrapWeeklyReports();
-startWeeklyReportCron();
-}
-
 // 비동기 에러 래퍼
 const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
@@ -396,4 +387,6 @@ app.use((err, req, res, next) => {
 // 서버 실행
 app.listen(port, async () => {
   console.log(`Server is running on port ${port}`);
+  await bootstrapWeeklyReports();
+startWeeklyReportCron();
 });
