@@ -1,3 +1,4 @@
+// src/controllers/weeklyReport.controller.js
 import { readWeeklyReport } from "../services/weeklyReport.service.js";
 
 export const handleGetWeeklyReport = async (req, res, next) => {

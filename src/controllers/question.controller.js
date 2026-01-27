@@ -1,3 +1,4 @@
+// src/controllers/question.controller.js
 import { getTodayQuestion } from "../services/question.service.js";
 
 export const handleGetTodayQuestion = async (req, res, next) => {

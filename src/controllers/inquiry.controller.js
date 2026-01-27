@@ -1,3 +1,4 @@
+// src/controllers/inquiry.controller.js
 import { insertInquiryAsUser, insertInquiryAsAdmin, selectInquiry } from "../services/inquiry.service.js";
 
 export const handleInsertInquiryAsUser = async(req, res, next) => {

@@ -1,3 +1,4 @@
+// src/controllers/session.controller.js
 import { createMatchingSession, updateSessionDiscarded, updateSessionFriends, createSessionReview } from "../services/session.service.js";
 
 export const handlePostMatchingSession = async(req, res, next) => {
