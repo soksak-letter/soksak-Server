@@ -75,7 +75,7 @@ export const updateSessionFriends = async (userId, sessionId) => {
       userId,
       sessionId
     );
-    if (findResult == null) throw new SessionParticipantNotFoundError(undefined, undefined, { userId, targetUserId });
+    if (findResult == null) throw new SessionParticipantNotFoundError(undefined, undefined, { userId, sessionId });
 
     const result = await updateMatchingSessionToFriends(sessionId);
     if (!result) throw new SessionInternalError();
