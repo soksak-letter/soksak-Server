@@ -3,7 +3,8 @@ import { prisma } from "../configs/db.config.js";
 import { getISOWeek, getISOYear } from "../../utils/date.util.js";
 import { createWeeklyReport } from "../services/weeklyReport.service.js";
 
-const FAIL_FAST = (process.env.WEEKLY_REPORT_FAIL_FAST ?? "false") === "true";
+// 동시에 몇 명까지 처리할지(너무 크게 잡으면 DB 터짐)
+const CONCURRENCY = Number(15);
 
 export const bootstrapWeeklyReports = async () => {
   const year = getISOYear();
@@ -14,22 +15,28 @@ export const bootstrapWeeklyReports = async () => {
     select: { id: true },
   });
 
-  for (const u of users) {
-    try {
-      await createWeeklyReport(u.id, year, week);
-    } catch (e) {
-      console.error("[BOOTSTRAP_WEEKLY_REPORT_ERROR]", {
-        userId: u.id,
-        year,
-        week,
-        name: e?.name,
-        message: e?.message,
-        stack: e?.stack,
-        cause: e?.cause,
-      });
+  const logError = (userId, e) => {
+    console.error("[BOOTSTRAP_WEEKLY_REPORT_ERROR]", {
+      userId,
+      year,
+      week,
+      name: e?.name,
+      message: e?.message,
+      stack: e?.stack,
+      cause: e?.cause,
+    });
+  };
 
-      if (FAIL_FAST) throw e;
-      continue;
-    }
+  for (let i = 0; i < users.length; i += CONCURRENCY) {
+    const batch = users.slice(i, i + CONCURRENCY);
+
+      const results = await Promise.allSettled(
+        batch.map(({ id }) =>
+          createWeeklyReport(id, year, week).catch((e) => {
+            logError(id, e);
+            throw e;
+          })
+        )
+      );
   }
 };
