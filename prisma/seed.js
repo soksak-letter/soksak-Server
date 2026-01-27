@@ -64,7 +64,7 @@ async function main() {
         name: `사용자${i}`,
         nickname: `닉네임${i}`,
         phoneNumber: `010-1234-567${i - 1}`,
-        pool: i % 3,
+        pool: i % 3 + 1,
         auths: { create: { provider: providers[i % 4], username: `username${i}`, passwordHash, email: `user${i}@example.com` } },
         agreements: { create: { termsAgreed: true, privacyAgreed: true, ageOver14Agreed: true, marketingAgreed: true } },
         notificationSetting: { create: { letterEnabled: true, marketingEnabled: false } },
