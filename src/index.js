@@ -26,7 +26,7 @@ import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js"
 import { handleGetTodayQuestion } from "./controllers/question.controller.js";
 import { validate } from "./middlewares/validate.middleware.js";
 import { emailSchema, loginSchema, passwordSchema, SignUpSchema, usernameSchema, verificationConfirmCodeSchema, verificationSendCodeSchema } from "./schemas/auth.schema.js";
-import { handleInsertInquiryAsUser, handleInsertInquiryAsAdmin, handleGetInquiry } from "./controllers/inquiry.controller.js";
+import { handleInsertInquiryAsUser, handleInsertInquiryAsAdmin, handleGetInquiry, handleGetInquiryDetail } from "./controllers/inquiry.controller.js";
 import { isLogin } from "./middlewares/auth.middleware.js";
 import { isRestricted } from "./middlewares/restriction.middleware.js";
 import {
@@ -48,11 +48,15 @@ import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
 import {
   handleInsertUserReport,
   handleGetUserReports,
+  handleGetUserReport
 } from "./controllers/report.controller.js";
-import { insertUserReportSchema } from "./schemas/report.schema.js";
+import { insertUserReportSchema, getUserReportSchema } from "./schemas/report.schema.js";
 import { postTargetUserIdAndSIdSchema, requesterUserIdSchema, targetUserIdSchema } from "./schemas/friend.schema.js";
-import { insertInquiryAsAdminSchema, insertInquiryAsUserSchema } from "./schemas/inquiry.schema.js";
+import { getInquiryDetailSchema, insertInquiryAsAdminSchema, insertInquiryAsUserSchema } from "./schemas/inquiry.schema.js";
 import { postMatchingSessionSchema, postSessionReviewSchema, patchMatchingSessionStatusSchema} from "./schemas/session.schema.js";
+import { postBlockUserSchema } from "./schemas/block.schema.js";
+import { handleGetBlock, handlePostBlock } from "./controllers/block.controller.js";
+import { handleGetRestrict } from "./controllers/restrict.controller.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -204,7 +208,7 @@ app.get(
   asyncHandler(handleGetOutgoingFriendRequests)
 ); //보낸 친구 신청 불러오기
 app.post(
-  "/friends/requests/accept",
+  "/friends/requests/accept/:requesterUserId",
   isLogin,
   isRestricted,
   validate(requesterUserIdSchema),
@@ -254,6 +258,11 @@ app.post(
   asyncHandler(handlePostSessionReview)
 ); //세션 리뷰 작성
 
+app.post("/block/:targetUserId", isLogin, isRestricted, validate(postBlockUserSchema), asyncHandler(handlePostBlock));
+app.get("/block", isLogin, isRestricted, asyncHandler(handleGetBlock));
+
+app.get("/restrict", isLogin, asyncHandler(handleGetRestrict));
+
 app.post(
   "/reports",
   isLogin,
@@ -262,9 +271,10 @@ app.post(
   asyncHandler(handleInsertUserReport)
 );
 app.get("/reports", isLogin, isRestricted, asyncHandler(handleGetUserReports));
+app.get("/reports/:reportId", isLogin, isRestricted, validate(getUserReportSchema), asyncHandler(handleGetUserReport));
 
 app.get(
-  "/reports/weekly/:year/:week",
+  "/weekly/reports",
   isLogin,
   isRestricted,
   asyncHandler(handleGetWeeklyReport)
@@ -273,6 +283,7 @@ app.get(
 app.post("/inquiries", isLogin, validate(insertInquiryAsUserSchema), asyncHandler(handleInsertInquiryAsUser));
 app.post("/inquiries/admin", isLogin, validate(insertInquiryAsAdminSchema), asyncHandler(handleInsertInquiryAsAdmin));
 app.get("/inquiries", isLogin, asyncHandler(handleGetInquiry));
+app.get("/inquiries/:inquiryId", isLogin, validate(getInquiryDetailSchema), asyncHandler(handleGetInquiryDetail));
 
 app.post("/auth/signup", validate(SignUpSchema), handleSignUp);                     // 회원가입
 app.post("/auth/login", validate(loginSchema), handleLogin);                        // 로그인

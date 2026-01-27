@@ -1,4 +1,6 @@
-import { insertInquiryAsUser, insertInquiryAsAdmin, selectInquiry } from "../services/inquiry.service.js";
+// src/controllers/inquiry.controller.js
+import { insertInquiryAsUser, insertInquiryAsAdmin, selectInquiry, selectInquiryDetail } from "../services/inquiry.service.js";
+import { requiredEnv } from "../utils/user.util.js";
 
 export const handleInsertInquiryAsUser = async(req, res, next) => {
     const userId = req.user.id;
@@ -36,6 +38,20 @@ export const handleGetInquiry = async(req, res, next) => {
             message: "문의 조회가 성공적으로 처리되었습니다.",
             result,
         });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const handleGetInquiryDetail = async(req, res, next) => {
+    const userId = req.user.id;
+    const { inquiryId } = req.params;
+    try {
+        const result = await selectInquiryDetail(userId, inquiryId);
+        return res.status(200).success({
+            message: "문의 상세 조회가 성공적으로 처리되었습니다.",
+            result,
+        })
     } catch (error) {
         next(error);
     }
