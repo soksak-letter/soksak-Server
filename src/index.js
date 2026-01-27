@@ -247,7 +247,7 @@ app.post("/auth/email/exists", validate(emailSchema), handleCheckDuplicatedEmail
 app.get("/auth/refresh", handleRefreshToken);                                       // 액세스 토큰 재발급
 app.post("/auth/:type/verification-codes", validate(verificationSendCodeSchema), handleSendVerifyEmailCode);       // 이메일 인증번호 전송
 app.post("/auth/:type/verification-codes/confirm", validate(verificationConfirmCodeSchema), handleCheckEmailCode); // 이메일 인증번호 확인
-app.get("/auth/find-id", validate(emailSchema), handleGetAccountInfo);                        // 아이디 찾기
+app.post("/auth/find-id", validate(emailSchema), handleGetAccountInfo);                        // 아이디 찾기
 app.patch("/auth/reset-password", isLogin, validate(passwordSchema), handleResetPassword);    // 비밀번호 찾기
 app.post("/auth/logout", isLogin, handleLogout);                            // 로그아웃
 app.delete("/users", isLogin, handleWithdrawUser);                          // 탈퇴
