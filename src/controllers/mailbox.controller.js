@@ -10,11 +10,7 @@ export const handleGetAnonymousThreads = async (req, res, next) => {
     if (!userId) throw new MailboxUnauthorizedError();
 
     const result = await getAnonymousThreads(userId);
-    return res.status(200).json({
-      resultType: "SUCCESS",
-      error: null,
-      success: result,
-    });
+    return res.status(200).success(result);
   } catch (err) {
     next(err);
   }
@@ -28,11 +24,7 @@ export const handleGetAnonymousThreadLetters = async (req, res, next) => {
     const { threadId } = req.params;
     const result = await getAnonymousThreadLetters(userId, threadId);
 
-    return res.status(200).json({
-      resultType: "SUCCESS",
-      error: null,
-      success: result,
-    });
+    return res.status(200).success(result);
   } catch (err) {
     next(err);
   }
@@ -57,11 +49,7 @@ export const handleGetSelfMailbox = async (req, res, next) => {
     if (!userId) throw new MailboxUnauthorizedError();
 
     const result = await getSelfMailbox(userId);
-    return res.status(200).json({
-      resultType: "SUCCESS",
-      error: null,
-      success: result,
-    });
+    return res.status(200).success(result);
   } catch (err) {
     next(err);
   }
