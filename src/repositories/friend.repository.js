@@ -1,5 +1,5 @@
 import { xprisma } from "../xprisma.js";
-import { prisma } from "../db.config.js";
+import { prisma } from "../configs/db.config.js";
 import { FriendRequestNotFoundError } from "../errors/friend.error.js";
 import {
   selectLetterByUserIds,

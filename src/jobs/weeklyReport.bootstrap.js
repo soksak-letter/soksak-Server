@@ -1,5 +1,5 @@
 // jobs/weeklyReport.bootstrap.js
-import { prisma } from "../db.config.js";
+import { prisma } from "../configs/db.config.js";
 import { getCurrentISOYear, getCurrentISOWeek } from "../jobs/date.js";
 import { createWeeklyReport } from "../services/weeklyReport.service.js";
 
