@@ -261,18 +261,25 @@ export async function generateKoreanLetterFromKeywords({
   ];
 
   let last = "";
+  // src/utils/ai/letterFromKeywords.ai.js (generateKoreanLetterFromKeywords 내부에서)
   for (let i = 0; i < attempts.length; i++) {
     const a = attempts[i];
 
-    const raw = await generateTextLocal({
-      prompt,
-      temperature: a.temperature,
-      maxNewTokens,
-      topP: a.topP,
-      repetitionPenalty: a.repetitionPenalty,
-      // generateTextLocal이 지원하면 적용됨(지원 안 해도 무해)
-      noRepeatNgramSize: a.noRepeatNgramSize,
-    });
+    let raw = "";
+    try {
+      raw = await generateTextLocal({
+        prompt,
+        temperature: a.temperature,
+        maxNewTokens,
+        topP: a.topP,
+        repetitionPenalty: a.repetitionPenalty,
+        noRepeatNgramSize: a.noRepeatNgramSize,
+      });
+    } catch (e) {
+      // ✅ AI 실패 → 다음 시도
+      last = "";
+      continue;
+    }
 
     let cleaned = extractBetweenTags(raw);
     cleaned = sanitizeOneLine(cleaned);
@@ -281,6 +288,7 @@ export async function generateKoreanLetterFromKeywords({
     last = cleaned;
     if (!isBadLetter(cleaned)) return cleaned;
   }
+
 
   // 여기까지 오면 모델이 계속 폭주한 것. 하드 fallback으로 “무조건 편지” 보장
   const fallback = buildDeterministicFallback({
