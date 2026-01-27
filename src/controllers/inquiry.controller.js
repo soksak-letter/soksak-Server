@@ -5,7 +5,7 @@ export const handleInsertInquiryAsUser = async(req, res, next) => {
     const { title, content } = req.body;
     try {
         const result = await insertInquiryAsUser(userId, title, content);
-        return res.success({
+        return res.status(201).success({
             message: "문의 입력이 성공적으로 처리되었습니다.",
             result,
         });
@@ -19,7 +19,7 @@ export const handleInsertInquiryAsAdmin = async(req, res, next) => {
     const {answerContent} = req.body;
    try {
         const result = await insertInquiryAsAdmin(inquiryId, answerContent);
-        return res.success({
+        return res.status(201).success({
             message: "문의 답변이 성공적으로 처리되었습니다.",
             result,
         });
@@ -32,7 +32,7 @@ export const handleGetInquiry = async(req, res, next) => {
     const userId = req.user.id;
     try {
         const result = await selectInquiry(userId);
-        return res.success({
+        return res.status(201).success({
             message: "문의 조회가 성공적으로 처리되었습니다.",
             result,
         });
