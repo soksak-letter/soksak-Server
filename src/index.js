@@ -29,26 +29,12 @@ import { emailSchema, loginSchema, passwordSchema, SignUpSchema, usernameSchema,
 import { handleInsertInquiryAsUser, handleInsertInquiryAsAdmin, handleGetInquiry } from "./controllers/inquiry.controller.js";
 import { isLogin } from "./middlewares/auth.middleware.js";
 import { isRestricted } from "./middlewares/restriction.middleware.js";
-import {
-  letterToMeSchema,
-  letterToOtherSchema,
-} from "./schemas/letter.schema.js";
+import { letterToMeSchema, letterToOtherSchema } from "./schemas/letter.schema.js";
 import { idParamSchema } from "./schemas/common.schema.js";
-import {
-  pushSubscriptionSchema,
-  onboardingStep1Schema,
-  updateInterestsSchema,
-  updateProfileSchema,
-  updateNotificationSettingsSchema,
-  updateConsentsSchema,
-  updateActivitySchema,
-} from "./schemas/user.schema.js";
+import { pushSubscriptionSchema, onboardingStep1Schema, updateInterestsSchema, updateProfileSchema, updateNotificationSettingsSchema, updateConsentsSchema, updateActivitySchema } from "./schemas/user.schema.js";
 import { threadIdParamSchema } from "./schemas/mailbox.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
-import {
-  handleInsertUserReport,
-  handleGetUserReports,
-} from "./controllers/report.controller.js";
+import { handleInsertUserReport, handleGetUserReports } from "./controllers/report.controller.js";
 import { insertUserReportSchema } from "./schemas/report.schema.js";
 import { postTargetUserIdAndSIdSchema, requesterUserIdSchema, targetUserIdSchema } from "./schemas/friend.schema.js";
 import { insertInquiryAsAdminSchema, insertInquiryAsUserSchema } from "./schemas/inquiry.schema.js";
@@ -64,12 +50,7 @@ app.use((req, res, next) => {
 
 // 미들웨어 설정
 app.use(morgan("dev"));
-app.use(
-  cors({
-    origin: ["http://localhost:3000"],
-    credentials: true,
-  })
-);
+app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
 app.set("trust proxy", 1);
 
 app.use(express.static("public"));
@@ -83,19 +64,7 @@ passport.use(kakaoStrategy);
 passport.use(naverStrategy);
 passport.use(jwtStrategy);
 
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      maxAge: 1800000,
-      sameSite: "none",
-      secure: true,
-    },
-  })
-);
+app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false, cookie: { httpOnly: true, maxAge: 1800000, sameSite: "none", secure: true } }));
 
 // Swagger 연결
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
@@ -107,11 +76,7 @@ app.use((req, res, next) => {
     return res.json({ resultType: "SUCCESS", error: null, success });
   };
   res.error = ({ errorCode = "unknown", reason = null, data = null }) => {
-    return res.json({
-      resultType: "FAIL",
-      error: { errorCode, reason, data },
-      success: null,
-    });
+    return res.json({ resultType: "FAIL", error: { errorCode, reason, data }, success: null });
   };
   next();
 });
@@ -178,91 +143,22 @@ app.get("/mypage", isLogin, (req, res) => {
 });
 
 app.get("/friends", isLogin, isRestricted, asyncHandler(handleGetFriendsList)); //친구 목록 불러오기
-app.post(
-  "/friends/requests",
-  isLogin,
-  isRestricted,
-  validate(postTargetUserIdAndSIdSchema),
-  asyncHandler(handlePostFriendsRequest)
-); //친구 신청
-app.get(
-  "/friends/requests/incoming",
-  isLogin,
-  isRestricted,
-  asyncHandler(handleGetIncomingFriendRequests)
-); //들어온 친구 신청 불러오기
-app.get(
-  "/friends/requests/outgoing",
-  isLogin,
-  isRestricted,
-  asyncHandler(handleGetOutgoingFriendRequests)
-); //보낸 친구 신청 불러오기
-app.post(
-  "/friends/requests/accept",
-  isLogin,
-  isRestricted,
-  validate(requesterUserIdSchema),
-  asyncHandler(handleAcceptFriendRequest)
-); //들어온 친구 신청 수락
-app.post(
-  "/friends/requests/reject/:targetUserId",
-  isLogin,
-  isRestricted,
-  validate(targetUserIdSchema),
-  asyncHandler(handleRejectFriendRequest)
-); //들어온 친구 신청 거절
-app.delete(
-  "/friends/requests/:targetUserId",
-  isLogin,
-  isRestricted,
-  validate(targetUserIdSchema),
-  asyncHandler(handleDeleteFriendRequest)
-); //보낸 친구 신청 삭제
+app.post("/friends/requests", isLogin, isRestricted, validate(postTargetUserIdAndSIdSchema), asyncHandler(handlePostFriendsRequest)); //친구 신청
+app.get("/friends/requests/incoming", isLogin, isRestricted, asyncHandler(handleGetIncomingFriendRequests)); //들어온 친구 신청 불러오기
+app.get("/friends/requests/outgoing", isLogin, isRestricted, asyncHandler(handleGetOutgoingFriendRequests)); //보낸 친구 신청 불러오기
+app.post("/friends/requests/accept", isLogin, isRestricted, validate(requesterUserIdSchema), asyncHandler(handleAcceptFriendRequest)); //들어온 친구 신청 수락
+app.post("/friends/requests/reject/:targetUserId", isLogin, isRestricted, validate(targetUserIdSchema), asyncHandler(handleRejectFriendRequest)); //들어온 친구 신청 거절
+app.delete("/friends/requests/:targetUserId", isLogin, isRestricted, validate(targetUserIdSchema), asyncHandler(handleDeleteFriendRequest)); //보낸 친구 신청 삭제
 
-app.post(
-  "/matching/sessions/:questionId",
-  isLogin,
-  isRestricted,
-  validate(postMatchingSessionSchema),
-  asyncHandler(handlePostMatchingSession)
-); //세션 생성
-app.patch(
-  "/matching/sessions/:sessionId/friends",
-  isLogin,
-  isRestricted,
-  validate(patchMatchingSessionStatusSchema),
-  asyncHandler(handlePatchMatchingSessionStatusFriends)
-); //세션 친구됨으로 변경
-app.patch(
-  "/matching/sessions/:sessionId/discards",
-  isLogin,
-  isRestricted,
-  validate(patchMatchingSessionStatusSchema),
-  asyncHandler(handlePatchMatchingSessionStatusDiscarded)
-); //세션 삭제됨으로 변경
-app.post(
-  "/matching/sessions/:sessionId/reviews",
-  isLogin,
-  isRestricted,
-  validate(postSessionReviewSchema),
-  asyncHandler(handlePostSessionReview)
-); //세션 리뷰 작성
+app.post("/matching/sessions/:questionId", isLogin, isRestricted, validate(postMatchingSessionSchema), asyncHandler(handlePostMatchingSession)); //세션 생성
+app.patch("/matching/sessions/:sessionId/friends", isLogin, isRestricted, validate(patchMatchingSessionStatusSchema), asyncHandler(handlePatchMatchingSessionStatusFriends)); //세션 친구됨으로 변경
+app.patch("/matching/sessions/:sessionId/discards", isLogin, isRestricted, validate(patchMatchingSessionStatusSchema), asyncHandler(handlePatchMatchingSessionStatusDiscarded)); //세션 삭제됨으로 변경
+app.post("/matching/sessions/:sessionId/reviews", isLogin, isRestricted, validate(postSessionReviewSchema), asyncHandler(handlePostSessionReview)); //세션 리뷰 작성
 
-app.post(
-  "/reports",
-  isLogin,
-  isRestricted,
-  validate(insertUserReportSchema),
-  asyncHandler(handleInsertUserReport)
-);
+app.post("/reports", isLogin, isRestricted, validate(insertUserReportSchema), asyncHandler(handleInsertUserReport));
 app.get("/reports", isLogin, isRestricted, asyncHandler(handleGetUserReports));
 
-app.get(
-  "/reports/weekly/:year/:week",
-  isLogin,
-  isRestricted,
-  asyncHandler(handleGetWeeklyReport)
-);
+app.get("/reports/weekly/:year/:week", isLogin, isRestricted, asyncHandler(handleGetWeeklyReport));
 
 app.post("/inquiries", isLogin, validate(insertInquiryAsUserSchema), asyncHandler(handleInsertInquiryAsUser));
 app.post("/inquiries/admin", isLogin, validate(insertInquiryAsAdminSchema), asyncHandler(handleInsertInquiryAsAdmin));
@@ -297,29 +193,15 @@ app.get("/home/summary", isLogin, isRestricted, HandleGetHomeDashboard);  // 홈
 
 // 온보딩 설정
 app.patch("/users/me/onboarding", isLogin, validate(onboardingStep1Schema), handlePatchOnboardingStep1);
-app.put(
-  "/users/me/onboarding/interests",
-  isLogin,
-  validate(updateInterestsSchema),
-  handleUpdateMyOnboardingInterests
-);
+app.put("/users/me/onboarding/interests", isLogin, validate(updateInterestsSchema), handleUpdateMyOnboardingInterests);
 
 // 관심사
 app.get("/interests/all", handleGetAllInterests); // 전체 목록 (로그인 불필요)
 app.get("/interests", isLogin, handleGetMyInterests); // 내 선택 목록 (로그인 필요)
 
 // 알람 설정
-app.patch(
-  "/users/me/notification-settings",
-  isLogin,
-  validate(updateNotificationSettingsSchema),
-  handleUpdateMyNotificationSettings
-);
-app.get(
-  "/users/me/notification-settings",
-  isLogin,
-  handleGetMyNotificationSettings
-);
+app.patch("/users/me/notification-settings", isLogin, validate(updateNotificationSettingsSchema), handleUpdateMyNotificationSettings);
+app.get("/users/me/notification-settings", isLogin, handleGetMyNotificationSettings);
 
 // 정책, 공지사항
 app.get("/policies/community-guidelines", handleGetCommunityGuidelines);
@@ -338,18 +220,8 @@ app.put("/users/me/push-subscriptions", isLogin, validate(pushSubscriptionSchema
 
 // / 편지함
 app.get("/mailbox/anonymous", isLogin, handleGetAnonymousThreads);
-app.get(
-  "/mailbox/anonymous/threads/:threadId/letters",
-  isLogin,
-  validate(threadIdParamSchema),
-  handleGetAnonymousThreadLetters
-);
-app.get(
-  "/mailbox/friends/threads/:friendId/letters",
-  isLogin,
-  validate(idParamSchema("friendId")),
-  handleGetLetterFromFriend
-); // 친구 대화 목록 화면 조회
+app.get("/mailbox/anonymous/threads/:threadId/letters", isLogin, validate(threadIdParamSchema), handleGetAnonymousThreadLetters);
+app.get("/mailbox/friends/threads/:friendId/letters", isLogin, validate(idParamSchema("friendId")), handleGetLetterFromFriend); // 친구 대화 목록 화면 조회
 app.get("/mailbox/self", isLogin, handleGetSelfMailbox);
 
 // 프로필
@@ -365,15 +237,7 @@ app.use((err, req, res, next) => {
 
   const status = err.status || err.statusCode || 500;
 
-  return res.status(status).json({
-    resultType: "FAIL",
-    error: {
-      errorCode: err.errorCode || "COMMON_001",
-      reason: err.reason || err.message || "Internal Server Error",
-      data: err.data || null,
-    },
-    success: null,
-  });
+  return res.status(status).json({ resultType: "FAIL", error: { errorCode: err.errorCode || "COMMON_001", reason: err.reason || err.message || "Internal Server Error", data: err.data || null }, success: null });
 });
 
 // 서버 실행
