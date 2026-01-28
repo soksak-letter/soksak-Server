@@ -14,14 +14,12 @@ import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
 import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriendRequest } from "./controllers/friend.controller.js";
 import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats, handleGetLetterAssets } from "./controllers/letter.controller.js";
-import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername } from "./controllers/auth.controller.js";
+import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername, handleSocialLogin, handleSocialLoginCertification, handleSocialLoginCallback } from "./controllers/auth.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
 import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyPushSubscription, handleGetMyConsents, handlePatchMyConsents, handleUpdateActivity, } from "./controllers/user.controller.js";
 import { handleGetAnonymousThreads, handleGetAnonymousThreadLetters, handleGetSelfMailbox, handleGetLetterFromFriend, } from "./controllers/mailbox.controller.js";
 import { handleGetNotices, handleGetNoticeDetail, } from "./controllers/notice.controller.js";
 import { handleGetCommunityGuidelines, handleGetTerms, handleGetPrivacy, } from "./controllers/policy.controller.js";
-import { bootstrapWeeklyReports } from "./jobs/weeklyReport.bootstrap.js";
-import { startWeeklyReportCron } from "./jobs/weeklyReport.cron.js";
 import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js";
 import { handleGetTodayQuestion } from "./controllers/question.controller.js";
 import { validate } from "./middlewares/validate.middleware.js";
@@ -35,8 +33,8 @@ import { pushSubscriptionSchema, onboardingStep1Schema, updateInterestsSchema, u
 import { threadIdParamSchema } from "./schemas/mailbox.schema.js";
 import { noticeIdParamSchema } from "./schemas/notice.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
-
 import { handleInsertUserReport, handleGetUserReports, handleGetUserReport } from "./controllers/report.controller.js";
+import { startBatch } from "./jobs/index.job.js";
 import { insertUserReportSchema, getUserReportSchema } from "./schemas/report.schema.js";
 import { postTargetUserIdAndSIdSchema, requesterUserIdSchema, targetUserIdSchema } from "./schemas/friend.schema.js";
 import { getInquiryDetailSchema, insertInquiryAsAdminSchema, insertInquiryAsUserSchema } from "./schemas/inquiry.schema.js";
@@ -47,6 +45,7 @@ import { handleGetRestrict } from "./controllers/restrict.controller.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
+const allowed_origins = process.env.ALLOWED_ORIGINS?.split(',') || ["http://localhost:3000"];
 
 app.use((req, res, next) => {
   console.log("[REQ]", req.method, req.originalUrl);
@@ -55,7 +54,16 @@ app.use((req, res, next) => {
 
 // 미들웨어 설정
 app.use(morgan("dev"));
-app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
+
+// app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
+
+app.use(
+  cors({
+    origin: allowed_origins,
+    credentials: true,
+  })
+);
+
 app.set("trust proxy", 1);
 
 app.use(express.static("public"));
@@ -86,15 +94,6 @@ app.use((req, res, next) => {
   next();
 });
 
-let weeklyReportTrigger = false;
-app.post("/trigger", (req) => {
-  if(req.body.trigger = true) {weeklyReportTrigger = true;} else {weeklyReportTrigger = false;}
-})
-if(weeklyReportTrigger) {
-await bootstrapWeeklyReports();
-startWeeklyReportCron();
-}
-
 // 비동기 에러 래퍼
 const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
@@ -107,6 +106,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.get("/", (req, res) => {
   res.send("Hello World! Server is running.");
 });
+
 
 // 로그인/회원가입
 app.get("/auth/oauth/:provider", (req, res, next) => {
@@ -165,12 +165,14 @@ app.get("/inquiries/:inquiryId", isLogin, validate(getInquiryDetailSchema), asyn
 
 app.post("/auth/signup", validate(SignUpSchema), handleSignUp);                     // 회원가입
 app.post("/auth/login", validate(loginSchema), handleLogin);                        // 로그인
-app.post("/auth/username/exists", validate(usernameSchema), handleCheckDuplicatedUsername);   // 아이디 중복 확인
+app.get("/auth/oauth/:provider", handleSocialLogin);                                // 소셜 로그인
+app.get("/auth/callback/:provider", handleSocialLoginCertification, handleSocialLoginCallback); // 소셜 로그인 응답
+app.post("/auth/username/exists", validate(usernameSchema), handleCheckDuplicatedUsername);     // 아이디 중복 확인
 app.post("/auth/email/exists", validate(emailSchema), handleCheckDuplicatedEmail);  // 이메일 중복 확인
 app.get("/auth/refresh", handleRefreshToken);                                       // 액세스 토큰 재발급
 app.post("/auth/:type/verification-codes", validate(verificationSendCodeSchema), handleSendVerifyEmailCode);       // 이메일 인증번호 전송
 app.post("/auth/:type/verification-codes/confirm", validate(verificationConfirmCodeSchema), handleCheckEmailCode); // 이메일 인증번호 확인
-app.get("/auth/find-id", validate(emailSchema), handleGetAccountInfo);                        // 아이디 찾기
+app.post("/auth/find-id", validate(emailSchema), handleGetAccountInfo);                        // 아이디 찾기
 app.patch("/auth/reset-password", isLogin, validate(passwordSchema), handleResetPassword);    // 비밀번호 찾기
 app.post("/auth/logout", isLogin, handleLogout);                            // 로그아웃
 app.delete("/users", isLogin, handleWithdrawUser);                          // 탈퇴
@@ -242,4 +244,7 @@ app.use((err, req, res, next) => {
 // 서버 실행
 app.listen(port, async () => {
   console.log(`Server is running on port ${port}`);
+  startBatch();
 });
+
+startBatch();

@@ -30,6 +30,6 @@ export const letterToOtherSchema = z.object({
         paperId: idPart,
         stampId: idPart,
         fontId: idPart,
-        receiverUserId: idPart
+        receiverUserId: idPart.optional()
     })
 });
