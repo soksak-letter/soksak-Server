@@ -64,7 +64,6 @@
  *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
  *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
  *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
- *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
@@ -78,20 +77,68 @@
  *                             example: "AUTH_TOKEN_EXPIRED"
  *                           reason:
  *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_INVALID_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아니거나 유효하지 않습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_ACCESS_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아닙니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_EXPIRED_TOKEN"
+ *                           reason:
+ *                             example: "이미 로그아웃된 토큰입니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "액세스 토큰이 유효하지 않습니다."
  *       404:
- *         description: 유저를 찾을 수 없음 (USER_NOT_FOUND)
+ *         description: |
+ *           찾을 수 없음:
+ *           - `USER_NOT_FOUND`: 유저를 찾을 수 없습니다.
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
- *                     error:
- *                       properties:
- *                         errorCode:
- *                           example: "USER_NOT_FOUND"
- *                         reason:
- *                           example: "유저를 찾을 수 없습니다."
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_FOUND"
+ *                           reason:
+ *                             example: "인증 토큰이 없습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "USER_NOT_FOUND"
+ *                           reason:
+ *                             example: "유저를 찾을 수 없습니다."
  *       409:
  *         description: 이미 온보딩이 완료된 사용자 (USER_ONBOARDING_ALREADY_COMPLETED)
  *         content:
@@ -212,7 +259,6 @@
  *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
  *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
  *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
- *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
@@ -226,6 +272,58 @@
  *                             example: "AUTH_TOKEN_EXPIRED"
  *                           reason:
  *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_INVALID_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아니거나 유효하지 않습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_ACCESS_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아닙니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_EXPIRED_TOKEN"
+ *                           reason:
+ *                             example: "이미 로그아웃된 토큰입니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "액세스 토큰이 유효하지 않습니다."
+ *       404:
+ *         description: |
+ *           찾을 수 없음:
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "AUTH_NOT_FOUND"
+ *                         reason:
+ *                           example: "인증 토큰이 없습니다."
  */
 
 /**
@@ -300,7 +398,6 @@
  *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
  *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
  *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
- *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
@@ -314,6 +411,58 @@
  *                             example: "AUTH_TOKEN_EXPIRED"
  *                           reason:
  *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_INVALID_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아니거나 유효하지 않습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_ACCESS_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아닙니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_EXPIRED_TOKEN"
+ *                           reason:
+ *                             example: "이미 로그아웃된 토큰입니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "액세스 토큰이 유효하지 않습니다."
+ *       404:
+ *         description: |
+ *           찾을 수 없음:
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "AUTH_NOT_FOUND"
+ *                         reason:
+ *                           example: "인증 토큰이 없습니다."
  */
 
 /**
@@ -351,7 +500,6 @@
  *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
  *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
  *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
- *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
@@ -365,6 +513,58 @@
  *                             example: "AUTH_TOKEN_EXPIRED"
  *                           reason:
  *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_INVALID_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아니거나 유효하지 않습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_ACCESS_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아닙니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_EXPIRED_TOKEN"
+ *                           reason:
+ *                             example: "이미 로그아웃된 토큰입니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "액세스 토큰이 유효하지 않습니다."
+ *       404:
+ *         description: |
+ *           찾을 수 없음:
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "AUTH_NOT_FOUND"
+ *                         reason:
+ *                           example: "인증 토큰이 없습니다."
  */
 
 /**
@@ -428,7 +628,6 @@
  *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
  *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
  *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
- *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
@@ -442,6 +641,58 @@
  *                             example: "AUTH_TOKEN_EXPIRED"
  *                           reason:
  *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_INVALID_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아니거나 유효하지 않습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_ACCESS_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아닙니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_EXPIRED_TOKEN"
+ *                           reason:
+ *                             example: "이미 로그아웃된 토큰입니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "액세스 토큰이 유효하지 않습니다."
+ *       404:
+ *         description: |
+ *           찾을 수 없음:
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "AUTH_NOT_FOUND"
+ *                         reason:
+ *                           example: "인증 토큰이 없습니다."
  */
 
 /**
@@ -527,7 +778,6 @@
  *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
  *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
  *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
- *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
@@ -629,7 +879,6 @@
  *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
  *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
  *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
- *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
@@ -643,6 +892,58 @@
  *                             example: "AUTH_TOKEN_EXPIRED"
  *                           reason:
  *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_INVALID_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아니거나 유효하지 않습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_ACCESS_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아닙니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_EXPIRED_TOKEN"
+ *                           reason:
+ *                             example: "이미 로그아웃된 토큰입니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "액세스 토큰이 유효하지 않습니다."
+ *       404:
+ *         description: |
+ *           찾을 수 없음:
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "AUTH_NOT_FOUND"
+ *                         reason:
+ *                           example: "인증 토큰이 없습니다."
  */
 
 /**
@@ -712,7 +1013,6 @@
  *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
  *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
  *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
- *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
@@ -726,6 +1026,58 @@
  *                             example: "AUTH_TOKEN_EXPIRED"
  *                           reason:
  *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_INVALID_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아니거나 유효하지 않습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_ACCESS_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아닙니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_EXPIRED_TOKEN"
+ *                           reason:
+ *                             example: "이미 로그아웃된 토큰입니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "액세스 토큰이 유효하지 않습니다."
+ *       404:
+ *         description: |
+ *           찾을 수 없음:
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "AUTH_NOT_FOUND"
+ *                         reason:
+ *                           example: "인증 토큰이 없습니다."
  */
 
 /**
@@ -801,7 +1153,6 @@
  *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
  *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
  *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
- *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
@@ -815,6 +1166,58 @@
  *                             example: "AUTH_TOKEN_EXPIRED"
  *                           reason:
  *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_INVALID_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아니거나 유효하지 않습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_ACCESS_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아닙니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_EXPIRED_TOKEN"
+ *                           reason:
+ *                             example: "이미 로그아웃된 토큰입니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "액세스 토큰이 유효하지 않습니다."
+ *       404:
+ *         description: |
+ *           찾을 수 없음:
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "AUTH_NOT_FOUND"
+ *                         reason:
+ *                           example: "인증 토큰이 없습니다."
  */
 
 /**
@@ -882,7 +1285,6 @@
  *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
  *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
  *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
- *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
@@ -896,20 +1298,69 @@
  *                             example: "AUTH_TOKEN_EXPIRED"
  *                           reason:
  *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_INVALID_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아니거나 유효하지 않습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_ACCESS_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아닙니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_EXPIRED_TOKEN"
+ *                           reason:
+ *                             example: "이미 로그아웃된 토큰입니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "액세스 토큰이 유효하지 않습니다."
  *       404:
- *         description: 유저를 찾을 수 없음 (USER_NOT_FOUND)
+ *         description: |
+ *           찾을 수 없음:
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *           - `USER_NOT_FOUND`: 유저를 찾을 수 없습니다.
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
- *                     error:
- *                       properties:
- *                         errorCode:
- *                           example: "USER_NOT_FOUND"
- *                         reason:
- *                           example: "유저를 찾을 수 없습니다."
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_FOUND"
+ *                           reason:
+ *                             example: "인증 토큰이 없습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "USER_NOT_FOUND"
+ *                           reason:
+ *                             example: "유저를 찾을 수 없습니다."
  */
 
 /**
@@ -972,7 +1423,6 @@
  *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
  *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
  *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
- *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
@@ -986,6 +1436,58 @@
  *                             example: "AUTH_TOKEN_EXPIRED"
  *                           reason:
  *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_INVALID_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아니거나 유효하지 않습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_ACCESS_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아닙니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_EXPIRED_TOKEN"
+ *                           reason:
+ *                             example: "이미 로그아웃된 토큰입니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "액세스 토큰이 유효하지 않습니다."
+ *       404:
+ *         description: |
+ *           찾을 수 없음:
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "AUTH_NOT_FOUND"
+ *                         reason:
+ *                           example: "인증 토큰이 없습니다."
  */
 
 /**
@@ -1083,7 +1585,6 @@
  *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
  *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
  *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
- *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
@@ -1097,6 +1598,58 @@
  *                             example: "AUTH_TOKEN_EXPIRED"
  *                           reason:
  *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_INVALID_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아니거나 유효하지 않습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_ACCESS_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아닙니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_EXPIRED_TOKEN"
+ *                           reason:
+ *                             example: "이미 로그아웃된 토큰입니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "액세스 토큰이 유효하지 않습니다."
+ *       404:
+ *         description: |
+ *           찾을 수 없음:
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "AUTH_NOT_FOUND"
+ *                         reason:
+ *                           example: "인증 토큰이 없습니다."
  */
 
 /**
@@ -1153,7 +1706,6 @@
  *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
  *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
  *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
- *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
  *         content:
  *           application/json:
  *             schema:
@@ -1167,18 +1719,67 @@
  *                             example: "AUTH_TOKEN_EXPIRED"
  *                           reason:
  *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_INVALID_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아니거나 유효하지 않습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_ACCESS_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아닙니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_EXPIRED_TOKEN"
+ *                           reason:
+ *                             example: "이미 로그아웃된 토큰입니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "액세스 토큰이 유효하지 않습니다."
  *       404:
- *         description: 유저를 찾을 수 없음 (USER_NOT_FOUND)
+ *         description: |
+ *           찾을 수 없음:
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *           - `USER_NOT_FOUND`: 사용자를 찾을 수 없습니다.
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
- *                     error:
- *                       properties:
- *                         errorCode:
- *                           example: "USER_NOT_FOUND"
- *                         reason:
- *                           example: "사용자를 찾을 수 없습니다."
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_FOUND"
+ *                           reason:
+ *                             example: "인증 토큰이 없습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "USER_NOT_FOUND"
+ *                           reason:
+ *                             example: "사용자를 찾을 수 없습니다."
  */

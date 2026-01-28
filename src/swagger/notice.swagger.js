@@ -32,12 +32,11 @@
  *                             type: integer
  *                           title:
  *                             type: string
- *                           content:
+ *                           summary:
  *                             type: string
+ *                           pinned:
+ *                             type: boolean
  *                           createdAt:
- *                             type: string
- *                             format: date-time
- *                           updatedAt:
  *                             type: string
  *                             format: date-time
  */
@@ -80,10 +79,9 @@
  *                       type: string
  *                     content:
  *                       type: string
+ *                     pinned:
+ *                       type: boolean
  *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                     updatedAt:
  *                       type: string
  *                       format: date-time
  *       400:

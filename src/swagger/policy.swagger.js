@@ -30,7 +30,21 @@
  *                       type: string
  *                       description: 가이드라인 내용
  *       404:
- *         description: 문서를 찾을 수 없음
+ *         description: |
+ *           문서를 찾을 수 없음:
+ *           - `POLICY_NOT_FOUND`: 해당 정책 문서를 찾을 수 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "POLICY_NOT_FOUND"
+ *                         reason:
+ *                           example: "해당 정책 문서를 찾을 수 없습니다."
  */
 
 /**
@@ -65,7 +79,21 @@
  *                       type: string
  *                       description: 이용약관 내용
  *       404:
- *         description: 문서를 찾을 수 없음
+ *         description: |
+ *           문서를 찾을 수 없음:
+ *           - `POLICY_NOT_FOUND`: 해당 정책 문서를 찾을 수 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "POLICY_NOT_FOUND"
+ *                         reason:
+ *                           example: "해당 정책 문서를 찾을 수 없습니다."
  */
 
 /**
@@ -100,5 +128,19 @@
  *                       type: string
  *                       description: 개인정보 처리방침 내용
  *       404:
- *         description: 문서를 찾을 수 없음
+ *         description: |
+ *           문서를 찾을 수 없음:
+ *           - `POLICY_NOT_FOUND`: 해당 정책 문서를 찾을 수 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "POLICY_NOT_FOUND"
+ *                         reason:
+ *                           example: "해당 정책 문서를 찾을 수 없습니다."
  */
