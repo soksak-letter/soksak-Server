@@ -1,8 +1,10 @@
 import { prisma } from "../configs/db.config.js";
 import { xprisma } from "../xprisma.js";
 import { DuplicatedValueError } from "../errors/base.error.js";
-import { UserNotFoundError } from "../errors/user.error.js";
+import { UserNotFoundError, StoragePermissionError, StorageNotFoundError, StorageUploadError } from "../errors/user.error.js";
 import { SessionNotFoundError, SessionFullError } from "../errors/session.error.js";
+import { getObjectStorageClient } from "../configs/objectStorage.config.js";
+import { requiredEnv } from "../utils/user.util.js";
 
 export const findUserByEmail = async (email) => {
     try{
@@ -763,4 +765,40 @@ export const incrementTotalUsageMinutes = async (userId) => {
       totalUsageMinutes: true,
     },
   });
+};
+
+// ========== Object Storage Repository ==========
+export const uploadProfileImageToStorage = async ({ objectName, fileBuffer, contentType }) => {
+  const namespaceName = requiredEnv("OCI_NAMESPACE");
+  const bucketName = requiredEnv("OCI_BUCKET_NAME");
+  const regionId = requiredEnv("OCI_REGION");
+
+  const client = getObjectStorageClient();
+
+  try {
+    await client.putObject({
+      namespaceName,
+      bucketName,
+      objectName,
+      contentType,
+      contentLength: fileBuffer.length,
+      putObjectBody: fileBuffer,
+    });
+  } catch (error) {
+    // OCI API 에러 분류
+    if (error.statusCode === 401 || error.statusCode === 403) {
+      throw new StoragePermissionError("USER_STORAGE_PERMISSION_DENIED", `Object Storage 접근 권한이 없습니다. (인증 실패 또는 Bucket/Namespace 접근 권한 없음): ${error.message}`, { statusCode: error.statusCode, originalError: error.message });
+    }
+    if (error.statusCode === 404) {
+      throw new StorageNotFoundError("USER_STORAGE_NOT_FOUND", `Object Storage 리소스를 찾을 수 없습니다. (Namespace, Bucket 또는 Object 경로 오류): ${error.message}`, { statusCode: error.statusCode, originalError: error.message });
+    }
+    // 네트워크 오류, 타임아웃, 서버 오류 등
+    throw new StorageUploadError("USER_STORAGE_UPLOAD_FAILED", `파일 업로드 중 오류가 발생했습니다. (네트워크 오류, 타임아웃 또는 서버 오류): ${error.message}`, { statusCode: error.statusCode || null, originalError: error.message });
+  }
+
+  const publicUrl =
+    `https://objectstorage.${regionId}.oraclecloud.com` +
+    `/n/${namespaceName}/b/${bucketName}/o/${encodeURIComponent(objectName)}`;
+
+  return { objectName, publicUrl };
 };
