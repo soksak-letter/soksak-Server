@@ -163,7 +163,6 @@
  *                                     properties:
  *                                       id: { type: integer, example: 1 }
  *                                       name: { type: string, example: "test" }
- *                                       assetUrl: { type: string, example: "test" }
  *                           - type: object
  *                             description: "detail=true 일 때의 응답"
  *                             properties:
@@ -181,7 +180,6 @@
  *                                     properties:
  *                                       id: { type: integer, example: 1 }
  *                                       name: { type: string, example: "test" }
- *                                       assetUrl: { type: string, example: "test" }
  *       401:
  *         description: |
  *           인증 실패:
@@ -245,7 +243,6 @@
  *                                     properties:
  *                                       id: { type: integer, example: 1 }
  *                                       name: { type: string, example: "test" }
- *                                       assetUrl: { type: string, example: "test" }
  *                           - type: object
  *                             description: "detail=true 일 때의 응답"
  *                             properties:
@@ -263,7 +260,6 @@
  *                                     properties:
  *                                       id: { type: integer, example: 1 }
  *                                       name: { type: string, example: "test" }
- *                                       assetUrl: { type: string, example: "test" }
  *       401:
  *         description: |
  *           인증 실패:

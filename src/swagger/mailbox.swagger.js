@@ -139,8 +139,6 @@
  *                                         type: integer
  *                                       name:
  *                                         type: string
- *                                       assetUrl:
- *                                         type: string
  *                                   stamp:
  *                                     type: object
  *                                     nullable: true
@@ -242,10 +240,42 @@
  *                           type: string
  *                         firstQuestion:
  *                           type: string
+ *                           nullable: true
+ *                           description: 첫 번째 편지의 질문
  *                         letters:
  *                           type: array
  *                           items:
  *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: integer
+ *                               title:
+ *                                 type: string
+ *                               deliveredAt:
+ *                                 type: string
+ *                                 format: date-time
+ *                                 nullable: true
+ *                               design:
+ *                                 type: object
+ *                                 properties:
+ *                                   paper:
+ *                                     type: object
+ *                                     nullable: true
+ *                                     properties:
+ *                                       id:
+ *                                         type: integer
+ *                                       name:
+ *                                         type: string
+ *                                   stamp:
+ *                                     type: object
+ *                                     nullable: true
+ *                                     properties:
+ *                                       id:
+ *                                         type: integer
+ *                                       name:
+ *                                         type: string
+ *                                       assetUrl:
+ *                                         type: string
  *       401:
  *         description: |
  *           인증 실패:
