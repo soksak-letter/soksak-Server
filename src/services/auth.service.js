@@ -111,6 +111,9 @@ export const signUpUser = async (data) => {
 }
 
 export const socialLoginUser = (provider) => {
+    if(!ALLOWED_PROVIDERS.includes(provider)) {
+        throw new UnprocessableProviderError("AUTH_UNPROCESSABLE_PROVIDER", "지원하지 않는 소셜입니다.", provider);
+    }
     const config = authConfigs[provider];
     
     const params = new URLSearchParams({
