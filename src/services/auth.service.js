@@ -7,7 +7,9 @@ import { createRandomNumber } from "../utils/random.util.js";
 import { transporter } from "../configs/mailer.config.js";
 import { UserNotFoundError } from "../errors/user.error.js";
 import { DuplicatedValueError, InternalServerError } from "../errors/base.error.js";
-import { AuthError, InvalidVerificationCodeError, NotRefreshTokenError, RequiredTermAgreementError, VerificationRateLimitError } from "../errors/auth.error.js";
+import { AuthError, InvalidGrantCodeError, InvalidVerificationCodeError, NotRefreshTokenError, RequiredTermAgreementError, UnprocessableProviderError, VerificationRateLimitError } from "../errors/auth.error.js";
+import { ALLOWED_PROVIDERS, authConfigs } from "../constants/auth.constant.js";
+import axios from "axios";
 
 /**
  * 유저가 서비스에 가입했는지 확인하고 JWT를 반환하는 함수
@@ -105,6 +107,59 @@ export const signUpUser = async (data) => {
             jwtRefreshToken
         }
     };
+}
+
+export const socialLoginUser = (provider) => {
+    const config = authConfigs[provider];
+    
+    const params = new URLSearchParams({
+        client_id: config.clientId,
+        redirect_uri: config.redirectUri,
+        response_type: 'code'
+    })
+
+    if (config.scope) params.append('scope', config.scope);
+    if (config.state) params.append('state', config.state);
+
+    const url = `${config.url}?${params.toString()}`;
+    
+    return url; 
+}
+
+export const socialLoginCertification = async ({provider, code}) => {
+    if(!ALLOWED_PROVIDERS.includes(provider)) {
+        throw new UnprocessableProviderError("AUTH_UNPROCESSABLE_PROVIDER", "지원하지 않는 소셜입니다.", provider);
+    }
+
+    const config = authConfigs[provider];
+    const decodedCode = decodeURIComponent(code);
+
+    const params = new URLSearchParams({
+        grant_type: config.grantType,
+        code: decodedCode,
+        client_id: config.clientId,
+        client_secret: config.clientSecret,
+        redirect_uri: config.redirectUri,
+    })
+
+    let profile;
+
+    try{
+        const tokens = await axios.post(config.tokenUrl, params);
+
+        profile = await axios.get(config.profileUrl, {
+            headers: {
+                Authorization: `Bearer ${tokens.data.access_token}`
+            }
+        });
+    } catch(err) {
+        if (err.response.data.error == "invalid_grant") {
+            throw new InvalidGrantCodeError("AUTH_INVALID_GRANT", "유효하지 않은 인가코드입니다.");
+        }
+        throw err
+    }
+
+    return profile;
 }
 
 export const loginUser = async ({username, password}) => {
