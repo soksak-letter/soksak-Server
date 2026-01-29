@@ -66,7 +66,7 @@ async function main() {
         phoneNumber: `010-1234-567${i - 1}`,
         pool: i % 3 + 1,
         auths: { create: { provider: providers[i % 4], username: `username${i}`, passwordHash, email: `user${i}@example.com` } },
-        agreements: { create: { termsAgreed: true, privacyAgreed: true, ageOver14Agreed: true, marketingAgreed: true } },
+        agreements: { create: { termsAgreed: true, privacyAgreed: true, ageOver14Agreed: true, marketingPushAgreed: true, marketingEmailAgreed: true } },
         notificationSetting: { create: { letterEnabled: true, marketingEnabled: false } },
         interests: {
           create: [{ interestId: allInterests[i % 17].id }, { interestId: allInterests[(i + 1) % 17].id }]
