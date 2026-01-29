@@ -99,6 +99,8 @@ export const signUpUser = async (data) => {
     const jwtAccessToken = generateAccessToken(payload, process.env.JWT_ACCESS_EXPIRED_TIME);
     const jwtRefreshToken = generateRefreshToken(payload, process.env.JWT_REFRESH_EXPIRED_TIME);
 
+    await saveRefreshToken({id: newUser.id, jwtRefreshToken});
+
     return { 
         id: payload.id,
         email: payload.email,
