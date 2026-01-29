@@ -506,9 +506,12 @@
  *                         ageOver14Agreed:
  *                           type: boolean
  *                           description: 만 14세 이상 동의 여부
- *                         marketingAgreed:
+ *                         marketingPushAgreed:
  *                           type: boolean
- *                           description: 마케팅 정보 수신 동의 여부
+ *                           description: 푸시 알림 수신 동의 여부
+ *                         marketingEmailAgreed:
+ *                           type: boolean
+ *                           description: 이메일 수신 동의 여부
  *       401:
  *         description: |
  *           인증 실패:
@@ -555,12 +558,15 @@
  *               privacyAgreed:
  *                 type: boolean
  *                 description: 개인정보 처리방침 동의 여부
- *               marketingAgreed:
- *                 type: boolean
- *                 description: 마케팅 정보 수신 동의 여부
  *               ageOver14Agreed:
  *                 type: boolean
  *                 description: 만 14세 이상 동의 여부
+ *               marketingPushAgreed:
+ *                 type: boolean
+ *                 description: 푸시 알림 수신 동의 여부
+ *               marketingEmailAgreed:
+ *                 type: boolean
+ *                 description: 이메일 수신 동의 여부
  *     responses:
  *       200:
  *         description: 성공
@@ -602,7 +608,7 @@
  *                           errorCode:
  *                             example: "USER_CONSENT_INVALID_BODY"
  *                           reason:
- *                             example: "요청 바디가 올바르지 않습니다. (termsAgreed/privacyAgreed/marketingAgreed/ageOver14Agreed 중 일부 boolean)"
+ *                             example: "요청 바디가 올바르지 않습니다. (termsAgreed/privacyAgreed/marketingPushAgreed/marketingEmailAgreed/ageOver14Agreed 중 일부 boolean)"
  *       401:
  *         description: |
  *           인증 실패:

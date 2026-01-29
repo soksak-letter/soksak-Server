@@ -44,7 +44,10 @@
  *               ageOver14Agreed:
  *                 type: boolean
  *                 example: true
- *               marketingAgreed:
+ *               marketingPushAgreed:
+ *                 type: boolean
+ *                 example: false
+ *               marketingEmailAgreed:
  *                 type: boolean
  *                 example: false
  *     responses:
@@ -870,117 +873,4 @@
  *                           example: "INTERNAL_SERVER_ERROR"
  *                         reason:
  *                           example: "로그아웃에 실패했습니다. 다시 시도해주세요."
- */
-
-/**
- * @swagger
- * /users/me/agreements:
- *   post:
- *     summary: 이용약관 동의
- *     tags: [로그인]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               marketingAgreed:
- *                 type: boolean
- *                 example: true
- *     responses:
- *       200:
- *         description: 동의 완료
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - properties:
- *                     success:
- *                       type: object
- *                       example: { message: "약관 동의가 완료되었습니다." }
- *       400:
- *         description: 필수 약관 미동의 (TERM_BAD_REQUEST)
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
- *                     error:
- *                       properties:
- *                         errorCode:
- *                           example: "TERM_BAD_REQUEST"
- *                         reason:
- *                           example: "필수 약관에 모두 동의해주세요."
- *       401:
- *         description: |
- *           인증 실패:
- *           - `AUTH_TOKEN_EXPIRED`: 토큰이 만료되었습니다.
- *           - `AUTH_INVALID_TOKEN`: 액세스 토큰이 아니거나 유효하지 않습니다.
- *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
- *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
- *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
- *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
- *         content:
- *           application/json:
- *             schema:
- *               oneOf:
- *                 - allOf:
- *                   - $ref: '#/components/schemas/ErrorResponse'
- *                   - properties:
- *                       error:
- *                         properties:
- *                           errorCode:
- *                             example: "AUTH_TOKEN_EXPIRED"
- *                           reason:
- *                             example: "토큰이 만료되었습니다."
- *                 - allOf:
- *                   - $ref: '#/components/schemas/ErrorResponse'
- *                   - properties:
- *                       error:
- *                         properties:
- *                           errorCode:
- *                             example: "AUTH_INVALID_TOKEN"
- *                           reason:
- *                             example: "액세스 토큰이 아니거나 유효하지 않습니다."
- *                 - allOf:
- *                   - $ref: '#/components/schemas/ErrorResponse'
- *                   - properties:
- *                       error:
- *                         properties:
- *                           errorCode:
- *                             example: "AUTH_NOT_ACCESS_TOKEN"
- *                           reason:
- *                             example: "액세스 토큰이 아닙니다."
- *                 - allOf:
- *                   - $ref: '#/components/schemas/ErrorResponse'
- *                   - properties:
- *                       error:
- *                         properties:
- *                           errorCode:
- *                             example: "AUTH_EXPIRED_TOKEN"
- *                           reason:
- *                             example: "이미 로그아웃된 토큰입니다."
- *                 - allOf:
- *                   - $ref: '#/components/schemas/ErrorResponse'
- *                   - properties:
- *                       error:
- *                         properties:
- *                           errorCode:
- *                             example: "AUTH_UNAUTHORIZED"
- *                           reason:
- *                             example: "액세스 토큰이 유효하지 않습니다."
- *                 - allOf:
- *                   - $ref: '#/components/schemas/ErrorResponse'
- *                   - properties:
- *                       error:
- *                         properties:
- *                           errorCode:
- *                             example: "AUTH_NOT_FOUND"
- *                           reason:
- *                             example: "인증 토큰이 없습니다."
  */
