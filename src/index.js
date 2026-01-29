@@ -9,9 +9,6 @@ import passport from "passport";
 import multer from "multer";
 import { specs } from "./configs/swagger.config.js";
 import { jwtStrategy } from "./Auths/strategies/jwt.strategy.js";
-import { googleStrategy } from "./Auths/strategies/google.strategy.js";
-import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
-import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriendRequest } from "./controllers/friend.controller.js";
 import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats, handleGetLetterAssets } from "./controllers/letter.controller.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername, handleSocialLogin, handleSocialLoginCertification, handleSocialLoginCallback } from "./controllers/auth.controller.js";
@@ -82,9 +79,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(passport.initialize());
 
 // 로그인 전략
-passport.use(googleStrategy);
-passport.use(kakaoStrategy);
-passport.use(naverStrategy);
 passport.use(jwtStrategy);
 
 app.use(
@@ -241,7 +235,7 @@ app.get("/inquiries/:inquiryId", isLogin, validate(getInquiryDetailSchema), asyn
 app.post("/auth/signup", validate(SignUpSchema), handleSignUp);                     // 회원가입
 app.post("/auth/login", validate(loginSchema), handleLogin);                        // 로그인
 app.get("/auth/oauth/:provider", handleSocialLogin);                                // 소셜 로그인
-app.get("/auth/callback/:provider", handleSocialLoginCertification, handleSocialLoginCallback); // 소셜 로그인 응답
+app.post("/auth/login/:provider", handleSocialLoginCertification, handleSocialLoginCallback); // 소셜 로그인 응답
 app.post("/auth/username/exists", validate(usernameSchema), handleCheckDuplicatedUsername);     // 아이디 중복 확인
 app.post("/auth/email/exists", validate(emailSchema), handleCheckDuplicatedEmail);  // 이메일 중복 확인
 app.get("/auth/refresh", handleRefreshToken);                                       // 액세스 토큰 재발급
