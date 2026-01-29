@@ -31,7 +31,7 @@ async function main() {
   const papers = [];
   for (let i = 1; i <= 10; i++) {
     const p = await prisma.letterAssetPaper.create({
-      data: { color: `Color_${i}`, assetUrl: `paper_url_${i}`, isActive: true }
+      data: { color: `Color_${i}`, isActive: true }
     });
     papers.push(p);
   }
@@ -47,7 +47,7 @@ async function main() {
   const fonts = [];
   for (let i = 1; i <= 10; i++) {
     const f = await prisma.letterAssetFont.create({
-      data: { font: `폰트_${i}`, fontFamily: `Family_${i}`, isActive: true }
+      data: { font: `폰트_${i}`, isActive: true }
     });
     fonts.push(f);
   }

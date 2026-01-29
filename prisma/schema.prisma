@@ -180,7 +180,6 @@ model LetterDesign {
 model LetterAssetPaper {
   id       Int            @id @default(autoincrement()) @map("id")
   color    String         @map("color")
-  assetUrl String         @map("asset_url")
   isActive Boolean        @map("is_active")
   designs  LetterDesign[]
 
@@ -200,7 +199,6 @@ model LetterAssetStamp {
 model LetterAssetFont {
   id         Int            @id @default(autoincrement()) @map("id")
   font       String         @map("font")
-  fontFamily String         @map("font_family")
   isActive   Boolean        @map("is_active")
   designs    LetterDesign[]
 
