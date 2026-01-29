@@ -40,11 +40,9 @@
  *                     papers:
  *                       - id: 1
  *                         color: "#FFFFFF"
- *                         assetUrl: "s3://papers/paper1.png"
  *                     fonts:
  *                       - id: 1
  *                         font: "Arial"
- *                         fontFamily: "sans-serif"
  *                     stamps:
  *                       - id: 1
  *                         name: "Default Stamp"

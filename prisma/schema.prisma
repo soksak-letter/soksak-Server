@@ -85,13 +85,14 @@ model PushSubscription {
 }
 
 model UserAgreement {
-  id              Int      @id @default(autoincrement()) @map("id")
-  userId          Int      @unique @map("user_id")   // ✅ 여기에 @unique 추가
-  termsAgreed     Boolean  @map("terms_agreed")
-  privacyAgreed   Boolean  @map("privacy_agreed")
-  ageOver14Agreed Boolean  @map("age_over_14_agreed")
-  marketingAgreed Boolean  @map("marketing_agreed")
-  agreedAt        DateTime @default(now()) @map("agreed_at")
+  id                    Int      @id @default(autoincrement()) @map("id")
+  userId                Int      @unique @map("user_id")
+  termsAgreed           Boolean  @map("terms_agreed")
+  privacyAgreed         Boolean  @map("privacy_agreed")
+  ageOver14Agreed       Boolean  @map("age_over_14_agreed")
+  marketingPushAgreed   Boolean  @map("marketing_push_agreed")
+  marketingEmailAgreed  Boolean  @map("marketing_email_agreed")
+  agreedAt            DateTime @default(now()) @map("agreed_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -179,7 +180,6 @@ model LetterDesign {
 model LetterAssetPaper {
   id       Int            @id @default(autoincrement()) @map("id")
   color    String         @map("color")
-  assetUrl String         @map("asset_url")
   isActive Boolean        @map("is_active")
   designs  LetterDesign[]
 
@@ -199,7 +199,6 @@ model LetterAssetStamp {
 model LetterAssetFont {
   id         Int            @id @default(autoincrement()) @map("id")
   font       String         @map("font")
-  fontFamily String         @map("font_family")
   isActive   Boolean        @map("is_active")
   designs    LetterDesign[]
 

@@ -15,7 +15,8 @@ export const SignUpSchema = z.object({
         termsAgreed: z.boolean("이용약관 동의는 필수 항목입니다."),
         privacyAgreed: z.boolean("개인정보 수집 동의는 필수 항목입니다."),
         ageOver14Agreed: z.boolean("만 14세 이상 동의는 필수 항목입니다."),
-        marketingAgreed: z.boolean("true, false값으로 입력되어야 합니다.").optional()
+        marketingPushAgreed: z.boolean("푸시 알림 동의는 true, false값으로 입력되어야 합니다.").optional(),
+        marketingEmailAgreed: z.boolean("이메일 동의는 true, false값으로 입력되어야 합니다.").optional()
     })
 });
 

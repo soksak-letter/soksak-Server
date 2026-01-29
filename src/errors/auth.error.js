@@ -1,4 +1,4 @@
-import { BadRequestError, NotFoundError, TooManyRequests, unauthorizedError } from "./base.error.js";
+import { BadRequestError, NotFoundError, TooManyRequests, unauthorizedError, UnprocessableEntityError } from "./base.error.js";
 
 export class AuthError extends unauthorizedError {
   constructor(code, message, data = null) {
@@ -31,19 +31,31 @@ export class NotFoundToken extends NotFoundError {
 }
 
 export class VerificationRateLimitError extends TooManyRequests {
-    constructor(code, message, data = null) {
-        super(code, message, data);
-    }
+  constructor(code, message, data = null) {
+      super(code, message, data);
+  }
 }
 
 export class InvalidVerificationCodeError extends BadRequestError {
-    constructor(code, message, data = null) {
-        super(code, message, data);
-    }
+  constructor(code, message, data = null) {
+      super(code, message, data);
+  }
 }
 
 export class RequiredTermAgreementError extends BadRequestError {
-    constructor(code, message, data = null) {
-        super(code, message, data);
-    }
+  constructor(code, message, data = null) {
+      super(code, message, data);
+  }
+}
+
+export class UnprocessableProviderError extends UnprocessableEntityError {
+  constructor(code, message, data = null) {
+      super(code, message, data);
+  }
+}
+
+export class InvalidGrantCodeError extends BadRequestError {
+  constructor(code, message, data = null) {
+      super(code, message, data);
+  }
 }
