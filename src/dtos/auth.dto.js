@@ -1,24 +1,24 @@
-export const createSocialUserDTO = (profile) => {
-    switch(profile.provider) {
+export const createSocialUserDTO = (socialData) => {
+    switch(socialData.provider) {
         case "google" :
             return {
-                email: profile.emails?.[0]?.value,
-                provider: profile.provider,
-                providerUserId: profile.id
+                email: socialData.profile.data.email,
+                provider: socialData.provider,
+                providerUserId: socialData.profile.data.id
             }
         case "kakao" : 
             return {
-                email: profile._json?.kakao_account?.email,
-                provider: profile.provider,
-                providerUserId: profile.id.toString()
+                email: socialData.profile.data.kakao_account.email,
+                provider: socialData.provider,
+                providerUserId: socialData.profile.data.id.toString()
             }
         case "naver" : 
             return {
-                email: profile.email,
-                provider: profile.provider,
-                providerUserId: profile.id
+                email: socialData.profile.data.response.email,
+                provider: socialData.provider,
+                providerUserId: socialData.profile.data.response.id
             }
         default:
-            throw new Error(`지원하지 않는 소셜입니다: ${profile.provider}`);
+            throw new Error(`지원하지 않는 소셜입니다: ${socialData.provider}`);
     }
 }
