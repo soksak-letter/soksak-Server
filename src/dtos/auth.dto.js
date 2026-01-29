@@ -19,6 +19,8 @@ export const createSocialUserDTO = (socialData) => {
                 providerUserId: socialData.profile.data.response.id
             }
         default:
-            throw new Error(`지원하지 않는 소셜입니다: ${socialData.provider}`);
+            return {
+                provider: null
+            }
     }
 }
