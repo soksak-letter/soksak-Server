@@ -43,10 +43,10 @@ export class ConflictError extends BaseError {
   }
 }
 
-// 500: Internal Server Error
-export class InternalServerError extends BaseError {
+// 422: Unprocessable Entity (문법은 맞지만 그 내용을 처리할 수 없음)
+export class UnprocessableEntityError extends BaseError {
   constructor(errorCode, message, data = null) {
-    super(message, 500, errorCode, data);
+    super(message, 422, errorCode, data);
   }
 }
 
@@ -54,6 +54,13 @@ export class InternalServerError extends BaseError {
 export class TooManyRequests extends BaseError {
   constructor(errorCode, message, data = null) {
     super(message, 429, errorCode, data);
+  }
+}
+
+// 500: Internal Server Error
+export class InternalServerError extends BaseError {
+  constructor(errorCode, message, data = null) {
+    super(message, 500, errorCode, data);
   }
 }
 
