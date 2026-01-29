@@ -89,7 +89,8 @@ export const signUpUser = async (data) => {
             termsAgreed: data.termsAgreed,
             privacyAgreed: data.privacyAgreed,
             ageOver14Agreed: data.ageOver14Agreed,
-            marketingAgreed: data.marketingAgreed || false
+            marketingPushAgreed: data.marketingPushAgreed || false,
+            marketingEmailAgreed: data.marketingEmailAgreed || false
         }, tx);
 
         return user;
