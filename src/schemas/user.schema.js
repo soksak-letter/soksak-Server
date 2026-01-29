@@ -52,10 +52,11 @@ export const updateNotificationSettingsSchema = z.object({
 // ========== Consent Schema ==========
 export const updateConsentsSchema = z.object({
   body: z.object({
-    termsAgreed: z.boolean("termsAgreed는 boolean이어야 합니다.").optional(),
-    privacyAgreed: z.boolean("privacyAgreed는 boolean이어야 합니다.").optional(),
-    marketingAgreed: z.boolean("marketingAgreed는 boolean이어야 합니다.").optional(),
-    ageOver14Agreed: z.boolean("ageOver14Agreed는 boolean이어야 합니다.").optional()
+    termsAgreed: z.boolean("이용약관 동의는 필수 항목입니다."),
+    privacyAgreed: z.boolean("개인정보 수집 동의는 필수 항목입니다."),
+    ageOver14Agreed: z.boolean("만 14세 이상 동의는 필수 항목입니다."),
+    marketingPushAgreed: z.boolean("푸시 알림 동의는 true, false값으로 입력되어야 합니다.").optional(),
+    marketingEmailAgreed: z.boolean("이메일 동의는 true, false값으로 입력되어야 합니다.").optional()
   })
 });
 

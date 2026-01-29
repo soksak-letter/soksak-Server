@@ -64,7 +64,7 @@ import {
 } from "../utils/user.util.js";
 
 // ------------------------------
-// Onboarding / Agreements
+// Onboarding
 // ------------------------------
 
 export const updateOnboardingStep1 = async ({ userId, gender, job }) => {
@@ -91,21 +91,6 @@ export const updateOnboardingStep1 = async ({ userId, gender, job }) => {
   return { updated: true };
 };
 
-export const createUserAgreements = async (data) => {
-  const user = await findUserById(data.userId);
-  if(!user) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
-
-  if(!data?.body?.termsAgreed || !data?.body?.privacyAgreed || !data?.body?.ageOver14Agreed) throw new RequiredTermAgreementError("TERM_BAD_REQUEST", "필수 약관에 모두 동의해주세요.");
-
-  await createUserAgreement({
-    userId: data.userId,
-    termsAgreed: data.body.termsAgreed,
-    privacyAgreed: data.body.privacyAgreed,
-    ageOver14Agreed: data.body.ageOver14Agreed,
-    marketingAgreed: data.body.marketingAgreed || false,
-  });
-};
-
 // ------------------------------
 // Consent 
 // ------------------------------
@@ -120,33 +105,20 @@ export const getMyConsents = async ({ userId }) => {
     termsAgreed: safe.termsAgreed,
     privacyAgreed: safe.privacyAgreed,
     ageOver14Agreed: safe.ageOver14Agreed,
-    marketingAgreed: safe.marketingAgreed,
+    marketingPushAgreed: safe.marketingPushAgreed,
+    marketingEmailAgreed: safe.marketingEmailAgreed
   };
 };
 
-export const patchMyConsents = async ({ userId, payload }) => {
-  if (!userId) throw new ConsentUnauthorizedError();
+export const patchMyConsents = async ({ userId, data }) => {
+  const user = await findUserById(userId);
+  if(!user) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
 
-  const { termsAgreed, privacyAgreed, marketingAgreed, ageOver14Agreed } = payload ?? {};
+  if(!data?.termsAgreed || !data?.privacyAgreed || !data?.ageOver14Agreed) throw new RequiredTermAgreementError("TERM_BAD_REQUEST", "필수 약관에 모두 동의해주세요.");
 
-  if (
-    !isBooleanOrUndefined(termsAgreed) ||
-    !isBooleanOrUndefined(privacyAgreed) ||
-    !isBooleanOrUndefined(marketingAgreed) ||
-    !isBooleanOrUndefined(ageOver14Agreed)
-  ) {
-    throw new ConsentInvalidBodyError();
-  }
+  const result = await upsertUserAgreement({ userId, data });
 
-  const updateData = {};
-  if (typeof termsAgreed === "boolean") updateData.termsAgreed = termsAgreed;
-  if (typeof privacyAgreed === "boolean") updateData.privacyAgreed = privacyAgreed;
-  if (typeof marketingAgreed === "boolean") updateData.marketingAgreed = marketingAgreed;
-  if (typeof ageOver14Agreed === "boolean") updateData.ageOver14Agreed = ageOver14Agreed;
-
-  await upsertUserAgreement({ userId, data: updateData });
-
-  return { updated: true };
+  return { result };
 };
 
 // ------------------------------

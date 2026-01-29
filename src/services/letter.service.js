@@ -5,7 +5,7 @@ import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getLetterD
 import { createLetterLike, deleteLetterLike, findLetterLike } from "../repositories/like.repository.js";
 import { findRandomUserByPool, findUserById } from "../repositories/user.repository.js";
 import { getMonthAndWeek, getWeekStartAndEnd } from "../utils/date.util.js";
-import { getLevelInfo } from "../utils/planetConstants.js";
+import { getLevelInfo } from "../constants/planet.constant.js";
 import { blockBadWordsInText } from "../utils/profanity.util.js";
 import { LetterBadRequest, LetterNotFound } from "../errors/letter.error.js";
 import { findLetterAssets } from "../repositories/asset.repository.js";
