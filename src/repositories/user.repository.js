@@ -424,7 +424,6 @@ export const findReceivedLettersForThreads = async ({ userId, letterType }) => {
             select: {
               id: true,
               color: true,
-              assetUrl: true,
             }
           },
           stamp: {
@@ -475,7 +474,6 @@ export const findReceivedLettersBySender = async ({ userId, senderUserId, letter
             select: {
               id: true,
               color: true,
-              assetUrl: true
             }
           },
           stamp: {
