@@ -727,6 +727,13 @@ export const updateUserNicknameById = async ({ userId, nickname }) => {
   });
 };
 
+export const updateUserPoolById = async ({id, pool}) => {
+  await prisma.user.updateMany({
+    where: { id },
+    data: { pool },
+  });
+}
+
 export const updateUserProfileImageUrlById = async ({ userId, profileImageUrl }) => {
   return prisma.user.update({
     where: { id: userId },
