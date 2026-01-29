@@ -541,7 +541,7 @@
  * /users/me/consents:
  *   patch:
  *     summary: 정보 동의 설정 갱신
- *     description: 사용자의 정보 동의 설정을 업데이트합니다.
+ *     description: 사용자의 정보 동의 설정을 업데이트합니다. **필수 항목**에 동의하지 않으면 에러가 발생합니다.
  *     tags: [알림/설정]
  *     security:
  *       - bearerAuth: []
@@ -551,22 +551,31 @@
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - termsAgreed
+ *               - privacyAgreed
+ *               - ageOver14Agreed
  *             properties:
  *               termsAgreed:
  *                 type: boolean
- *                 description: 이용약관 동의 여부
+ *                 description: 이용약관 동의 여부 (필수)
+ *                 example: true
  *               privacyAgreed:
  *                 type: boolean
- *                 description: 개인정보 처리방침 동의 여부
+ *                 description: 개인정보 처리방침 동의 여부 (필수)
+ *                 example: true
  *               ageOver14Agreed:
  *                 type: boolean
- *                 description: 만 14세 이상 동의 여부
+ *                 description: 만 14세 이상 동의 여부 (필수)
+ *                 example: true
  *               marketingPushAgreed:
  *                 type: boolean
  *                 description: 푸시 알림 수신 동의 여부
+ *                 example: false
  *               marketingEmailAgreed:
  *                 type: boolean
  *                 description: 이메일 수신 동의 여부
+ *                 example: false
  *     responses:
  *       200:
  *         description: 성공
@@ -579,14 +588,13 @@
  *                     success:
  *                       type: object
  *                       properties:
- *                         updated:
- *                           type: boolean
- *                           example: true
+ *                         result:
+ *                           type: object
  *       400:
  *         description: |
  *           잘못된 요청:
  *           - `REQ_BAD_REQUEST`: 요청 유효성 검사 실패
- *           - `USER_CONSENT_INVALID_BODY`: 요청 바디가 올바르지 않습니다.
+ *           - `TERM_BAD_REQUEST`: 필수 약관 미동의
  *         content:
  *           application/json:
  *             schema:
@@ -606,9 +614,9 @@
  *                       error:
  *                         properties:
  *                           errorCode:
- *                             example: "USER_CONSENT_INVALID_BODY"
+ *                             example: "TERM_BAD_REQUEST"
  *                           reason:
- *                             example: "요청 바디가 올바르지 않습니다. (termsAgreed/privacyAgreed/marketingPushAgreed/marketingEmailAgreed/ageOver14Agreed 중 일부 boolean)"
+ *                             example: "필수 약관에 모두 동의해주세요."
  *       401:
  *         description: |
  *           인증 실패:
@@ -631,6 +639,20 @@
  *                             example: "AUTH_TOKEN_EXPIRED"
  *                           reason:
  *                             example: "토큰이 만료되었습니다."
+ *       404:
+ *         description: 사용자를 찾을 수 없음 (USER_NOT_FOUND)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "USER_NOT_FOUND"
+ *                         reason:
+ *                           example: "해당 정보로 가입된 계정을 찾을 수 없습니다."
  */
 
 /**
