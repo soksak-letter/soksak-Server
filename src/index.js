@@ -9,14 +9,11 @@ import passport from "passport";
 import multer from "multer";
 import { specs } from "./configs/swagger.config.js";
 import { jwtStrategy } from "./Auths/strategies/jwt.strategy.js";
-import { googleStrategy } from "./Auths/strategies/google.strategy.js";
-import { kakaoStrategy } from "./Auths/strategies/kakao.strategy.js";
-import { naverStrategy } from "./Auths/strategies/naver.strategy.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriendRequest } from "./controllers/friend.controller.js";
 import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats, handleGetLetterAssets } from "./controllers/letter.controller.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername, handleSocialLogin, handleSocialLoginCertification, handleSocialLoginCallback } from "./controllers/auth.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
-import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyPushSubscription, handleGetMyConsents, handlePatchMyConsents, handleUpdateActivity, } from "./controllers/user.controller.js";
+import { handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyPushSubscription, handleGetMyConsents, handlePatchMyConsents, handleUpdateActivity, } from "./controllers/user.controller.js";
 import { handleGetAnonymousThreads, handleGetAnonymousThreadLetters, handleGetSelfMailbox, handleGetLetterFromFriend, } from "./controllers/mailbox.controller.js";
 import { handleGetNotices, handleGetNoticeDetail, } from "./controllers/notice.controller.js";
 import { handleGetCommunityGuidelines, handleGetTerms, handleGetPrivacy, } from "./controllers/policy.controller.js";
@@ -72,9 +69,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(passport.initialize());
 
 // 로그인 전략
-passport.use(googleStrategy);
-passport.use(kakaoStrategy);
-passport.use(naverStrategy);
 passport.use(jwtStrategy);
 
 app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false, cookie: { httpOnly: true, maxAge: 1800000, sameSite: "none", secure: true } }));
@@ -166,7 +160,7 @@ app.get("/inquiries/:inquiryId", isLogin, validate(getInquiryDetailSchema), asyn
 app.post("/auth/signup", validate(SignUpSchema), handleSignUp);                     // 회원가입
 app.post("/auth/login", validate(loginSchema), handleLogin);                        // 로그인
 app.get("/auth/oauth/:provider", handleSocialLogin);                                // 소셜 로그인
-app.get("/auth/callback/:provider", handleSocialLoginCertification, handleSocialLoginCallback); // 소셜 로그인 응답
+app.post("/auth/login/:provider", handleSocialLoginCertification, handleSocialLoginCallback); // 소셜 로그인 응답
 app.post("/auth/username/exists", validate(usernameSchema), handleCheckDuplicatedUsername);     // 아이디 중복 확인
 app.post("/auth/email/exists", validate(emailSchema), handleCheckDuplicatedEmail);  // 이메일 중복 확인
 app.get("/auth/refresh", handleRefreshToken);                                       // 액세스 토큰 재발급
@@ -177,6 +171,7 @@ app.patch("/auth/reset-password", isLogin, validate(passwordSchema), handleReset
 app.post("/auth/logout", isLogin, handleLogout);                            // 로그아웃
 app.delete("/users", isLogin, handleWithdrawUser);                          // 탈퇴
 app.post("/users/me/agreements", isLogin, validate(createUserAgreementsSchema), handleCreateUserAgreements)    // 이용약관 동의
+
 
 app.get("/letter-assets", isLogin, isRestricted, handleGetLetterAssets);        // 편지 꾸미기 리소스 목록 조회
 app.post("/letter/me", isLogin, isRestricted, validate(letterToMeSchema), handleSendMyLetter);                      // 나에게 편지 전송

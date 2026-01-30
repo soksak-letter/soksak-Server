@@ -256,8 +256,9 @@ export const findUserAgreementByUserId = async (userId) => {
     select: {
       termsAgreed: true,
       privacyAgreed: true,
-      marketingAgreed: true,
       ageOver14Agreed: true,
+      marketingPushAgreed: true,
+      marketingEmailAgreed: true
     },
   });
 };
@@ -271,18 +272,19 @@ export const upsertUserAgreement = async ({ userId, data }) => {
     },
     create: {
       userId,
-      // 없으면 기본 false로 생성
-      termsAgreed: data.termsAgreed ?? false,
-      privacyAgreed: data.privacyAgreed ?? false,
-      marketingAgreed: data.marketingAgreed ?? false,
-      ageOver14Agreed: data.ageOver14Agreed ?? false,
+      termsAgreed: data.termsAgreed,
+      privacyAgreed: data.privacyAgreed,
+      ageOver14Agreed: data.ageOver14Agreed,
+      marketingPushAgreed: data.marketingPushAgreed,
+      marketingEmailAgreed: data.marketingEmailAgreed,
       agreedAt: new Date(),
     },
     select: {
       termsAgreed: true,
       privacyAgreed: true,
-      marketingAgreed: true,
       ageOver14Agreed: true,
+      marketingPushAgreed: true,
+      marketingEmailAgreed: true,
     },
   });
 };
@@ -424,7 +426,6 @@ export const findReceivedLettersForThreads = async ({ userId, letterType }) => {
             select: {
               id: true,
               color: true,
-              assetUrl: true,
             }
           },
           stamp: {
@@ -475,7 +476,6 @@ export const findReceivedLettersBySender = async ({ userId, senderUserId, letter
             select: {
               id: true,
               color: true,
-              assetUrl: true
             }
           },
           stamp: {

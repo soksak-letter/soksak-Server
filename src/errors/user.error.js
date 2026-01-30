@@ -33,7 +33,7 @@ export class ConsentUnauthorizedError extends unauthorizedError {
 }
 
 export class ConsentInvalidBodyError extends BadRequestError {
-  constructor(code = "USER_CONSENT_INVALID_BODY", message = "요청 바디가 올바르지 않습니다. (termsAgreed/privacyAgreed/marketingAgreed/ageOver14Agreed 중 일부 boolean)", data = null) {
+  constructor(code = "USER_CONSENT_INVALID_BODY", message = "요청 바디가 올바르지 않습니다. (termsAgreed/privacyAgreed/marketingPushAgreed/marketingEmailAgreed/ageOver14Agreed 중 일부 boolean)", data = null) {
     super(code, message, data);
   }
 }

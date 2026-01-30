@@ -1,5 +1,4 @@
 import {
-  createUserAgreements,
   updateOnboardingStep1,
   getMyConsents,
   patchMyConsents,
@@ -37,18 +36,6 @@ export const handlePatchOnboardingStep1 = async (req, res, next) => {
   }
 };
 
-export const handleCreateUserAgreements = async (req, res, next) => {
-  const userId = req.user.id;
-  
-  try{
-    await createUserAgreements({userId, body: req.body});
-
-    res.status(200).success({ message: "약관 동의가 완료되었습니다." });
-  } catch(err) {
-    next(err);
-  }
-};
-
 // ========== Consent Controllers ==========
 export const handleGetMyConsents = async (req, res, next) => {
   try {
@@ -65,9 +52,9 @@ export const handleGetMyConsents = async (req, res, next) => {
 export const handlePatchMyConsents = async (req, res, next) => {
   try {
     const userId = req.user?.id;
-    const payload = req.body ?? {};
+    const data = req.body ?? {};
 
-    const result = await patchMyConsents({ userId, payload });
+    const result = await patchMyConsents({ userId, data });
 
     return res.status(200).success(result);
   } catch (err) {

@@ -209,8 +209,6 @@
  *                                         type: integer
  *                                       name:
  *                                         type: string
- *                                       assetUrl:
- *                                         type: string
  *                                   stamp:
  *                                     type: object
  *                                     nullable: true
@@ -355,6 +353,8 @@
  *                                         type: string
  *                           description: 친구가 보낸 편지 목록
  *                         userLetters:
+ *                           description: 첫 번째 편지의 질문
+ *                         letters:
  *                           type: array
  *                           items:
  *                             type: object
@@ -389,6 +389,7 @@
  *                                       color:
  *                                         type: string
  *                                       assetUrl:
+ *                                       name:
  *                                         type: string
  *                                   stamp:
  *                                     type: object
