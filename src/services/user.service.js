@@ -1,31 +1,20 @@
-import fs from "fs";
-import * as common from "oci-common";
-import * as objectstorage from "oci-objectstorage";
-
 import { RequiredTermAgreementError } from "../errors/auth.error.js";
 import { BadRequestError } from "../errors/base.error.js";
 import {
   ConsentUnauthorizedError,
-  ConsentInvalidBodyError,
   PushSubscriptionUnauthorizedError,
-  PushSubscriptionInvalidBodyError,
   ProfileUnauthorizedError,
   ProfileUserNotFoundError,
-  ProfileInvalidNicknameError,
   ProfileFileRequiredError,
   ProfileUnsupportedImageTypeError,
-  ProfileInvalidImageUrlError,
   ProfileFileTooLargeError,
   ProfileFileBufferMissingError,
   UserNotFoundError,
-  OnboardingInvalidGenderError,
-  OnboardingInvalidJobError,
   OnboardingAlreadyCompletedError,
   InterestIdsNotArrayError,
   InterestIdsInvalidFormatError,
   InterestIdsMinCountError,
   InterestIdsInvalidError,
-  NotificationSettingsInvalidBodyError,
 } from "../errors/user.error.js";
 
 import {
@@ -52,11 +41,9 @@ import {
   updateUserProfileImageUrlById,
   findRandomUserByPool,
   incrementTotalUsageMinutes,
+  uploadProfileImageToStorage,
 } from "../repositories/user.repository.js";
 import {
-  ALLOWED_GENDERS,
-  ALLOWED_JOBS,
-  isBooleanOrUndefined,
   mimeToExt,
   requiredEnv,
   toIntArray,
@@ -68,14 +55,6 @@ import {
 // ------------------------------
 
 export const updateOnboardingStep1 = async ({ userId, gender, job }) => {
-  // validation 
-  if (!gender || !ALLOWED_GENDERS.has(gender)) {
-    throw new OnboardingInvalidGenderError();
-  }
-  if (!job || !ALLOWED_JOBS.has(job)) {
-    throw new OnboardingInvalidJobError();
-  }
-
   const user = await getUserForOnboarding(userId);
   if (!user) {
     throw new UserNotFoundError("USER_NOT_FOUND", "유저를 찾을 수 없습니다.");
@@ -90,6 +69,21 @@ export const updateOnboardingStep1 = async ({ userId, gender, job }) => {
 
   return { updated: true };
 };
+
+
+export const createUserAgreements = async (data) => {
+  const user = await findUserById(data.userId);
+  if(!user) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
+
+  await createUserAgreement({
+    userId: data.userId,
+    termsAgreed: data.body.termsAgreed,
+    privacyAgreed: data.body.privacyAgreed,
+    ageOver14Agreed: data.body.ageOver14Agreed,
+    marketingAgreed: data.body.marketingAgreed || false,
+  });
+};
+
 
 // ------------------------------
 // Consent 
@@ -110,11 +104,13 @@ export const getMyConsents = async ({ userId }) => {
   };
 };
 
+
 export const patchMyConsents = async ({ userId, data }) => {
   const user = await findUserById(userId);
   if(!user) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
 
   if(!data?.termsAgreed || !data?.privacyAgreed || !data?.ageOver14Agreed) throw new RequiredTermAgreementError("TERM_BAD_REQUEST", "필수 약관에 모두 동의해주세요.");
+
 
   const result = await upsertUserAgreement({ userId, data });
 
@@ -129,16 +125,6 @@ export const updateMyPushSubscription = async ({ userId, subscription }) => {
   
   const { endpoint, keys } = subscription || {};
   const { p256dh, auth } = keys || {};
-
-  if (!endpoint || typeof endpoint !== "string" || endpoint.trim().length === 0) {
-    throw new PushSubscriptionInvalidBodyError("USER_PUSH_SUBSCRIPTION_INVALID", "endpoint는 필수입니다.");
-  }
-  if (!p256dh || typeof p256dh !== "string" || p256dh.trim().length === 0) {
-    throw new PushSubscriptionInvalidBodyError("USER_PUSH_SUBSCRIPTION_INVALID", "keys.p256dh는 필수입니다.");
-  }
-  if (!auth || typeof auth !== "string" || auth.trim().length === 0) {
-    throw new PushSubscriptionInvalidBodyError("USER_PUSH_SUBSCRIPTION_INVALID", "keys.auth는 필수입니다.");
-  }
 
   await upsertPushSubscription({
     userId,
@@ -197,16 +183,6 @@ export const updateMyOnboardingInterests = async ({ userId, interestIds }) => {
 // Notification
 // ------------------------------
 export const updateMyNotificationSettings = async ({ userId, letter, marketing }) => {
-  if (typeof letter !== "boolean" && typeof marketing !== "boolean") {
-    throw new NotificationSettingsInvalidBodyError("USER_NOTIFICATION_SETTINGS_INVALID_BODY", '요청 바디에 "letter" 또는 "marketing" 중 하나 이상이 boolean으로 필요합니다.');
-  }
-  if (typeof letter !== "undefined" && typeof letter !== "boolean") {
-    throw new NotificationSettingsInvalidBodyError("USER_NOTIFICATION_SETTINGS_INVALID_BODY", '"letter"는 boolean이어야 합니다.');
-  }
-  if (typeof marketing !== "undefined" && typeof marketing !== "boolean") {
-    throw new NotificationSettingsInvalidBodyError("USER_NOTIFICATION_SETTINGS_INVALID_BODY", '"marketing"은 boolean이어야 합니다.');
-  }
-
   await upsertNotificationSetting({
     userId,
     letterEnabled: letter,
@@ -229,43 +205,6 @@ export const getMyNotificationSettings = async ({ userId }) => {
 // Object Storage
 // ------------------------------
 
-let cachedClient = null;
-
-const getObjectStorageClient = () => {
-  if (cachedClient) return cachedClient;
-
-  const tenancyId = requiredEnv("OCI_TENANCY_OCID");
-  const userId = requiredEnv("OCI_USER_OCID");
-  const fingerprint = requiredEnv("OCI_FINGERPRINT");
-  const privateKeyPath = requiredEnv("OCI_PRIVATE_KEY_PATH");
-  const passphrase = process.env.OCI_PRIVATE_KEY_PASSPHRASE || null;
-  const regionId = requiredEnv("OCI_REGION"); // 예: 'ap-seoul-1'
-
-  const privateKey = fs
-    .readFileSync(privateKeyPath, "utf8")
-    .replace(/\r/g, "")
-    .trim();
-
-  const regionObj = common.Region.fromRegionId(regionId);
-
-  const provider = new common.SimpleAuthenticationDetailsProvider(
-    tenancyId,
-    userId,
-    fingerprint,
-    privateKey,
-    passphrase,
-    regionObj
-  );
-
-  const client = new objectstorage.ObjectStorageClient({
-    authenticationDetailsProvider: provider,
-    region: regionObj,
-  });
-
-  cachedClient = client;
-  return client;
-};
-
 export const uploadUserProfileImage = async ({ userId, fileBuffer, mimeType }) => {
   if (!fileBuffer || fileBuffer.length === 0) {
     throw new ProfileFileRequiredError("USER_PROFILE_FILE_REQUIRED", "업로드할 파일이 비어있습니다.");
@@ -273,43 +212,18 @@ export const uploadUserProfileImage = async ({ userId, fileBuffer, mimeType }) =
   if (fileBuffer.length > MAX_PROFILE_IMAGE_SIZE) {
     throw new ProfileFileTooLargeError();
   }
-  console.log("파일은 받음");
-  const namespaceName = requiredEnv("OCI_NAMESPACE");
-  const bucketName = requiredEnv("OCI_BUCKET_NAME");
-  const regionId = requiredEnv("OCI_REGION");
-  console.log(namespaceName);
-  console.log(bucketName);
-  console.log(regionId);
+
   const ext = mimeToExt(mimeType);
   if (!ext) {
     throw new ProfileUnsupportedImageTypeError();
   }
-  console.log("여기까지");
   const objectName = `profiles/${userId}/profile${ext}`;
 
-  const client = getObjectStorageClient();
-
-  try {
-    await client.putObject({
-      namespaceName,
-      bucketName,
-      objectName,
-      contentType: mimeType,
-      contentLength: fileBuffer.length,
-      putObjectBody: fileBuffer,
-    });
-  } catch (error) {
-    console.error("❌ OCI 상세 에러 발생:");
-    console.error("상태 코드:", error.statusCode);
-    console.error("에러 코드:", error.code);
-    console.error("메시지:", error.message);
-    console.error("요청 ID:", error.opcRequestId);
-    throw error;
-  }
-
-  const publicUrl =
-    `https://objectstorage.${regionId}.oraclecloud.com` +
-    `/n/${namespaceName}/b/${bucketName}/o/${encodeURIComponent(objectName)}`;
+  const { publicUrl } = await uploadProfileImageToStorage({
+    objectName,
+    fileBuffer,
+    contentType: mimeType,
+  });
 
   return { objectName, publicUrl };
 };
@@ -344,9 +258,7 @@ export const getMyProfile = async ({ userId }) => {
 };
 
 export const updateMyNickname = async ({ userId, nickname }) => {
-  if (typeof nickname !== "string") throw new ProfileInvalidNicknameError();
   const trimmed = nickname.trim();
-  if (trimmed.length < 2 || trimmed.length > 20) throw new ProfileInvalidNicknameError();
 
   await updateUserNicknameById({ userId, nickname: trimmed });
   return { updated: true };

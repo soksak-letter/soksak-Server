@@ -46,6 +46,12 @@ export const updateNotificationSettingsSchema = z.object({
   }).refine(
     (data) => typeof data.letter === "boolean" || typeof data.marketing === "boolean",
     "letter 또는 marketing 중 하나 이상이 boolean으로 필요합니다."
+  ).refine(
+    (data) => data.letter === undefined || typeof data.letter === "boolean",
+    '"letter"는 boolean이어야 합니다.'
+  ).refine(
+    (data) => data.marketing === undefined || typeof data.marketing === "boolean",
+    '"marketing"은 boolean이어야 합니다.'
   )
 });
 
@@ -68,3 +74,12 @@ export const updateActivitySchema = z.object({
   )
 });
 
+// ========== User Agreements Schema ==========
+export const createUserAgreementsSchema = z.object({
+  body: z.object({
+    termsAgreed: z.boolean("termsAgreed는 필수입니다."),
+    privacyAgreed: z.boolean("privacyAgreed는 필수입니다."),
+    ageOver14Agreed: z.boolean("ageOver14Agreed는 필수입니다."),
+    marketingAgreed: z.boolean("marketingAgreed는 boolean이어야 합니다.").optional()
+  })
+});

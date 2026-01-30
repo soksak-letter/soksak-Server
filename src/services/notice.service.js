@@ -1,5 +1,5 @@
 import { findActiveNotices, findNoticeById } from "../repositories/user.repository.js";
-import { InvalidNoticeIdError, NoticeNotFoundError } from "../errors/notice.error.js";
+import { NoticeNotFoundError } from "../errors/notice.error.js";
 
 // ------------------------------
 // Notice
@@ -11,9 +11,6 @@ export const getNotices = async () => {
 
 export const getNoticeDetail = async (noticeId) => {
   const id = Number(noticeId);
-  if (!Number.isInteger(id) || id <= 0) {
-    throw new InvalidNoticeIdError("NOTICE_INVALID_ID", `noticeId는 양의 정수여야 합니다. noticeId=${noticeId}`, { noticeId });
-  }
 
   const notice = await findNoticeById(id);
   if (!notice) {
