@@ -74,7 +74,7 @@ export const insertMatchingSession = async (questionId) => {
   const session = await prisma.matchingSession.create({
     data: {
       questionId: questionId,
-      status: "IN_PROGRESS",
+      status: "PENDING",
     },
   });
   return {
