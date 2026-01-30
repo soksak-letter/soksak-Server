@@ -49,7 +49,6 @@ export const getAnonymousThreads = async (userId) => {
               ? {
                   id: l.design.paper.id,
                   name: l.design.paper.color, // color를 name으로 매핑
-                  assetUrl: l.design.paper.assetUrl,
                 }
               : null,
             stamp: l.design.stamp
@@ -94,7 +93,6 @@ export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
             ? {
                 id: l.design.paper.id,
                 name: l.design.paper.color, // color를 name으로 매핑
-                assetUrl: l.design.paper.assetUrl,
               }
             : null,
           stamp: l.design.stamp

@@ -31,7 +31,7 @@ async function main() {
   const papers = [];
   for (let i = 1; i <= 10; i++) {
     const p = await prisma.letterAssetPaper.create({
-      data: { color: `Color_${i}`, assetUrl: `paper_url_${i}`, isActive: true }
+      data: { color: `Color_${i}`, isActive: true }
     });
     papers.push(p);
   }
@@ -47,7 +47,7 @@ async function main() {
   const fonts = [];
   for (let i = 1; i <= 10; i++) {
     const f = await prisma.letterAssetFont.create({
-      data: { font: `폰트_${i}`, fontFamily: `Family_${i}`, isActive: true }
+      data: { font: `폰트_${i}`, isActive: true }
     });
     fonts.push(f);
   }
@@ -64,9 +64,9 @@ async function main() {
         name: `사용자${i}`,
         nickname: `닉네임${i}`,
         phoneNumber: `010-1234-567${i - 1}`,
-        pool: i % 3,
+        pool: i % 3 + 1,
         auths: { create: { provider: providers[i % 4], username: `username${i}`, passwordHash, email: `user${i}@example.com` } },
-        agreements: { create: { termsAgreed: true, privacyAgreed: true, ageOver14Agreed: true, marketingAgreed: true } },
+        agreements: { create: { termsAgreed: true, privacyAgreed: true, ageOver14Agreed: true, marketingPushAgreed: true, marketingEmailAgreed: true } },
         notificationSetting: { create: { letterEnabled: true, marketingEnabled: false } },
         interests: {
           create: [{ interestId: allInterests[i % 17].id }, { interestId: allInterests[(i + 1) % 17].id }]

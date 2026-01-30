@@ -39,6 +39,7 @@ import {
   getTotalUsageMinutes,
   updateUserNicknameById,
   updateUserProfileImageUrlById,
+  findRandomUserByPool,
   incrementTotalUsageMinutes,
   uploadProfileImageToStorage,
 } from "../repositories/user.repository.js";
@@ -50,7 +51,7 @@ import {
 } from "../utils/user.util.js";
 
 // ------------------------------
-// Onboarding / Agreements
+// Onboarding
 // ------------------------------
 
 export const updateOnboardingStep1 = async ({ userId, gender, job }) => {
@@ -69,6 +70,7 @@ export const updateOnboardingStep1 = async ({ userId, gender, job }) => {
   return { updated: true };
 };
 
+
 export const createUserAgreements = async (data) => {
   const user = await findUserById(data.userId);
   if(!user) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
@@ -81,6 +83,7 @@ export const createUserAgreements = async (data) => {
     marketingAgreed: data.body.marketingAgreed || false,
   });
 };
+
 
 // ------------------------------
 // Consent 
@@ -96,9 +99,11 @@ export const getMyConsents = async ({ userId }) => {
     termsAgreed: safe.termsAgreed,
     privacyAgreed: safe.privacyAgreed,
     ageOver14Agreed: safe.ageOver14Agreed,
-    marketingAgreed: safe.marketingAgreed,
+    marketingPushAgreed: safe.marketingPushAgreed,
+    marketingEmailAgreed: safe.marketingEmailAgreed
   };
 };
+
 
 export const patchMyConsents = async ({ userId, payload }) => {
   if (!userId) throw new ConsentUnauthorizedError();
@@ -111,9 +116,16 @@ export const patchMyConsents = async ({ userId, payload }) => {
   if (typeof marketingAgreed === "boolean") updateData.marketingAgreed = marketingAgreed;
   if (typeof ageOver14Agreed === "boolean") updateData.ageOver14Agreed = ageOver14Agreed;
 
-  await upsertUserAgreement({ userId, data: updateData });
+export const patchMyConsents = async ({ userId, data }) => {
+  const user = await findUserById(userId);
+  if(!user) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
 
-  return { updated: true };
+  if(!data?.termsAgreed || !data?.privacyAgreed || !data?.ageOver14Agreed) throw new RequiredTermAgreementError("TERM_BAD_REQUEST", "필수 약관에 모두 동의해주세요.");
+
+
+  const result = await upsertUserAgreement({ userId, data });
+
+  return { result };
 };
 
 // ------------------------------
@@ -281,6 +293,11 @@ export const updateMyProfileImage = async ({ userId, file }) => {
   return { updated: true, profileImageUrl: publicUrl };
 };
 
+export const selectRandomUser = async (userId) => {
+  const receiverUserId = await findRandomUserByPool(userId);
+  
+  return receiverUserId;
+}
 // ========== Activity Service ==========
 export const updateActivity = async (userId) => {
   const user = await incrementTotalUsageMinutes(userId);

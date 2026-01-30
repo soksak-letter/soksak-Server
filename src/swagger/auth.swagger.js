@@ -44,7 +44,10 @@
  *               ageOver14Agreed:
  *                 type: boolean
  *                 example: true
- *               marketingAgreed:
+ *               marketingPushAgreed:
+ *                 type: boolean
+ *                 example: false
+ *               marketingEmailAgreed:
  *                 type: boolean
  *                 example: false
  *     responses:
@@ -173,6 +176,152 @@
  *                           example: "AUTH_BAD_REQUEST"
  *                         reason:
  *                           example: "아이디 또는 비밀번호가 일치하지 않습니다."
+ */
+
+/**
+ * @swagger
+ * /auth/oauth/{provider}:
+ *   get:
+ *     summary: 소셜 로그인 페이지로 리디렉션
+ *     description: 지정된 소셜 로그인 페이지로 사용자를 리디렉션합니다. (주로 웹 브라우저에서 사용)
+ *     tags: [로그인]
+ *     parameters:
+ *       - in: path
+ *         name: provider
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [google, kakao, naver, apple]
+ *         description: 소셜 로그인 제공자
+ *     responses:
+  *       422:
+ *         description: 지원하지 않는 소셜 로그인 제공자 (AUTH_UNPROCESSABLE_PROVIDER)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "AUTH_UNPROCESSABLE_PROVIDER"
+ *                         reason:
+ *                           example: "지원하지 않는 소셜입니다."
+ *       302:
+ *         description: 소셜 로그인 페이지로 성공적으로 리디렉션됩니다.
+ */
+
+/**
+ * @swagger
+ * /auth/login/{provider}:
+ *   post:
+ *     summary: 소셜 로그인 (클라이언트용)
+ *     description: |
+ *       클라이언트(예: 모바일 앱)에서 소셜 로그인을 통해 얻은 인증 코드를 사용하여 로그인을 처리하고 JWT 토큰을 발급합니다.
+ *       서버는 이 코드를 받아 소셜 제공자와 통신하여 사용자 프로필을 확인하고, 기존 사용자인 경우 로그인 처리, 신규 사용자인 경우 회원가입 후 로그인 처리합니다.
+ *     tags: [로그인]
+ *     parameters:
+ *       - in: path
+ *         name: provider
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [google, kakao, naver, apple]
+ *         description: 소셜 로그인 제공자
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: 소셜 로그인 제공자로부터 받은 인증 코드
+ *                 example: "authorization_code_string"
+ *     responses:
+ *       200:
+ *         description: 로그인 성공. 신규 사용자인 경우 가입 처리 후 토큰 발급.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - properties:
+ *                     success:
+ *                       type: object
+ *                       properties:
+ *                         userId:
+ *                           type: integer
+ *                           example: 123
+ *                         tokens:
+ *                           type: object
+ *                           properties:
+ *                             jwtAccessToken:
+ *                               type: string
+ *                               example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                             jwtRefreshToken:
+ *                               type: string
+ *                               example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       401:
+ *         description: 유효하지 않은 인가 코드 (AUTH_INVALID_GRANT)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "AUTH_INVALID_GRANT"
+ *                         reason:
+ *                           example: "유효하지 않은 인가코드입니다."
+ *       404:
+ *         description: 사용자 이메일 정보 없음 (USER_NOT_FOUND)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "USER_NOT_FOUND"
+ *                         reason:
+ *                           example: "존재하지 않는 이메일입니다."
+ *       409:
+ *         description: 다른 소셜 제공자로 이미 가입된 이메일 (USER_EMAIL_DUPLICATED)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "USER_EMAIL_DUPLICATED"
+ *                         reason:
+ *                           example: "이미 google에서 가입한 이메일입니다"
+ *       422:
+ *         description: 지원하지 않는 소셜 로그인 제공자 (AUTH_UNPROCESSABLE_PROVIDER)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "AUTH_UNPROCESSABLE_PROVIDER"
+ *                         reason:
+ *                           example: "지원하지 않는 소셜입니다."
  */
 
 /**
@@ -472,7 +621,7 @@
 /**
  * @swagger
  * /auth/find-id:
- *   get:
+ *   post:
  *     summary: 아이디 찾기
  *     tags: [로그인]
  *     requestBody:
@@ -871,4 +1020,5 @@
  *                         reason:
  *                           example: "로그아웃에 실패했습니다. 다시 시도해주세요."
  */
+
 

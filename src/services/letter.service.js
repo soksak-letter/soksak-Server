@@ -3,12 +3,18 @@ import { DuplicatedValueError } from "../errors/base.error.js";
 import { selectAllFriendsByUserId } from "../repositories/friend.repository.js";
 import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getLetterDetail, getPublicLetters } from "../repositories/letter.repository.js"
 import { createLetterLike, deleteLetterLike, findLetterLike } from "../repositories/like.repository.js";
-import { findUserById } from "../repositories/user.repository.js";
-import { getMonthAndWeek, getWeekStartAndEnd } from "../utils/day.util.js";
-import { getLevelInfo } from "../utils/planetConstants.js";
+import { findRandomUserByPool, findUserById } from "../repositories/user.repository.js";
+import { getMonthAndWeek, getWeekStartAndEnd } from "../utils/date.util.js";
+import { getLevelInfo } from "../constants/planet.constant.js";
 import { blockBadWordsInText } from "../utils/profanity.util.js";
 import { LetterBadRequest, LetterNotFound } from "../errors/letter.error.js";
 import { findLetterAssets } from "../repositories/asset.repository.js";
+import { countMatchingSessionByUserId, decrementSessionTurn, existsMatchingSession, updateMatchingSessionToChating } from "../repositories/session.repository.js";
+import { createMatchingSession } from "./session.service.js";
+import { QuestionNotFoundError } from "../errors/question.error.js";
+import { findQuestionByQuestionId } from "../repositories/question.repository.js";
+import { prisma } from "../configs/db.config.js";
+import { MaxTurnIsOver, SessionCountOverError, SessionNotFoundError } from "../errors/session.error.js";
 
 export const getLetter = async (id) => {
     const letter = await getLetterDetail(id);
@@ -18,6 +24,9 @@ export const getLetter = async (id) => {
 }
 
 export const sendLetterToMe = async (userId, data) => {
+    const question = await findQuestionByQuestionId(data.questionId);
+    if(question == null) throw new QuestionNotFoundError("QUESTION_NOT_FOUND", "해당 질문을 찾을 수 없습니다.");
+    
     const isProfane = blockBadWordsInText(data.content);
     if(isProfane) throw new LetterBadRequest("LETTER_BAD_WORD", "부적절한 단어가 포함되어있습니다.");
 
@@ -33,11 +42,9 @@ export const sendLetterToMe = async (userId, data) => {
             status: "PENDING"
         },
         design: {
-            create: {
-                paperId: data.paperId,
-                stampId: data.stampId,
-                fontId: data.fontId
-            }
+            paperId: data.paperId,
+            stampId: data.stampId,
+            fontId: data.fontId
         }
     });
 
@@ -46,35 +53,68 @@ export const sendLetterToMe = async (userId, data) => {
 }
 
 export const sendLetterToOther = async (userId, data) => {
+    if(!data?.receiverUserId) {
+        data.receiverUserId = await findRandomUserByPool(userId);
+        if (!data.receiverUserId) throw new SessionNotFoundError("SESSION_CANDIDATE_NOT_FOUND", "채팅할 수 있는 상대가 없습니다.");
+    }
+
+    const count = await countMatchingSessionByUserId(userId);
+    if(count >= 10) throw new MaxTurnIsOver("SESSION_MAX_TURN", "편지를 주고 받은 횟수가 10번이 되었습니다.");
+
+    const question = await findQuestionByQuestionId(data.questionId);
+    if(question == null) throw new QuestionNotFoundError("QUESTION_NOT_FOUND", "해당 질문을 찾을 수 없습니다.");
+
     const receiver = await findUserById(data.receiverUserId);
     if(!receiver) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
-    if(userId === receiver.id) throw new DuplicatedValueError("USER_DUPLICATED_ID", "전송하는 유저와 전달받는 유저의 id가 같습니다", "id");
+    if(userId === receiver.id) throw new DuplicatedValueError("USER_DUPLICATED_ID", "전송하는 유저와 전달받는 유저의 ID가 같습니다", "id");
 
     const isProfane = blockBadWordsInText(data.content);
     if(isProfane) throw new LetterBadRequest("LETTER_BAD_WORD", "부적절한 단어가 포함되어있습니다.");
 
-    const letterId = await createLetter({
-        letter: {
-            senderUserId: userId,
-            receiverUserId: data.receiverUserId,
-            letterType: "TO_OTHER",
-            questionId: data.questionId,
-            title: data.title,
-            content: data.content,
-            isPublic: data.isPublic,
-            status: "DELIVERED",
-            deliveredAt: new Date()
-        },
-        design: {
-            create: {
+    let session = await existsMatchingSession(userId, data.receiverUserId, data.questionId);
+    const letterId = await prisma.$transaction(async (tx) => {
+        // 친구는 아닌데 비활성화 세션일 때
+        if(session?.status === "PENDING") {
+            await updateMatchingSessionToChating(session.id, tx)
+            await decrementSessionTurn(session.id, tx);
+        }
+
+        // 친구는 아닌데 채팅중일 때
+        if(session?.status === "CHATING") {
+            await decrementSessionTurn(session.id, tx);
+        }
+        
+        // 친구도 아니고 채팅중도 아닐 때
+        if(!session){
+            session = await createMatchingSession(userId, data.receiverUserId, data.questionId, tx);
+            await decrementSessionTurn(session.id, tx);
+        }
+
+        const letterId = await createLetter({
+            letter: {
+                senderUserId: userId,
+                receiverUserId: data.receiverUserId,
+                sessionId: session.id,
+                letterType: "TO_OTHER",
+                questionId: data.questionId,
+                title: data.title,
+                content: data.content,
+                isPublic: data.isPublic,
+                status: "DELIVERED",
+                deliveredAt: new Date()
+            },
+            design: {
                 paperId: data.paperId,
                 stampId: data.stampId,
                 fontId: data.fontId
             }
-        }
-    });
+        }, tx);
+
+        return letterId
+    })
 
     const letter = await getLetterDetail(letterId);
+
     return { letter };
 }
 

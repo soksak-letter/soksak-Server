@@ -19,7 +19,6 @@ export const getLetterDetail = async (id) => {
                         select: {
                             id: true,
                             color: true,
-                            assetUrl: true
                         }
                     },
                     stamp: {
@@ -33,7 +32,6 @@ export const getLetterDetail = async (id) => {
                         select: {
                             id: true,
                             font: true,
-                            fontFamily: true,
                         }
                     }
                 }
@@ -56,7 +54,6 @@ export const getLetterDetail = async (id) => {
             paper: {
                 id: letter?.design?.paper?.id,
                 color: letter?.design?.paper?.color,
-                assetUrl: letter?.design?.paper?.assetUrl
             },
             stamp: {
                 id: letter?.design?.stamp?.id,
@@ -66,20 +63,21 @@ export const getLetterDetail = async (id) => {
             font: {
                 id: letter?.design?.font?.id,
                 font: letter?.design?.font?.font,
-                fontFamily: letter?.design?.font?.fontFamily,
             }
         }
     }
 }
 
 // senderUserId = receiverUserId, letterType, questionId, title, content, isPublic, status, scheduledAt 필수 deliveredAt, readAt은 scheduledAt에 따라서
-export const createLetter = async ({letter, design}) => {
+export const createLetter = async ({letter, design}, tx = prisma) => {
     try{
-        const newLetter = await prisma.letter.create({
+        const newLetter = await tx.letter.create({
             data: {
                 ...letter,
                 design: {
-                    ...design
+                    create: {
+                        ...design
+                    }
                 }
             }
         });
@@ -96,7 +94,7 @@ export const createLetter = async ({letter, design}) => {
             const target = err.meta?.constraint[0] || "";
             const displayName = fieldNameMap[target] || "참조 데이터";
     
-            throw new ReferenceNotFoundError("REF_404", `${target} 정보를 찾을 수 없습니다.`, displayName);
+            throw new ReferenceNotFoundError("REF_NOT_FOUND", `${target} 정보를 찾을 수 없습니다.`, displayName);
 
         }
         throw err;
@@ -125,7 +123,6 @@ export const getFriendLetters = async ({userId, friendId}) => {
                         select: {
                             id: true,
                             color: true,
-                            assetUrl: true
                         }
                     },
                     stamp: {
@@ -169,8 +166,7 @@ export const getMyLettersWithFriend = async ({userId, friendId}) => {
                     paper: {
                         select: {
                             id: true,
-                            color: true,
-                            assetUrl: true
+                            color: true
                         }
                     },
                     stamp: {
@@ -216,8 +212,7 @@ export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDet
                     paper: {
                         select: {
                             id: true,
-                            color: true,
-                            assetUrl: true
+                            color: true
                         }
                     },
                 }
@@ -242,7 +237,6 @@ export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDet
             paper: {
                 id: letter?.design?.paper?.id,
                 color: letter?.design?.paper?.color,
-                assetUrl: letter?.design?.paper?.assetUrl
             }
         }
     }));
@@ -324,7 +318,7 @@ export const selectLetterDesignByLetterId = async (lId) => {
   const [letterPaper, letterStamp] = await Promise.all([
     prisma.letterAssetPaper.findFirst({
       where: { id: letterDesign.paperId },
-      select: { color: true, assetUrl: true },
+      select: { color: true },
     }),
     prisma.letterAssetStamp.findFirst({
       where: { id: letterDesign.stampId },
@@ -334,8 +328,7 @@ export const selectLetterDesignByLetterId = async (lId) => {
 
   return {
     paper: {
-        color: letterPaper.color,
-        assetUrl: letterPaper.assetUrl
+        color: letterPaper.color
     },
     stamp: {
         name: letterStamp.name,
@@ -357,3 +350,21 @@ export const selectSenderUserIdByLetterIdAndReceiverUserId = async(letterId, use
     return result?.senderUserId ?? null;
 }
 
+export const sendReservedLetter = async ({startTime, endTime}) => {
+    const updatedLetters = await prisma.letter.updateMany({
+        where: {
+            letterType: "TO_ME",
+            status: "PENDING",
+            scheduledAt: {
+                gte: startTime,
+                lte: endTime
+            }
+        },
+        data: {
+            status: "DELIVERED",
+            deliveredAt: new Date()
+        }
+    })
+
+    return updatedLetters;
+}

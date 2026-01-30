@@ -19,9 +19,11 @@ import {
 } from "../errors/weeklyReport.error.js";
 import { generateKoreanLetterFromKeywords } from "../utils/ai/letterFromKeywords.ai.js";
 import { analyzeWeeklyReportEmotionByKeywords } from "../utils/weeklyEmotion.util.js";
-import { yearWeekToMonthWeek } from "../utils/day.util.js";
+import { yearWeekToMonthWeek } from "../utils/date.util.js";
 
 /** @typedef {Record<string, number>} KeywordCountMap */
+
+const WEEKLY_REPORT_AI_FAIL_FAST = (process.env.WEEKLY_REPORT_AI_FAIL_FAST ?? "false") === "true";
 
 /**
  * countSentLettersAiKeywordsByUserId / findWeeklyReportKeywordByReportId 결과가
@@ -68,9 +70,7 @@ function keywordsToString(keywordsOrMap) {
   if (!keywordsOrMap) return "";
 
   if (Array.isArray(keywordsOrMap)) {
-    return keywordsOrMap
-      .map(({ keyword, count }) => `${keyword}(${count})`)
-      .join(", ");
+    return keywordsOrMap.map(({ keyword, count }) => `${keyword}(${count})`).join(", ");
   }
 
   if (typeof keywordsOrMap === "object") {
@@ -82,6 +82,27 @@ function keywordsToString(keywordsOrMap) {
   return "";
 }
 
+function defaultEmotionIndexMap() {
+  return { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [] };
+}
+
+/**
+ * analyzeWeeklyReportEmotionByKeywords 결과가
+ * - { "0": [...], "1": [...], ... } 형태라고 가정하되,
+ * - 혹시 일부 키가 빠져도 0..7을 강제로 보장.
+ */
+function ensureEmotionIndexMap(emotionByIndex) {
+  const base = defaultEmotionIndexMap();
+  if (!emotionByIndex || typeof emotionByIndex !== "object") return base;
+
+  for (let i = 0; i <= 7; i++) {
+    const k = String(i);
+    const v = emotionByIndex?.[k];
+    base[k] = Array.isArray(v) ? v : [];
+  }
+  return base;
+}
+
 /**
  * 키워드 기반 한국어 마음편지(주간 summaryText 본문) 생성
  * - 중복 쿼리 방지: keywordCounts / nickname을 외부에서 전달받음
@@ -89,9 +110,10 @@ function keywordsToString(keywordsOrMap) {
 async function createLetterDraft({ keywordCounts, nickname, weeklyEmotions }) {
   const receiver = nickname ?? "당신";
 
-  const emotionLine = Array.isArray(weeklyEmotions) && weeklyEmotions.length
-    ? weeklyEmotions.map(e => `${e.emotion}:${e.ratio}`).join(", ")
-    : "없음";
+  const emotionLine =
+    Array.isArray(weeklyEmotions) && weeklyEmotions.length
+      ? weeklyEmotions.map((e) => `${e.emotion}:${e.ratio}`).join(", ")
+      : "없음";
 
   const basePrompt = `
 너는 상담사가 아니라 친한 친구처럼 다정하고 담백한 한국어 존댓말 편지를 쓴다.
@@ -122,17 +144,15 @@ async function createLetterDraft({ keywordCounts, nickname, weeklyEmotions }) {
   return { letterText };
 }
 
-
-
 /**
  * analyzeWeeklyReportEmotionByKeywords 결과(0..7)를 DB insert용 rows로 변환
  * - count 컬럼을 0..7 인덱스로 사용(네 기존 코드 의도 유지)
  */
 function buildEmotionRows(reportId, emotionByIndex) {
-  if (!emotionByIndex || typeof emotionByIndex !== "object") return [];
+  const safe = ensureEmotionIndexMap(emotionByIndex);
 
   const rows = [];
-  for (const [dayIndex, list] of Object.entries(emotionByIndex)) {
+  for (const [dayIndex, list] of Object.entries(safe)) {
     const idx = Number(dayIndex);
     if (!Number.isInteger(idx) || idx < 0 || idx > 7) continue;
     if (!Array.isArray(list)) continue;
@@ -153,6 +173,43 @@ function buildEmotionRows(reportId, emotionByIndex) {
   return rows;
 }
 
+async function safeAnalyzeWeeklyEmotions(keywordCounts, options) {
+  try {
+    const res = await analyzeWeeklyReportEmotionByKeywords(keywordCounts, options);
+    return ensureEmotionIndexMap(res);
+  } catch (err) {
+    // Groq json schema strict 모드에서 자주 나는 케이스:
+    // - json_validate_failed (필수 키 누락 등) => 요청 자체가 400으로 떨어짐
+    const msg = String(err?.message ?? "");
+    const isJsonSchemaFail =
+      msg.includes("json_validate_failed") ||
+      msg.includes("Failed to validate JSON") ||
+      msg.includes("Generated JSON does not match the expected schema");
+
+    console.error("[weeklyReport] analyzeWeeklyReportEmotionByKeywords failed", {
+      name: err?.name,
+      message: err?.message,
+      isJsonSchemaFail,
+    });
+
+    if (WEEKLY_REPORT_AI_FAIL_FAST) throw err;
+    return defaultEmotionIndexMap(); // 소프트 폴백
+  }
+}
+
+async function safeCreateLetterDraft({ keywordCounts, nickname, weeklyEmotions }) {
+  try {
+    return await createLetterDraft({ keywordCounts, nickname, weeklyEmotions });
+  } catch (err) {
+    console.error("[weeklyReport] createLetterDraft failed", {
+      name: err?.name,
+      message: err?.message,
+    });
+    if (WEEKLY_REPORT_AI_FAIL_FAST) throw err;
+    return { letterText: "이번 주를 차근차근 버텨낸 것만으로도 충분히 잘하고 있어요. 스스로에게 따뜻한 위로의 편지를 보내보세요." };
+  }
+}
+
 export const createWeeklyReport = async (userId, year, week) => {
   const user = await findUserById(userId);
   if (!user) throw new InvalidUserError();
@@ -167,37 +224,33 @@ export const createWeeklyReport = async (userId, year, week) => {
     const keywordCounts = normalizeKeywordCountMap(rawCounts);
     const hasKeywords = Object.keys(keywordCounts).length > 0;
 
-    // 2) 감정 분석(키워드 기반)
-    const emotions = hasKeywords
-      ? await analyzeWeeklyReportEmotionByKeywords(keywordCounts, { maxEmotions: 6, minRatio: 0.05, temperature: 0.2 })
-      : null;
+    // 2) 감정 분석(키워드 기반) - 0..7 보장 + 실패 시 폴백
+    const emotionsByIndex = hasKeywords
+      ? await safeAnalyzeWeeklyEmotions(keywordCounts, {
+          maxEmotions: 6,
+          minRatio: 0.05,
+          temperature: 0.2,
+        })
+      : defaultEmotionIndexMap();
 
-    // 3) 편지 생성(감정+키워드)
+    // 3) 편지 생성(감정+키워드) - 실패 시 폴백
     const { letterText } = hasKeywords
-      ? await createLetterDraft({ keywordCounts, nickname: user.nickname, weeklyEmotions: emotions?.[0] })
-      : { letterText: "이번 주는 기록된 키워드가 없어 마음 편지를 생성하지 않았어요." };
+      ? await safeCreateLetterDraft({
+          keywordCounts,
+          nickname: user.nickname,
+          weeklyEmotions: emotionsByIndex?.["0"] ?? [],
+        })
+      : { letterText: "이번 주는 기록된 키워드가 없어 마음 편지를 생성하지 않았어요. 스스로에게 따뜻한 위로의 편지를 보내보세요." };
 
-    // 4) insertWeeklyReport(...summaryText)
-    // 5) emotionRows = buildEmotionRows(..., emotions) 후 insertWeeklyReportEmotions
-
-
-    // 3) weekly_report 생성 (+ repo 내부에서 weekly_report_keyword를 같이 넣는 구조일 가능성)
+    // 4) weekly_report 생성
     const weeklyReportResult = await insertWeeklyReport(userId, year, week, letterText);
 
-    // 4) 하이라이트 생성(최근 편지 3개 등)
+    // 5) 하이라이트 생성(최근 편지 3개 등)
     await createWeeklyReportHighlightsByLatestLetters(year, week, userId);
 
-    // 5) 감정 분석 입력은 “실제로 저장된 keyword rows” 기준이 가장 안전
-    const keywordRows = await findWeeklyReportKeywordByReportId(weeklyReportResult.id);
-
-    // ✅ 배열 그대로 넘겨라 (객체/문자열 fallback 제거)
-    const weeklyReportEmotionByAi = await analyzeWeeklyReportEmotionByKeywords(keywordRows, {
-      maxEmotions: 6,
-      minRatio: 0.05,
-      temperature: 0.2,
-    });
-
-    const emotionRows = buildEmotionRows(weeklyReportResult.id, weeklyReportEmotionByAi);
+    // 6) 감정 rows insert
+    // - 키워드가 없거나(=분석 의미 없음) / 분석 실패 폴백이면 insert 스킵 가능
+    const emotionRows = buildEmotionRows(weeklyReportResult.id, emotionsByIndex);
     if (emotionRows.length > 0) {
       await insertWeeklyReportEmotions(emotionRows);
     }
@@ -221,7 +274,7 @@ export const readWeeklyReport = async (userId) => {
   try {
     const weeklyReport = await findWeeklyReportByUserIdAndDate(userId);
     if (!weeklyReport) {
-      throw new WeeklyReportNotFoundError(undefined, undefined, userId );
+      throw new WeeklyReportNotFoundError(undefined, undefined, userId);
     }
 
     const keywords = await findWeeklyReportKeywordByReportId(weeklyReport.id);
@@ -229,21 +282,23 @@ export const readWeeklyReport = async (userId) => {
     const emotionsRaw = await findWeeklyReportEmotionByRId(weeklyReport.id);
 
     // count(0..7)별로 그룹핑
-    const emotionsByIndex = (emotionsRaw ?? []).reduce((acc, e) => {
-      const idx = e.count; // 0..7
-      if (!acc[idx]) acc[idx] = [];
-      acc[idx].push({ emotion: e.emotion, ratio: e.ratio });
-      return acc;
-    }, {});
+    const emotionsByIndex = (emotionsRaw ?? []).reduce(
+      (acc, e) => {
+        const idx = e.count; // 0..7 기대
+        if (idx >= 0 && idx <= 7) {
+          acc[idx].push({ emotion: e.emotion, ratio: e.ratio });
+        }
+        return acc;
+      },
+      // 0..7을 무조건 보장하는 초기값
+      { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [] }
+    );
 
     // ✅ 과거에 summaryText를 JSON.stringify로 저장한 데이터가 남아있을 수 있어 복구 처리
     let summaryText = weeklyReport.summaryText ?? null;
     if (typeof summaryText === "string") {
       const t = summaryText.trim();
-      if (
-        (t.startsWith('"') && t.endsWith('"')) ||
-        (t.startsWith("'") && t.endsWith("'"))
-      ) {
+      if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"))) {
         try {
           summaryText = JSON.parse(t);
         } catch (_) {
@@ -281,7 +336,7 @@ export const readWeeklyReport = async (userId) => {
     };
   } catch (error) {
     if (error?.code === "P2025") {
-      throw new WeeklyReportNotFoundError(undefined, undefined, userId );
+      throw new WeeklyReportNotFoundError(undefined, undefined, userId);
     }
     throw new WeeklyReportInternalError(undefined, undefined, {
       reason: error.message,

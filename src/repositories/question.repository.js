@@ -31,4 +31,6 @@ export const findQuestionByQuestionId = async(id) => {
             id: true
         }
     })
+
+    return result;
 }
