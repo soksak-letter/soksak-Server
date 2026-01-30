@@ -52,37 +52,67 @@ async function main() {
     fonts.push(f);
   }
 
-  // --- 4. 유저 10명 생성 ---
+  // --- 4. 유저 100명 생성 ---
   const passwordHash = await bcrypt.hash('password123', 10);
   const providers = ['soksak', 'naver', 'google', 'kakao'];
   const users = [];
 
-  for (let i = 1; i <= 10; i++) {
+  console.log('유저 100명 생성 중...');
+
+  for (let i = 1; i <= 100; i++) {
     const user = await prisma.user.create({
       data: {
         email: `user${i}@example.com`,
         name: `사용자${i}`,
         nickname: `닉네임${i}`,
-        phoneNumber: `010-1234-567${i - 1}`,
-        pool: i % 3 + 1,
-        auths: { create: { provider: providers[i % 4], username: `username${i}`, passwordHash, email: `user${i}@example.com` } },
-        agreements: { create: { termsAgreed: true, privacyAgreed: true, ageOver14Agreed: true, marketingPushAgreed: true, marketingEmailAgreed: true } },
-        notificationSetting: { create: { letterEnabled: true, marketingEnabled: false } },
+        // 전화번호 중복 방지를 위해 i 값을 활용
+        phoneNumber: `010-${String(i).padStart(4, '0')}-${String(i).padStart(4, '0')}`,
+        pool: (i % 3) + 1,
+        auths: { 
+          create: { 
+            provider: providers[i % 4], 
+            username: `username${i}`, 
+            passwordHash, 
+            email: `user${i}@example.com` 
+          } 
+        },
+        agreements: { 
+          create: { 
+            termsAgreed: true, 
+            privacyAgreed: true, 
+            ageOver14Agreed: true, 
+            marketingPushAgreed: true, 
+            marketingEmailAgreed: true 
+          } 
+        },
+        notificationSetting: { 
+          create: { 
+            letterEnabled: true, 
+            marketingEnabled: false 
+          } 
+        },
         interests: {
-          create: [{ interestId: allInterests[i % 17].id }, { interestId: allInterests[(i + 1) % 17].id }]
+          create: [
+            { interestId: allInterests[i % 17].id }, 
+            { interestId: allInterests[(i + 1) % 17].id }
+          ]
         }
       }
     });
     users.push(user);
   }
 
-  // --- 5. 친구 및 매칭 세션 (상태: friend) ---
-  for (let i = 0; i < 4; i += 2) {
-    await prisma.friend.create({ data: { userAId: users[i].id, userBId: users[i + 1].id } });
+  // --- 5. 친구 및 매칭 세션 (상태: friend, 25쌍 생성) ---
+  console.log('친구 및 매칭 세션 생성 중...');
+  for (let i = 0; i < 50; i += 2) {
+    await prisma.friend.create({ 
+      data: { userAId: users[i].id, userBId: users[i + 1].id } 
+    });
     await prisma.matchingSession.create({
       data: {
-        questionId: allQuestions[i].id,
-        status: 'friend',
+        // 질문 데이터가 부족할 수 있으므로 나머지 연산 사용
+        questionId: allQuestions[i % allQuestions.length].id,
+        status: 'FRIEND',
         participants: {
           create: [{ userId: users[i].id }, { userId: users[i + 1].id }]
         }
@@ -90,34 +120,35 @@ async function main() {
     });
   }
 
-  // --- 6. 편지 100개 (유저당 10개) + 디자인 연결 ---
+  // --- 6. 편지 데이터 (유저당 5개로 조정, 총 500개) ---
+  console.log('편지 및 디자인 에셋 생성 중...');
   for (const user of users) {
-    for (let j = 0; j < 10; j++) {
-      const isSelf = j < 3;
-      const isFriend = j >= 3 && j < 7;
+    const userIdx = users.indexOf(user);
+    
+    for (let j = 0; j < 5; j++) {
+      const isSelf = j < 2; // 2개는 나에게
+      const isFriend = j >= 2 && j < 4; // 2개는 친구에게
       
       await prisma.letter.create({
         data: {
           senderUserId: user.id,
-          receiverUserId: isSelf ? user.id : (isFriend ? users[(users.indexOf(user) + 1) % 10].id : null),
-          letterType: isSelf ? 'self' : (isFriend ? 'friend' : 'public'),
+          receiverUserId: isSelf ? user.id : (isFriend ? users[(userIdx + 1) % 100].id : null),
+          letterType: isSelf ? 'TO_ME' : 'TO_OTHER',
           title: `${user.nickname}의 ${j + 1}번째 편지`,
           content: `테스트 편지 내용입니다. 디자인 에셋이 잘 적용되었는지 확인하세요.`,
-          isPublic: j >= 7,
-          status: 'delivered',
-          questionId: allQuestions[j].id,
-          // 디자인 정보 연결 (랜덤하게 10개 중 하나씩 선택)
+          isPublic: j === 4, // 1개는 공개 편지
+          status: 'DELIVERED',
+          questionId: allQuestions[j % allQuestions.length].id,
           design: {
             create: {
-              paperId: papers[Math.floor(Math.random() * 10)].id,
-              stampId: stamps[Math.floor(Math.random() * 10)].id,
-              fontId: fonts[Math.floor(Math.random() * 10)].id,
+              paperId: papers[Math.floor(Math.random() * papers.length)].id,
+              stampId: stamps[Math.floor(Math.random() * stamps.length)].id,
+              fontId: fonts[Math.floor(Math.random() * fonts.length)].id,
             }
           }
         }
       });
     }
-    console.log(`- ${user.name}의 디자인된 편지 생성 완료`);
   }
 
   console.log('시드 데이터 주입 성공!');
