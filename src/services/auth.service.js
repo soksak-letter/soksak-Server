@@ -24,6 +24,7 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
     }
 
     let user = await findUserByEmail(email);
+    let isNewUser = false;
 
     if(user && user.provider !== provider) {
         throw new DuplicatedValueError("USER_EMAIL_DUPLICATED", `이미 ${user.provider}에서 가입한 이메일입니다`, "email");
@@ -39,6 +40,7 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
                 providerUserId: providerUserId
             }
         });
+        isNewUser = true;
     }
 
     const payload = { id: user.id, email: user.email, provider: user.provider };
@@ -49,6 +51,7 @@ export const verifySocialAccount = async ({email, provider, providerUserId}) => 
     
     return {
         userId: payload.id,
+        isNewUser: isNewUser ?? false,
         tokens: {
             jwtAccessToken,
             jwtRefreshToken

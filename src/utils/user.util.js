@@ -1,8 +1,6 @@
 export const ALLOWED_GENDERS = new Set(["MALE", "FEMALE", "UNKNOWN"]); // UNKNOWN = 비공개
 export const ALLOWED_JOBS = new Set(["WORKER", "STUDENT", "HOUSEWIFE", "FREELANCER", "UNEMPLOYED", "OTHER"]);
 
-export const isBooleanOrUndefined = (v) => typeof v === "boolean" || typeof v === "undefined";
-
 export const toIntArray = (arr) => arr.map((v) => Number(v));
 
 export const LETTER_TYPE_ANON = "ANON_SESSION";
