@@ -8,7 +8,6 @@ import { UserNotFoundError } from "../errors/user.error.js";
 import { findRandomUserByPool } from "../repositories/user.repository.js";
 
 export async function existsMatchingSession(userId, targetUserId, questionId) {
-  console.log(userId, targetUserId);
   const session = await prisma.matchingSession.findFirst({
     where: {
       questionId: questionId,
