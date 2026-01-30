@@ -4,7 +4,6 @@ import {
   findSelfLetters,
   findUsersNicknameByIds,
 } from "../repositories/user.repository.js";
-import { MailboxInvalidThreadIdError } from "../errors/mailbox.error.js";
 import { LETTER_TYPE_ANON, LETTER_TYPE_SELF, makePreview } from "../utils/user.util.js";
 import { findFriendById } from "../repositories/friend.repository.js";
 import { NotFriendError } from "../errors/friend.error.js";
@@ -75,9 +74,6 @@ export const getAnonymousThreads = async (userId) => {
 
 export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
   const threadId = Number(threadIdRaw);
-  if (!Number.isFinite(threadId) || threadId <= 0) {
-    throw new MailboxInvalidThreadIdError("MAILBOX_INVALID_THREAD_ID", "threadId가 올바르지 않습니다.", { threadId: threadIdRaw });
-  }
 
   const letters = await findReceivedLettersBySender({
     userId,

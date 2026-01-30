@@ -1,5 +1,6 @@
 import {
   updateOnboardingStep1,
+  createUserAgreements,
   getMyConsents,
   patchMyConsents,
   updateMyPushSubscription,
@@ -37,6 +38,21 @@ export const handlePatchOnboardingStep1 = async (req, res, next) => {
 };
 
 // ========== Consent Controllers ==========
+export const handleCreateUserAgreements = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new ProfileUnauthorizedError();
+    }
+
+    await createUserAgreements({ userId, body: req.body });
+
+    return res.status(200).success({ message: "약관 동의가 완료되었습니다." });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const handleGetMyConsents = async (req, res, next) => {
   try {
     const userId = req.user?.id;

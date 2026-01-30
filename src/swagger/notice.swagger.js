@@ -32,12 +32,11 @@
  *                             type: integer
  *                           title:
  *                             type: string
- *                           content:
+ *                           summary:
  *                             type: string
+ *                           pinned:
+ *                             type: boolean
  *                           createdAt:
- *                             type: string
- *                             format: date-time
- *                           updatedAt:
  *                             type: string
  *                             format: date-time
  */
@@ -80,14 +79,41 @@
  *                       type: string
  *                     content:
  *                       type: string
+ *                     pinned:
+ *                       type: boolean
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                     updatedAt:
- *                       type: string
- *                       format: date-time
  *       400:
- *         description: 잘못된 noticeId
+ *         description: |
+ *           잘못된 요청:
+ *           - `REQ_BAD_REQUEST`: 요청 유효성 검사 실패
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "REQ_BAD_REQUEST"
+ *                         reason:
+ *                           example: "입력값이 잘못되었습니다"
  *       404:
- *         description: 공지사항을 찾을 수 없음
+ *         description: |
+ *           공지사항을 찾을 수 없음:
+ *           - `NOTICE_NOT_FOUND`: 해당 공지사항을 찾을 수 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "NOTICE_NOT_FOUND"
+ *                         reason:
+ *                           example: "해당 공지사항을 찾을 수 없습니다."
  */
