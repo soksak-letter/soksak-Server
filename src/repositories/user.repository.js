@@ -310,6 +310,27 @@ export const upsertPushSubscription = async ({ userId, endpoint, p256dh, auth })
   });
 };
 
+export const getPushSubscription = async (userId) => {
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { 
+      userId: userId,
+      user: {
+        notificationSetting: {
+          letterEnabled: true
+        }
+      }
+    }
+  })
+
+  return subscriptions;
+}
+
+export const deletePushSubscription = async (id) => {
+  await prisma.pushSubscription.delete({
+    where: {id: id}
+  });
+}
+
 // ========== Interest Repository ==========
 export const findActiveInterests = async () => {
   return prisma.interest.findMany({
@@ -728,6 +749,13 @@ export const updateUserNicknameById = async ({ userId, nickname }) => {
     select: { id: true },
   });
 };
+
+export const updateUserPoolById = async ({id, pool}) => {
+  await prisma.user.updateMany({
+    where: { id },
+    data: { pool },
+  });
+}
 
 export const updateUserProfileImageUrlById = async ({ userId, profileImageUrl }) => {
   return prisma.user.update({
