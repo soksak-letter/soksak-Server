@@ -15,6 +15,7 @@ import { QuestionNotFoundError } from "../errors/question.error.js";
 import { findQuestionByQuestionId } from "../repositories/question.repository.js";
 import { prisma } from "../configs/db.config.js";
 import { MaxTurnIsOver, SessionCountOverError, SessionNotFoundError } from "../errors/session.error.js";
+import { sendPushNotification } from "./push.service.js";
 
 export const getLetter = async (id) => {
     const letter = await getLetterDetail(id);
@@ -70,7 +71,7 @@ export const sendLetterToOther = async (userId, data) => {
 
     const isProfane = blockBadWordsInText(data.content);
     if(isProfane) throw new LetterBadRequest("LETTER_BAD_WORD", "부적절한 단어가 포함되어있습니다.");
-
+    
     let session = await existsMatchingSession(userId, data.receiverUserId, data.questionId);
     const letterId = await prisma.$transaction(async (tx) => {
         // 친구는 아닌데 비활성화 세션일 때
@@ -112,6 +113,7 @@ export const sendLetterToOther = async (userId, data) => {
 
         return letterId
     })
+    await sendPushNotification(data.receiverUserId, "새 편지가 도착했어요!", "누군가의 편지가 도착했나봐요!");
 
     const letter = await getLetterDetail(letterId);
 

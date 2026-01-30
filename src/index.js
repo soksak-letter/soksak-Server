@@ -39,10 +39,13 @@ import { postMatchingSessionSchema, postSessionReviewSchema, patchMatchingSessio
 import { postBlockUserSchema } from "./schemas/block.schema.js";
 import { handleGetBlock, handlePostBlock } from "./controllers/block.controller.js";
 import { handleGetRestrict } from "./controllers/restrict.controller.js";
+import { configurePush } from "./configs/push.config.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
 const allowed_origins = process.env.ALLOWED_ORIGINS?.split(',') || ["http://localhost:3000"];
+
+configurePush();
 
 app.use((req, res, next) => {
   console.log("[REQ]", req.method, req.originalUrl);
@@ -200,7 +203,7 @@ app.get("/notices/:noticeId", validate(noticeIdParamSchema), handleGetNoticeDeta
 app.get("/users/me/consents", isLogin, handleGetMyConsents);
 app.patch("/users/me/consents", isLogin, validate(updateConsentsSchema), handlePatchMyConsents);
 
-// 디바이스 토큰
+// 구독객체
 app.put("/users/me/push-subscriptions", isLogin, validate(pushSubscriptionSchema), handlePutMyPushSubscription);
 
 // / 편지함
