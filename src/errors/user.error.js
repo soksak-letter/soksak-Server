@@ -1,4 +1,4 @@
-import { BadRequestError, ConflictError, NotFoundError, unauthorizedError } from "./base.error.js";
+import { BadRequestError, ConflictError, NotFoundError, unauthorizedError, ForbiddenError, InternalServerError } from "./base.error.js";
 
 /**
  * 401: 차단된 유저
@@ -147,6 +147,47 @@ export class InterestIdsInvalidError extends BadRequestError {
 // ========== Notification Errors ==========
 export class NotificationSettingsInvalidBodyError extends BadRequestError {
   constructor(code = "USER_NOTIFICATION_SETTINGS_INVALID_BODY", message = "요청 바디가 올바르지 않습니다.", data = null) {
+    super(code, message, data);
+  }
+}
+
+// ========== Storage Errors ==========
+/**
+ * 500: Object Storage 설정 오류
+ * - Private Key 파일 읽기 실패, 클라이언트 생성 실패 등
+ */
+export class StorageConfigError extends InternalServerError {
+  constructor(code = "USER_STORAGE_CONFIG_ERROR", message = "Object Storage 설정 중 오류가 발생했습니다. (Private Key 파일 읽기 실패 또는 클라이언트 생성 실패)", data = null) {
+    super(code, message, data);
+  }
+}
+
+/**
+ * 403: Object Storage 권한 오류
+ * - OCI API 401/403: 인증 실패, 접근 권한 없음
+ */
+export class StoragePermissionError extends ForbiddenError {
+  constructor(code = "USER_STORAGE_PERMISSION_DENIED", message = "Object Storage 접근 권한이 없습니다. (인증 실패 또는 Bucket/Namespace 접근 권한 없음)", data = null) {
+    super(code, message, data);
+  }
+}
+
+/**
+ * 404: Object Storage 리소스 없음
+ * - OCI API 404: Namespace, Bucket, Object 경로를 찾을 수 없음
+ */
+export class StorageNotFoundError extends NotFoundError {
+  constructor(code = "USER_STORAGE_NOT_FOUND", message = "Object Storage 리소스를 찾을 수 없습니다. (Namespace, Bucket 또는 Object 경로 오류)", data = null) {
+    super(code, message, data);
+  }
+}
+
+/**
+ * 500: Object Storage 업로드 오류
+ * - 네트워크 오류, 타임아웃, 서버 오류 등
+ */
+export class StorageUploadError extends InternalServerError {
+  constructor(code = "USER_STORAGE_UPLOAD_FAILED", message = "파일 업로드 중 오류가 발생했습니다. (네트워크 오류, 타임아웃 또는 서버 오류)", data = null) {
     super(code, message, data);
   }
 }
