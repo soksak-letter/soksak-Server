@@ -105,17 +105,6 @@ export const getMyConsents = async ({ userId }) => {
 };
 
 
-export const patchMyConsents = async ({ userId, payload }) => {
-  if (!userId) throw new ConsentUnauthorizedError();
-
-  const { termsAgreed, privacyAgreed, marketingAgreed, ageOver14Agreed } = payload ?? {};
-
-  const updateData = {};
-  if (typeof termsAgreed === "boolean") updateData.termsAgreed = termsAgreed;
-  if (typeof privacyAgreed === "boolean") updateData.privacyAgreed = privacyAgreed;
-  if (typeof marketingAgreed === "boolean") updateData.marketingAgreed = marketingAgreed;
-  if (typeof ageOver14Agreed === "boolean") updateData.ageOver14Agreed = ageOver14Agreed;
-
 export const patchMyConsents = async ({ userId, data }) => {
   const user = await findUserById(userId);
   if(!user) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");

@@ -13,7 +13,7 @@ import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriend
 import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats, handleGetLetterAssets } from "./controllers/letter.controller.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername, handleSocialLogin, handleSocialLoginCertification, handleSocialLoginCallback } from "./controllers/auth.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
-import { handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyPushSubscription, handleGetMyConsents, handlePatchMyConsents, handleUpdateActivity, } from "./controllers/user.controller.js";
+import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyPushSubscription, handleGetMyConsents, handlePatchMyConsents, handleUpdateActivity, } from "./controllers/user.controller.js";
 import { handleGetAnonymousThreads, handleGetAnonymousThreadLetters, handleGetSelfMailbox, handleGetLetterFromFriend, } from "./controllers/mailbox.controller.js";
 import { handleGetNotices, handleGetNoticeDetail, } from "./controllers/notice.controller.js";
 import { handleGetCommunityGuidelines, handleGetTerms, handleGetPrivacy, } from "./controllers/policy.controller.js";
@@ -103,17 +103,6 @@ app.get("/", (req, res) => {
 
 
 // 로그인/회원가입
-app.get("/auth/oauth/:provider", (req, res, next) => {
-  const { provider } = req.params;
-  const auth = passport.authenticate(provider, {
-    session: false,
-  });
-
-  auth(req, res, next);
-});
-
-
-app.get("/auth/callback/:provider", (req, res, next) => { const { provider } = req.params; const auth = passport.authenticate(provider, { session: false }); auth(req, res, next); }, (req, res) => { const { id, jwtAccessToken, jwtRefreshToken } = req.user; const { provider } = req.params; res.status(200).json({ resultType: "SUCCESS", error: null, success: { message: `${provider} 로그인 성공!`, id: id, tokens: { jwtAccessToken, jwtRefreshToken }, }, }); });
 
 app.get("/mypage", isLogin, (req, res) => {
   res.status(200).success({
