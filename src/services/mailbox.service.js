@@ -135,12 +135,15 @@ export const getSelfMailbox = async (userId) => {
     letterType: LETTER_TYPE_SELF,
   });
 
-  const items = letters.map((l) => ({
+  const lettersData = letters.map((l) => ({
     id: l.id,
     title: l.title,
     createdAt: l.createdAt ?? null,
+    questionId: l.questionId ?? null,
     paperId: l.design?.paperId ?? null,
+    stampId: l.design?.stampId ?? null,
+    stampUrl: l.design?.stamp?.assetUrl ?? null,
   }));
 
-  return { items };
+  return { letters: lettersData };
 };
