@@ -3,7 +3,7 @@ export const ALLOWED_JOBS = new Set(["WORKER", "STUDENT", "HOUSEWIFE", "FREELANC
 
 export const toIntArray = (arr) => arr.map((v) => Number(v));
 
-export const LETTER_TYPE_ANON = "ANON_SESSION";
+export const LETTER_TYPE_ANON = "TO_OTHER";
 export const LETTER_TYPE_SELF = "SELF";
 
 export const makePreview = (text, maxLen = 30) => {

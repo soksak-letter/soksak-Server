@@ -1,6 +1,7 @@
 import {
   findReceivedLettersForThreads,
   findReceivedLettersBySender,
+  findSentLettersByReceiver,
   findSelfLetters,
   findUsersNicknameByIds,
 } from "../repositories/user.repository.js";
@@ -43,6 +44,8 @@ export const getAnonymousThreads = async (userId) => {
         id: senderId,
         nickname: nicknameMap.get(senderId) ?? null,
       },
+      stampId: l.design?.stamp?.id ?? null,
+      stampUrl: l.design?.stamp?.assetUrl ?? null,
       design: l.design
         ? {
             paper: l.design.paper
@@ -51,15 +54,8 @@ export const getAnonymousThreads = async (userId) => {
                   name: l.design.paper.color, // color를 name으로 매핑
                 }
               : null,
-            stamp: l.design.stamp
-              ? {
-                  id: l.design.stamp.id,
-                  name: l.design.stamp.name,
-                  assetUrl: l.design.stamp.assetUrl,
-                }
-              : null,
           }
-        : { paper: null, stamp: null },
+        : { paper: null },
     };
   });
 
@@ -75,18 +71,31 @@ export const getAnonymousThreads = async (userId) => {
 export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
   const threadId = Number(threadIdRaw);
 
-  const letters = await findReceivedLettersBySender({
+  // 받은 편지 조회
+  const receivedLetters = await findReceivedLettersBySender({
     userId,
     senderUserId: threadId,
     letterType: LETTER_TYPE_ANON,
   });
 
-  const firstQuestion = letters[0]?.question?.content ?? null;
+  // 보낸 편지 조회
+  const sentLetters = await findSentLettersByReceiver({
+    userId,
+    receiverUserId: threadId,
+    letterType: LETTER_TYPE_ANON,
+  });
 
-  const lettersData = letters.map((l) => ({
+  // firstQuestion: 받은 편지의 첫 번째 질문 우선, 없으면 보낸 편지의 첫 번째 질문
+  const firstQuestion = receivedLetters[0]?.question?.content ?? sentLetters[0]?.question?.content ?? null;
+
+  // 받은 편지에 isMine: false 추가
+  const receivedLettersData = receivedLetters.map((l) => ({
     id: l.id,
     title: l.title,
     deliveredAt: l.deliveredAt ?? null,
+    isMine: false,
+    stampId: l.design?.stamp?.id ?? null,
+    stampUrl: l.design?.stamp?.assetUrl ?? null,
     design: l.design
       ? {
           paper: l.design.paper
@@ -95,16 +104,32 @@ export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
                 name: l.design.paper.color, // color를 name으로 매핑
               }
             : null,
-          stamp: l.design.stamp
+        }
+      : { paper: null },
+  }));
+
+  // 보낸 편지에 isMine: true 추가
+  const sentLettersData = sentLetters.map((l) => ({
+    id: l.id,
+    title: l.title,
+    deliveredAt: l.deliveredAt ?? null,
+    isMine: true,
+    stampId: l.design?.stamp?.id ?? null,
+    stampUrl: l.design?.stamp?.assetUrl ?? null,
+    design: l.design
+      ? {
+          paper: l.design.paper
             ? {
-                id: l.design.stamp.id,
-                name: l.design.stamp.name,
-                assetUrl: l.design.stamp.assetUrl,
+                id: l.design.paper.id,
+                name: l.design.paper.color, // color를 name으로 매핑
               }
             : null,
         }
-      : { paper: null, stamp: null },
+      : { paper: null },
   }));
+
+  // 받은 편지 먼저, 보낸 편지 나중에 배치
+  const lettersData = [...receivedLettersData, ...sentLettersData];
 
   return {
     firstQuestion,
@@ -135,12 +160,15 @@ export const getSelfMailbox = async (userId) => {
     letterType: LETTER_TYPE_SELF,
   });
 
-  const items = letters.map((l) => ({
+  const lettersData = letters.map((l) => ({
     id: l.id,
     title: l.title,
     createdAt: l.createdAt ?? null,
+    questionId: l.questionId ?? null,
     paperId: l.design?.paperId ?? null,
+    stampId: l.design?.stampId ?? null,
+    stampUrl: l.design?.stamp?.assetUrl ?? null,
   }));
 
-  return { items };
+  return { letters: lettersData };
 };
