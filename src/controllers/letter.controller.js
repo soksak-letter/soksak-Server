@@ -75,11 +75,9 @@ export const handleGetPublicLetterFromOther = async (req, res, next) => {
 }
 
 export const handleGetPublicLetterFromFriend = async (req, res, next) => {
-    console.log(req.query.detail);
     const userId = req.user.id;
     const isDetail = req.query.detail;
     const date = req.query.date;
-    console.log(isDetail);
 
     try{
         const letters = await getPublicLetterFromFriend({userId, date, isDetail});
