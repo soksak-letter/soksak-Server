@@ -45,20 +45,17 @@
  *                                 type: string
  *                                 format: date-time
  *                                 nullable: true
+ *                               stampId:
+ *                                 type: integer
+ *                                 nullable: true
+ *                               stampUrl:
+ *                                 type: string
+ *                                 nullable: true
+ *                                 description: 스탬프 이미지 URL
  *                               design:
  *                                 type: object
  *                                 properties:
  *                                   paper:
- *                                     type: object
- *                                     nullable: true
- *                                     properties:
- *                                       id:
- *                                         type: integer
- *                                       name:
- *                                         type: string
- *                                       assetUrl:
- *                                         type: string
- *                                   stamp:
  *                                     type: object
  *                                     nullable: true
  *                                     properties:
@@ -198,6 +195,16 @@
  *                                 type: string
  *                                 format: date-time
  *                                 nullable: true
+ *                               isMine:
+ *                                 type: boolean
+ *                                 description: 내가 보낸 편지인지 여부
+ *                               stampId:
+ *                                 type: integer
+ *                                 nullable: true
+ *                               stampUrl:
+ *                                 type: string
+ *                                 nullable: true
+ *                                 description: 스탬프 이미지 URL
  *                               design:
  *                                 type: object
  *                                 properties:
@@ -208,16 +215,6 @@
  *                                       id:
  *                                         type: integer
  *                                       name:
- *                                         type: string
- *                                   stamp:
- *                                     type: object
- *                                     nullable: true
- *                                     properties:
- *                                       id:
- *                                         type: integer
- *                                       name:
- *                                         type: string
- *                                       assetUrl:
  *                                         type: string
  *       400:
  *         description: |
@@ -514,7 +511,7 @@
  *                     success:
  *                       type: object
  *                       properties:
- *                         items:
+ *                         letters:
  *                           type: array
  *                           items:
  *                             type: object
@@ -527,10 +524,20 @@
  *                                 type: string
  *                                 format: date-time
  *                                 nullable: true
+ *                               questionId:
+ *                                 type: integer
+ *                                 nullable: true
  *                               paperId:
  *                                 type: integer
  *                                 nullable: true
  *                                 description: 편지통 색상
+ *                               stampId:
+ *                                 type: integer
+ *                                 nullable: true
+ *                               stampUrl:
+ *                                 type: string
+ *                                 nullable: true
+ *                                 description: 스탬프 이미지 URL
  *       401:
  *         description: |
  *           인증 실패:
