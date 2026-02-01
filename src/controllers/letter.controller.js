@@ -1,8 +1,11 @@
 import { addLetterLike, getLetter, getLetterAssets, getPublicLetterFromFriend, getPublicLetterFromOther, getUserLetterStats, removeLetterLike, sendLetterToMe, sendLetterToOther } from "../services/letter.service.js";
 
 export const handleGetLetterDetail = async (req, res, next) => {
+    const userId = req.user.id;
+    const letterId = parseInt(req.params.letterId);
+
     try{
-        const letter = await getLetter(parseInt(req.params.letterId));
+        const letter = await getLetter({userId, letterId});
         
         res.status(200).success(letter);
     } catch(err) {

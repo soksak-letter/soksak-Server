@@ -1,7 +1,7 @@
 import { UserNotFoundError } from "../errors/user.error.js";
 import { DuplicatedValueError } from "../errors/base.error.js";
 import { selectAllFriendsByUserId } from "../repositories/friend.repository.js";
-import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getLetterDetail, getPublicLetters } from "../repositories/letter.repository.js"
+import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getLetterDetail, getPublicLetters, updateLetter } from "../repositories/letter.repository.js"
 import { createLetterLike, deleteLetterLike, findLetterLike } from "../repositories/like.repository.js";
 import { findRandomUserByPool, findUserById } from "../repositories/user.repository.js";
 import { getDayStartAndEnd, getMonthAndWeek, getToday, getWeekStartAndEnd } from "../utils/date.util.js";
@@ -16,12 +16,13 @@ import { findQuestionByQuestionId } from "../repositories/question.repository.js
 import { prisma } from "../configs/db.config.js";
 import { SessionCountOverError, SessionNotFoundError } from "../errors/session.error.js";
 import { sendPushNotification } from "./push.service.js";
-import { nullable } from "zod";
 
-export const getLetter = async (id) => {
-    const letter = await getLetterDetail(id);
+export const getLetter = async ({userId, letterId}) => {
+    const {letter, receiverUserId, readAt} = await getLetterDetail(letterId);
     if(!letter) throw new LetterNotFound("LETTER_NOT_FOUND", "작성되지 않은 편지입니다.");
-    
+
+    if(userId == receiverUserId && !readAt) await updateLetter({id: letter.id, data: { readAt: new Date() }});
+
     return letter;
 }
 

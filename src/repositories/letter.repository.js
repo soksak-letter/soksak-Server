@@ -5,9 +5,11 @@ export const getLetterDetail = async (id) => {
     const letter = await prisma.letter.findFirst({
         select: {
             id: true,
+            receiverUserId: true,
             title: true,
             content: true,
             deliveredAt: true,
+            readAt: true,
             question: {
                 select: {
                     content: true
@@ -45,26 +47,30 @@ export const getLetterDetail = async (id) => {
     if(!letter) return null;
 
     return {
-        id: letter.id,
-        title: letter.title,
-        content: letter.title,
-        deliveredAt: letter.deliveredAt,
-        question: letter?.question.content,
-        design: {
-            paper: {
-                id: letter?.design?.paper?.id,
-                color: letter?.design?.paper?.color,
-            },
-            stamp: {
-                id: letter?.design?.stamp?.id,
-                name: letter?.design?.stamp?.name,
-                assetUrl: letter?.design?.stamp?.assetUrl
-            },
-            font: {
-                id: letter?.design?.font?.id,
-                font: letter?.design?.font?.font,
+        letter: {
+            id: letter.id,
+            title: letter.title,
+            content: letter.title,
+            deliveredAt: letter.deliveredAt,
+            question: letter?.question.content,
+            design: {
+                paper: {
+                    id: letter?.design?.paper?.id,
+                    color: letter?.design?.paper?.color,
+                },
+                stamp: {
+                    id: letter?.design?.stamp?.id,
+                    name: letter?.design?.stamp?.name,
+                    assetUrl: letter?.design?.stamp?.assetUrl
+                },
+                font: {
+                    id: letter?.design?.font?.id,
+                    font: letter?.design?.font?.font,
+                }
             }
-        }
+        },
+        receiverUserId: letter.receiverUserId, 
+        readAt: letter.readAt
     }
 }
 
@@ -380,4 +386,16 @@ export const sendReservedLetter = async ({startTime, endTime}) => {
     })
 
     return updatedLetters;
+}
+
+export const updateLetter = async ({id, data}) => {
+    console.log(data);
+    await prisma.letter.update({
+        where: {
+            id
+        },
+        data: {
+            ...data
+        }
+    })
 }
