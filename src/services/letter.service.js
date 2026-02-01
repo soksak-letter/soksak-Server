@@ -9,12 +9,12 @@ import { getLevelInfo } from "../constants/planet.constant.js";
 import { blockBadWordsInText } from "../utils/profanity.util.js";
 import { LetterBadRequest, LetterNotFound } from "../errors/letter.error.js";
 import { findLetterAssets } from "../repositories/asset.repository.js";
-import { countMatchingSessionByUserId, decrementSessionTurn, existsMatchingSession, updateMatchingSessionToChating } from "../repositories/session.repository.js";
+import { countMatchingSessionWhichChating, decrementSessionTurn, existsMatchingSession, updateMatchingSessionToChating } from "../repositories/session.repository.js";
 import { createMatchingSession } from "./session.service.js";
 import { QuestionNotFoundError } from "../errors/question.error.js";
 import { findQuestionByQuestionId } from "../repositories/question.repository.js";
 import { prisma } from "../configs/db.config.js";
-import { MaxTurnIsOver, SessionCountOverError, SessionNotFoundError } from "../errors/session.error.js";
+import { SessionCountOverError, SessionNotFoundError } from "../errors/session.error.js";
 import { sendPushNotification } from "./push.service.js";
 
 export const getLetter = async (id) => {
@@ -59,9 +59,6 @@ export const sendLetterToOther = async (userId, data) => {
         if (!data.receiverUserId) throw new SessionNotFoundError("SESSION_CANDIDATE_NOT_FOUND", "채팅할 수 있는 상대가 없습니다.");
     }
 
-    const count = await countMatchingSessionByUserId(userId);
-    if(count >= 10) throw new SessionCountOverError("SESSION_COUNTOVER_ERROR", "세션이 10개 이상입니다.");
-
     const question = await findQuestionByQuestionId(data.questionId);
     if(question == null) throw new QuestionNotFoundError("QUESTION_NOT_FOUND", "해당 질문을 찾을 수 없습니다.");
 
@@ -72,7 +69,8 @@ export const sendLetterToOther = async (userId, data) => {
     const isProfane = blockBadWordsInText(data.content);
     if(isProfane) throw new LetterBadRequest("LETTER_BAD_WORD", "부적절한 단어가 포함되어있습니다.");
     
-    let session = await existsMatchingSession(userId, data.receiverUserId, data.questionId);
+    let session = await existsMatchingSession(userId, data.receiverUserId);
+
     const letterId = await prisma.$transaction(async (tx) => {
         // 친구는 아닌데 비활성화 세션일 때
         if(session?.status === "PENDING") {
@@ -87,6 +85,9 @@ export const sendLetterToOther = async (userId, data) => {
         
         // 친구도 아니고 채팅중도 아닐 때
         if(!session){
+            const count = await countMatchingSessionWhichChating(userId);
+            if(count >= 10) throw new SessionCountOverError("SESSION_COUNTOVER_ERROR", "세션이 10개 이상입니다.");
+
             session = await createMatchingSession(userId, data.receiverUserId, data.questionId, tx);
             await decrementSessionTurn(session.id, tx);
         }

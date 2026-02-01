@@ -4,7 +4,7 @@ import {
   updateMatchingSessionToDiscard,
   updateMatchingSessionToFriends,
   findSessionParticipantByUserIdAndSessionId,
-  countMatchingSessionByUserId
+  countMatchingSessionWhichChating
 } from "../repositories/session.repository.js";
 import {
   SessionCountOverError,
@@ -136,8 +136,8 @@ export const createSessionReview = async (
   }
 };
 
-export const countUserSession = (userId) => {
-  const count = countMatchingSessionByUserId(userId);
+export const countUserSession = async (userId) => {
+  const count = await countMatchingSessionWhichChating(userId);
 
   return count;
 } 
