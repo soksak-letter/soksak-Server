@@ -251,10 +251,22 @@ export const countLetterStatsForWeek = async ({userId, weekStart, weekEnd}) => {
             _count: {
                 select: {
                     sentLetters: {
-                        where: { createdAt: { gte: weekStart, lte: weekEnd } }
+                        where: { 
+                            createdAt: { 
+                                gte: weekStart, 
+                                lte: weekEnd 
+                            } 
+                        }
                     },
                     receivedLetters: {
-                        where: { deliveredAt: { gte: weekStart, lte: weekEnd }, status: "DELIVERED" }
+                        where: { 
+                            deliveredAt: { 
+                                gte: weekStart, 
+                                lte: weekEnd 
+                            }, 
+                            status: "DELIVERED" ,
+                            letterType: "TO_OTHER"
+                        }
                     }
                 }
             }
