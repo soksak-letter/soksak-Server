@@ -44,6 +44,8 @@ export const getAnonymousThreads = async (userId) => {
         id: senderId,
         nickname: nicknameMap.get(senderId) ?? null,
       },
+      stampId: l.design?.stamp?.id ?? null,
+      stampUrl: l.design?.stamp?.assetUrl ?? null,
       design: l.design
         ? {
             paper: l.design.paper
@@ -52,15 +54,8 @@ export const getAnonymousThreads = async (userId) => {
                   name: l.design.paper.color, // color를 name으로 매핑
                 }
               : null,
-            stamp: l.design.stamp
-              ? {
-                  id: l.design.stamp.id,
-                  name: l.design.stamp.name,
-                  assetUrl: l.design.stamp.assetUrl,
-                }
-              : null,
           }
-        : { paper: null, stamp: null },
+        : { paper: null },
     };
   });
 
@@ -99,6 +94,8 @@ export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
     title: l.title,
     deliveredAt: l.deliveredAt ?? null,
     isMine: false,
+    stampId: l.design?.stamp?.id ?? null,
+    stampUrl: l.design?.stamp?.assetUrl ?? null,
     design: l.design
       ? {
           paper: l.design.paper
@@ -107,15 +104,8 @@ export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
                 name: l.design.paper.color, // color를 name으로 매핑
               }
             : null,
-          stamp: l.design.stamp
-            ? {
-                id: l.design.stamp.id,
-                name: l.design.stamp.name,
-                assetUrl: l.design.stamp.assetUrl,
-              }
-            : null,
         }
-      : { paper: null, stamp: null },
+      : { paper: null },
   }));
 
   // 보낸 편지에 isMine: true 추가
@@ -124,6 +114,8 @@ export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
     title: l.title,
     deliveredAt: l.deliveredAt ?? null,
     isMine: true,
+    stampId: l.design?.stamp?.id ?? null,
+    stampUrl: l.design?.stamp?.assetUrl ?? null,
     design: l.design
       ? {
           paper: l.design.paper
@@ -132,15 +124,8 @@ export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
                 name: l.design.paper.color, // color를 name으로 매핑
               }
             : null,
-          stamp: l.design.stamp
-            ? {
-                id: l.design.stamp.id,
-                name: l.design.stamp.name,
-                assetUrl: l.design.stamp.assetUrl,
-              }
-            : null,
         }
-      : { paper: null, stamp: null },
+      : { paper: null },
   }));
 
   // 받은 편지 먼저, 보낸 편지 나중에 배치

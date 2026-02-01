@@ -45,20 +45,17 @@
  *                                 type: string
  *                                 format: date-time
  *                                 nullable: true
+ *                               stampId:
+ *                                 type: integer
+ *                                 nullable: true
+ *                               stampUrl:
+ *                                 type: string
+ *                                 nullable: true
+ *                                 description: 스탬프 이미지 URL
  *                               design:
  *                                 type: object
  *                                 properties:
  *                                   paper:
- *                                     type: object
- *                                     nullable: true
- *                                     properties:
- *                                       id:
- *                                         type: integer
- *                                       name:
- *                                         type: string
- *                                       assetUrl:
- *                                         type: string
- *                                   stamp:
  *                                     type: object
  *                                     nullable: true
  *                                     properties:
@@ -201,6 +198,13 @@
  *                               isMine:
  *                                 type: boolean
  *                                 description: 내가 보낸 편지인지 여부
+ *                               stampId:
+ *                                 type: integer
+ *                                 nullable: true
+ *                               stampUrl:
+ *                                 type: string
+ *                                 nullable: true
+ *                                 description: 스탬프 이미지 URL
  *                               design:
  *                                 type: object
  *                                 properties:
@@ -211,16 +215,6 @@
  *                                       id:
  *                                         type: integer
  *                                       name:
- *                                         type: string
- *                                   stamp:
- *                                     type: object
- *                                     nullable: true
- *                                     properties:
- *                                       id:
- *                                         type: integer
- *                                       name:
- *                                         type: string
- *                                       assetUrl:
  *                                         type: string
  *       400:
  *         description: |
