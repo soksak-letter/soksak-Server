@@ -10,7 +10,7 @@ import { findRandomUserByPool } from "../repositories/user.repository.js";
 export async function existsMatchingSession(userId, targetUserId) {
   const session = await prisma.matchingSession.findFirst({
     where: {
-      status: { notIn: ["FRIENDS", "DISCARDED"]},
+      status: { notIn: ["DISCARDED"]},
       AND: [
         { participants: { some: { userId: userId } } },
         { participants: { some: { userId: targetUserId } } },

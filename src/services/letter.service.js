@@ -16,6 +16,7 @@ import { findQuestionByQuestionId } from "../repositories/question.repository.js
 import { prisma } from "../configs/db.config.js";
 import { SessionCountOverError, SessionNotFoundError } from "../errors/session.error.js";
 import { sendPushNotification } from "./push.service.js";
+import { nullable } from "zod";
 
 export const getLetter = async (id) => {
     const letter = await getLetterDetail(id);
@@ -56,54 +57,58 @@ export const sendLetterToMe = async (userId, data) => {
 export const sendLetterToOther = async (userId, data) => {
     if(!data?.receiverUserId) {
         data.receiverUserId = await findRandomUserByPool(userId);
-        if (!data.receiverUserId) throw new SessionNotFoundError("SESSION_CANDIDATE_NOT_FOUND", "채팅할 수 있는 상대가 없습니다.");
     }
 
     const question = await findQuestionByQuestionId(data.questionId);
     if(question == null) throw new QuestionNotFoundError("QUESTION_NOT_FOUND", "해당 질문을 찾을 수 없습니다.");
 
-    const receiver = await findUserById(data.receiverUserId);
-    if(!receiver) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
-    if(userId === receiver.id) throw new DuplicatedValueError("USER_DUPLICATED_ID", "전송하는 유저와 전달받는 유저의 ID가 같습니다", "id");
-
     const isProfane = blockBadWordsInText(data.content);
     if(isProfane) throw new LetterBadRequest("LETTER_BAD_WORD", "부적절한 단어가 포함되어있습니다.");
     
-    let session = await existsMatchingSession(userId, data.receiverUserId);
+    let session = null;
+    if(data.receiverUserId) {
+        const receiver = await findUserById(data.receiverUserId);
+        if(!receiver) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
+        if(userId === receiver.id) throw new DuplicatedValueError("USER_DUPLICATED_ID", "전송하는 유저와 전달받는 유저의 ID가 같습니다", "id");
+
+        session = await existsMatchingSession(userId, data.receiverUserId);
+    }
 
     const letterId = await prisma.$transaction(async (tx) => {
-        // 친구는 아닌데 비활성화 세션일 때
-        if(session?.status === "PENDING") {
-            await updateMatchingSessionToChating(session.id, tx)
-            await decrementSessionTurn(session.id, tx);
-        }
+        if(data.receiverUserId) {
+            // 친구는 아닌데 비활성화 세션일 때
+            if(session?.status === "PENDING") {
+                await updateMatchingSessionToChating(session.id, tx)
+                await decrementSessionTurn(session.id, tx);
+            }
 
-        // 친구는 아닌데 채팅중일 때
-        if(session?.status === "CHATING") {
-            await decrementSessionTurn(session.id, tx);
-        }
-        
-        // 친구도 아니고 채팅중도 아닐 때
-        if(!session){
-            const count = await countMatchingSessionWhichChating(userId);
-            if(count >= 10) throw new SessionCountOverError("SESSION_COUNTOVER_ERROR", "세션이 10개 이상입니다.");
+            // 친구는 아닌데 채팅중일 때
+            if(session?.status === "CHATING") {
+                await decrementSessionTurn(session.id, tx);
+            }
+            
+            // 친구도 아니고 채팅중도 아닐 때
+            if(!session){
+                const count = await countMatchingSessionWhichChating(userId);
+                if(count >= 10) throw new SessionCountOverError("SESSION_COUNTOVER_ERROR", "세션이 10개 이상입니다.");
 
-            session = await createMatchingSession(userId, data.receiverUserId, data.questionId, tx);
-            await decrementSessionTurn(session.id, tx);
+                session = await createMatchingSession(userId, data.receiverUserId, data.questionId, tx);
+                await decrementSessionTurn(session.id, tx);
+            }
         }
 
         const letterId = await createLetter({
             letter: {
                 senderUserId: userId,
-                receiverUserId: data.receiverUserId,
-                sessionId: session.id,
+                receiverUserId: data.receiverUserId || null,
+                sessionId: session?.id || null,
                 letterType: "TO_OTHER",
                 questionId: data.questionId,
                 title: data.title,
                 content: data.content,
                 isPublic: data.isPublic,
-                status: "DELIVERED",
-                deliveredAt: new Date()
+                status: data.receiverUserId ? "DELIVERED" : "QUEUED",
+                deliveredAt: data.receiverUserId ? new Date() : null
             },
             design: {
                 paperId: data.paperId,
@@ -114,7 +119,10 @@ export const sendLetterToOther = async (userId, data) => {
 
         return letterId
     })
-    await sendPushNotification(data.receiverUserId, "새 편지가 도착했어요!", "누군가의 편지가 도착했나봐요!");
+
+    if (data.receiverUserId) {
+        await sendPushNotification(data.receiverUserId, "새 편지가 도착했어요!", "누군가의 편지가 도착했나봐요!");
+    }
 
     const letter = await getLetterDetail(letterId);
 
