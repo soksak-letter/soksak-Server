@@ -1,10 +1,15 @@
+import { NOTIFICATION_MESSAGES } from "../constants/push.constant.js";
 import { deletePushSubscription, getPushSubscription } from "../repositories/user.repository.js"
 import webpush from "web-push"
 
-export const sendPushNotification = async (userId, title, body) => {
+export const sendPushNotification = async ({userId, type, data = {}}) => {
     const subscriptions = await getPushSubscription(userId);
     if(subscriptions.length === 0)  return;
-    console.log(subscriptions);
+
+    const messageConfig = NOTIFICATION_MESSAGES[type];
+    const title = messageConfig.TITLE(data);
+    const body = messageConfig.BODY(data);
+
     const payload = JSON.stringify({
         title,
         body,
@@ -28,10 +33,8 @@ export const sendPushNotification = async (userId, title, body) => {
                     if (err.statusCode === 410 || err.statusCode === 404) {
                         await deletePushSubscription(sub.id);
                     }
+                    throw err;
                 });
         })
     )
-    console.log("=================전송 완료===================");
-
-    console.log(results);
 }

@@ -1,9 +1,9 @@
 import { UserNotFoundError } from "../errors/user.error.js";
 import { DuplicatedValueError } from "../errors/base.error.js";
-import { selectAllFriendsByUserId } from "../repositories/friend.repository.js";
+import { findFriendById, selectAllFriendsByUserId } from "../repositories/friend.repository.js";
 import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getLetterDetail, getPublicLetters, updateLetter } from "../repositories/letter.repository.js"
 import { createLetterLike, deleteLetterLike, findLetterLike } from "../repositories/like.repository.js";
-import { findRandomUserByPool, findUserById } from "../repositories/user.repository.js";
+import { findRandomUserByPool, findUserByIdForProfile } from "../repositories/user.repository.js";
 import { getDayStartAndEnd, getMonthAndWeek, getToday, getWeekStartAndEnd } from "../utils/date.util.js";
 import { getLevelInfo } from "../constants/planet.constant.js";
 import { blockBadWordsInText } from "../utils/profanity.util.js";
@@ -18,10 +18,24 @@ import { SessionCountOverError, SessionNotFoundError } from "../errors/session.e
 import { sendPushNotification } from "./push.service.js";
 
 export const getLetter = async ({userId, letterId}) => {
-    const {letter, receiverUserId, readAt} = await getLetterDetail(letterId);
+    const {letter, receiverUserId, senderUserId, readAt} = await getLetterDetail(letterId);
     if(!letter) throw new LetterNotFound("LETTER_NOT_FOUND", "작성되지 않은 편지입니다.");
 
-    if(userId == receiverUserId && !readAt) await updateLetter({id: letter.id, data: { readAt: new Date() }});
+    if(userId == receiverUserId && !readAt) {
+        await updateLetter({id: letter.id, data: { readAt: new Date() }});
+
+        const friend = await findFriendById(receiverUserId);
+
+        await sendPushNotification({
+            userId: senderUserId, 
+            type: "READ_CONFIRMATION",
+            data: {
+                isFriend: !!friend,
+                nickname: friend?.nickname
+            }
+        });
+
+    }
 
     return letter;
 }
@@ -67,8 +81,9 @@ export const sendLetterToOther = async (userId, data) => {
     if(isProfane) throw new LetterBadRequest("LETTER_BAD_WORD", "부적절한 단어가 포함되어있습니다.");
     
     let session = null;
+    let receiver = null;
     if(data.receiverUserId) {
-        const receiver = await findUserById(data.receiverUserId);
+        receiver = await findUserByIdForProfile(data.receiverUserId);
         if(!receiver) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
         if(userId === receiver.id) throw new DuplicatedValueError("USER_DUPLICATED_ID", "전송하는 유저와 전달받는 유저의 ID가 같습니다", "id");
 
@@ -80,7 +95,7 @@ export const sendLetterToOther = async (userId, data) => {
             // 친구는 아닌데 비활성화 세션일 때
             if(session?.status === "PENDING") {
                 await updateMatchingSessionToChating(session.id, tx)
-                await decrementSessionTurn(session.id, tx);
+                session.status = "CHATING";
             }
 
             // 친구는 아닌데 채팅중일 때
@@ -120,9 +135,18 @@ export const sendLetterToOther = async (userId, data) => {
 
         return letterId
     })
+    console.log(session);
 
-    if (data.receiverUserId) {
-        await sendPushNotification(data.receiverUserId, "새 편지가 도착했어요!", "누군가의 편지가 도착했나봐요!");
+    // 매칭잡혔을 때 푸시알림 전송
+    if (data.receiverUserId) {  
+        await sendPushNotification({
+            userId: data.receiverUserId, 
+            type: "NEW_LETTER",
+            data: {
+                nickname: receiver.nickname,
+                status: session.status
+            }
+        });
     }
 
     const letter = await getLetterDetail(letterId);

@@ -6,6 +6,7 @@ export const getLetterDetail = async (id) => {
         select: {
             id: true,
             receiverUserId: true,
+            senderUserId: true,
             title: true,
             content: true,
             deliveredAt: true,
@@ -70,6 +71,7 @@ export const getLetterDetail = async (id) => {
             }
         },
         receiverUserId: letter.receiverUserId, 
+        senderUserId: letter.senderUserId,
         readAt: letter.readAt
     }
 }
