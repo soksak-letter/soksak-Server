@@ -221,7 +221,7 @@ export const getPublicLetters = async ({ids, userId, startTime, endTime, isFrien
         orderBy: {
             deliveredAt: 'desc'
         },
-        take: isDetail ? undefined : 3
+        take: isDetail ? undefined : 4
     })
 
     return letters.map(letter => ({ 

@@ -150,7 +150,7 @@ export const getPublicLetterFromOther = async ({userId, date, isDetail}) => {
 
     const {startTime, endTime} = getDayStartAndEnd(date);
 
-    const letters = await getPublicLetters({ids: [...friendIds, userId], userId, startTime, endTime, isDetail});
+    const letters = await getPublicLetters({ids: [...friendIds], userId, startTime, endTime, isDetail});
 
     return letters;
 }
