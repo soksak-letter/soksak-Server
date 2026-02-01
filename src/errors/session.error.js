@@ -40,9 +40,9 @@ export class SessionNotFoundError extends NotFoundError {
 }
 
 /**
- * 500: 세션 개수 초과 (SESSION_500_03)
+ * 400: 세션 개수 초과
  */
-export class SessionCountOverError extends InternalServerError {
+export class SessionCountOverError extends BadRequestError {
   constructor(code = "SESSION_COUNTOVER_ERROR", message = "세션이 10개 이상입니다.", data = null) {
         super(code, message, data);
   }

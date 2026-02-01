@@ -24,8 +24,8 @@ import { emailSchema, loginSchema, passwordSchema, SignUpSchema, usernameSchema,
 import { handleInsertInquiryAsUser, handleInsertInquiryAsAdmin, handleGetInquiry, handleGetInquiryDetail } from "./controllers/inquiry.controller.js";
 import { isLogin } from "./middlewares/auth.middleware.js";
 import { isRestricted } from "./middlewares/restriction.middleware.js";
-import { letterToMeSchema, letterToOtherSchema } from "./schemas/letter.schema.js";
-import { idParamSchema } from "./schemas/common.schema.js";
+import { letterToMeSchema, letterToOtherSchema, publicCarouselSchema } from "./schemas/letter.schema.js";
+import { idParamSchema, ISOTimeSchema } from "./schemas/common.schema.js";
 import { pushSubscriptionSchema, onboardingStep1Schema, updateInterestsSchema, updateProfileSchema, updateNotificationSettingsSchema, updateConsentsSchema, updateActivitySchema, createUserAgreementsSchema } from "./schemas/user.schema.js";
 import { threadIdParamSchema } from "./schemas/mailbox.schema.js";
 import { noticeIdParamSchema } from "./schemas/notice.schema.js";
@@ -172,12 +172,12 @@ app.get("/letters/:letterId", isLogin, isRestricted, validate(idParamSchema("let
 app.post("/letters/:letterId/like", isLogin, isRestricted, validate(idParamSchema("letterId")), handleAddLetterLike);                // 편지 좋아요 추가
 app.delete("/letters/:letterId/like", isLogin, isRestricted, validate(idParamSchema("letterId")), handleRemoveLetterLike);           // 편지 좋아요 삭제
 
-app.get("/questions/today", handleGetTodayQuestion);       // 오늘의 질문 조회
-app.get("/letters/others/public", isLogin, isRestricted, handleGetPublicLetterFromOther);       // 공개 편지 캐러셀 목록 조회
-app.get("/letters/friends/public", isLogin, isRestricted, handleGetPublicLetterFromFriend);     // 친구 편지 캐러셀 목록 조회
-app.get("/users/me/letters/stats", isLogin, isRestricted, handleGetUserLetterStats)  // 편지 여행 카드 데이터 조회
+app.get("/questions/today", validate(ISOTimeSchema), handleGetTodayQuestion);       // 오늘의 질문 조회
+app.get("/letters/others/public", isLogin, isRestricted, validate(publicCarouselSchema), handleGetPublicLetterFromOther);       // 공개 편지 캐러셀 목록 조회
+app.get("/letters/friends/public", isLogin, isRestricted, validate(publicCarouselSchema), handleGetPublicLetterFromFriend);     // 친구 편지 캐러셀 목록 조회
+app.get("/users/me/letters/stats", isLogin, isRestricted, validate(ISOTimeSchema), handleGetUserLetterStats)  // 편지 여행 카드 데이터 조회
 
-app.get("/home/summary", isLogin, isRestricted, HandleGetHomeDashboard);  // 홈 대시보드 조회
+app.get("/home/summary", isLogin, isRestricted, validate(ISOTimeSchema), HandleGetHomeDashboard);  // 홈 대시보드 조회
 
 // 온보딩 설정
 app.patch("/users/me/onboarding", isLogin, validate(onboardingStep1Schema), handlePatchOnboardingStep1);

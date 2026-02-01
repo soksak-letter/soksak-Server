@@ -4,7 +4,7 @@ import { selectAllFriendsByUserId } from "../repositories/friend.repository.js";
 import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getLetterDetail, getPublicLetters } from "../repositories/letter.repository.js"
 import { createLetterLike, deleteLetterLike, findLetterLike } from "../repositories/like.repository.js";
 import { findRandomUserByPool, findUserById } from "../repositories/user.repository.js";
-import { getMonthAndWeek, getWeekStartAndEnd } from "../utils/date.util.js";
+import { getDayStartAndEnd, getMonthAndWeek, getToday, getWeekStartAndEnd } from "../utils/date.util.js";
 import { getLevelInfo } from "../constants/planet.constant.js";
 import { blockBadWordsInText } from "../utils/profanity.util.js";
 import { LetterBadRequest, LetterNotFound } from "../errors/letter.error.js";
@@ -60,7 +60,7 @@ export const sendLetterToOther = async (userId, data) => {
     }
 
     const count = await countMatchingSessionByUserId(userId);
-    if(count >= 10) throw new MaxTurnIsOver("SESSION_MAX_TURN", "편지를 주고 받은 횟수가 10번이 되었습니다.");
+    if(count >= 10) throw new SessionCountOverError("SESSION_COUNTOVER_ERROR", "세션이 10개 이상입니다.");
 
     const question = await findQuestionByQuestionId(data.questionId);
     if(question == null) throw new QuestionNotFoundError("QUESTION_NOT_FOUND", "해당 질문을 찾을 수 없습니다.");
@@ -144,32 +144,36 @@ export const removeLetterLike = async ({userId, letterId}) => {
     }
 }
 
-export const getPublicLetterFromOther = async (userId, isDetail) => {
+export const getPublicLetterFromOther = async ({userId, date, isDetail}) => {
     const friends = await selectAllFriendsByUserId(userId);
     const friendIds = friends.map(friend => friend.friendUserId);
 
-    const letters = await getPublicLetters({ids: [...friendIds, userId], userId, isDetail});
+    const {startTime, endTime} = getDayStartAndEnd(date);
+
+    const letters = await getPublicLetters({ids: [...friendIds, userId], userId, startTime, endTime, isDetail});
 
     return letters;
 }
 
-export const getPublicLetterFromFriend = async (userId, isDetail) => {
+export const getPublicLetterFromFriend = async ({userId, date, isDetail}) => {
     const friends = await selectAllFriendsByUserId(userId);
     const friendIds = friends.map(friend => friend.friendUserId);
 
-    const letters = await getPublicLetters({ids: [...friendIds], userId, isFriendOnly: true, isDetail});
+    const {startTime, endTime} = getDayStartAndEnd(date);
+
+    const letters = await getPublicLetters({ids: [...friendIds], userId, isFriendOnly: true, startTime, endTime, isDetail});
 
     return letters;
 }
 
-export const getUserLetterStats = async (userId) => {
-    const today = new Date();
+export const getUserLetterStats = async (userId, date) => {
+    const {weekStart, weekEnd} = getWeekStartAndEnd(date);
+    const today = getToday(date);
 
-    const {weekStart, weekEnd} = getWeekStartAndEnd(today);
     const counts = await countLetterStatsForWeek({userId, weekStart, weekEnd});
-    const totalSentCount = await countTotalSentLetter(userId);
+    const totalSentCount = await countTotalSentLetter(userId, today);
 
-    const {month, week} = getMonthAndWeek(today);
+    const {month, week} = getMonthAndWeek(date);
 
     const info = getLevelInfo(totalSentCount);
 
