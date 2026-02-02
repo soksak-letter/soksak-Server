@@ -390,9 +390,8 @@ export const sendReservedLetter = async ({startTime, endTime}) => {
     return updatedLetters;
 }
 
-export const updateLetter = async ({id, data}) => {
-    console.log(data);
-    await prisma.letter.update({
+export const updateLetter = async ({id, data}, tx = prisma) => {
+    await tx.letter.update({
         where: {
             id
         },

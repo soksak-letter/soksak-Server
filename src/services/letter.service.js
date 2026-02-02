@@ -16,6 +16,8 @@ import { findQuestionByQuestionId } from "../repositories/question.repository.js
 import { prisma } from "../configs/db.config.js";
 import { SessionCountOverError, SessionNotFoundError } from "../errors/session.error.js";
 import { sendPushNotification } from "./push.service.js";
+import { letterQueue } from "../jobs/bootstraps/letter.bootstrap.js";
+import { enqueueJob } from "../utils/queue.util.js";
 
 export const getLetter = async ({userId, letterId}) => {
     const {letter, receiverUserId, senderUserId, readAt} = await getLetterDetail(letterId);
@@ -135,7 +137,6 @@ export const sendLetterToOther = async (userId, data) => {
 
         return letterId
     })
-    console.log(session);
 
     // 매칭잡혔을 때 푸시알림 전송
     if (data.receiverUserId) {  
@@ -146,6 +147,13 @@ export const sendLetterToOther = async (userId, data) => {
                 nickname: receiver.nickname,
                 status: session.status
             }
+        });
+    } else {
+        // 매칭이 잡히지 않았을 때 큐에 작업 추가
+        await enqueueJob(letterQueue, "MATCH_BY_LETTER", {
+            letterId, 
+            userId, 
+            questionId: data.questionId
         });
     }
 
@@ -226,4 +234,23 @@ export const getLetterAssets = async () => {
     const assets = await findLetterAssets();
 
     return assets;
+}
+
+export const sendQueuedLetters = async (data) => {
+    const receiverUserId = await findRandomUserByPool(data.userId);
+    if(!receiverUserId) throw new Error("매칭 상대 없음");
+
+    const count = await countMatchingSessionWhichChating(data.userId);
+    if(count >= 10) throw new SessionCountOverError("SESSION_COUNTOVER_ERROR", "세션이 10개 이상입니다.");
+
+    await prisma.$transaction(async (tx) => {
+        const session = await createMatchingSession(data.userId, receiverUserId, data.questionId, tx);
+        await decrementSessionTurn(session.id, tx);
+        await updateLetter({id: data.letterId, data: { 
+            status: "DELIVERED", 
+            receiverUserId, 
+            sessionId: session.id,
+            deliveredAt: new Date()
+        }}, tx);
+    })
 }
