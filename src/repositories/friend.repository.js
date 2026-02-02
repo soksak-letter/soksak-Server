@@ -46,9 +46,9 @@ export async function selectFriendsRequestByUserId(userId) {
   });
   return result.map((r) => ({
     id: r.id,
-    nickname: r.receiver?.nickname ?? null,
     requesterUserId: r.requesterUserId,
     receiverUserId: r.receiverUserId,
+    receiverNickname: r.receiver?.nickname ?? null,
     sessionId: r.sessionId,
     status: r.status,
     createdAt: r.createdAt,
@@ -75,8 +75,8 @@ export async function selectFriendsRequestByTargetUserId(userId) {
   });
   return result.map((r) => ({
     id: r.id,
-    nickname: r.requester?.nickname ?? null,
     requesterUserId: r.requesterUserId,
+    requesterNickname: r.requester?.nickname ?? null,
     receiverUserId: r.receiverUserId,
     sessionId: r.sessionId,
     status: r.status,
