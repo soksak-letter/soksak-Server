@@ -10,7 +10,7 @@ import multer from "multer";
 import { specs } from "./configs/swagger.config.js";
 import { jwtStrategy } from "./Auths/strategies/jwt.strategy.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriendRequest } from "./controllers/friend.controller.js";
-import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats, handleGetLetterAssets } from "./controllers/letter.controller.js";
+import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats, handleGetLetterAssets, handleGetLetterByAiKeyword } from "./controllers/letter.controller.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername, handleSocialLogin, handleSocialLoginCertification, handleSocialLoginCallback } from "./controllers/auth.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
 import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyPushSubscription, handleGetMyConsents, handlePatchMyConsents, handleUpdateActivity, } from "./controllers/user.controller.js";
@@ -24,7 +24,7 @@ import { emailSchema, loginSchema, passwordSchema, SignUpSchema, usernameSchema,
 import { handleInsertInquiryAsUser, handleInsertInquiryAsAdmin, handleGetInquiry, handleGetInquiryDetail } from "./controllers/inquiry.controller.js";
 import { isLogin } from "./middlewares/auth.middleware.js";
 import { isRestricted } from "./middlewares/restriction.middleware.js";
-import { letterToMeSchema, letterToOtherSchema, publicCarouselSchema } from "./schemas/letter.schema.js";
+import { letterByAiKeywordSchema, letterToMeSchema, letterToOtherSchema, publicCarouselSchema } from "./schemas/letter.schema.js";
 import { idParamSchema, ISOTimeSchema } from "./schemas/common.schema.js";
 import { pushSubscriptionSchema, onboardingStep1Schema, updateInterestsSchema, updateProfileSchema, updateNotificationSettingsSchema, updateConsentsSchema, updateActivitySchema, createUserAgreementsSchema } from "./schemas/user.schema.js";
 import { threadIdParamSchema } from "./schemas/mailbox.schema.js";
@@ -169,6 +169,7 @@ app.get("/letter-assets", isLogin, isRestricted, handleGetLetterAssets);        
 app.post("/letter/me", isLogin, isRestricted, validate(letterToMeSchema), handleSendMyLetter);                      // 나에게 편지 전송
 app.post("/letter/other", isLogin, isRestricted, validate(letterToOtherSchema),handleSendOtherLetter);              // 타인/친구에게 편지 전송
 app.get("/letters/:letterId", isLogin, isRestricted, validate(idParamSchema("letterId")),handleGetLetterDetail);    // 편지 상세 조회
+app.get("/letters/keywords/:aiKeyword", isLogin, isRestricted, validate(letterByAiKeywordSchema), asyncHandler(handleGetLetterByAiKeyword));    // AI 키워드로 편지 조회
 app.post("/letters/:letterId/like", isLogin, isRestricted, validate(idParamSchema("letterId")), handleAddLetterLike);                // 편지 좋아요 추가
 app.delete("/letters/:letterId/like", isLogin, isRestricted, validate(idParamSchema("letterId")), handleRemoveLetterLike);           // 편지 좋아요 삭제
 

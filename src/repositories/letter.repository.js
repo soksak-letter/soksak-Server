@@ -1,6 +1,45 @@
 import { prisma } from "../configs/db.config.js"
 import { ReferenceNotFoundError } from "../errors/base.error.js";
 
+export const getLetterByUserIdAndAiKeyword = async (senderUserId, keyword) => {
+    const letter = await prisma.letter.findMany({
+        where: {
+            senderUserId,
+            aiKeywords: {
+                some: {
+                    keyword: {
+                        name: keyword
+                    }
+                }
+            }
+        },
+        select: {
+            id: true,
+            senderUserId: true,
+            receiverUserId: true,
+            sessionId: true,
+            letterType: true,
+            questionId: true,
+            title: true,
+            content: true,
+            isPublic: true,
+            status: true,
+            scheduledAt: true,
+            deliveredAt: true,
+            readAt: true,
+            createdAt: true,
+            aiKeywords: {
+                select: {
+                    keyword: {
+                       select:  { name: true }
+                    }
+                }
+            }
+        }
+    })
+    return letter;
+}
+
 export const getLetterDetail = async (id) => {
     const letter = await prisma.letter.findFirst({
         select: {

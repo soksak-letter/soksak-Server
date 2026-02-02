@@ -1,9 +1,9 @@
 import { UserNotFoundError } from "../errors/user.error.js";
 import { DuplicatedValueError } from "../errors/base.error.js";
 import { findFriendById, selectAllFriendsByUserId } from "../repositories/friend.repository.js";
-import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getLetterDetail, getPublicLetters, updateLetter } from "../repositories/letter.repository.js"
+import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getLetterDetail, getPublicLetters, updateLetter, getLetterByUserIdAndAiKeyword } from "../repositories/letter.repository.js"
 import { createLetterLike, deleteLetterLike, findLetterLike } from "../repositories/like.repository.js";
-import { findRandomUserByPool, findUserByIdForProfile } from "../repositories/user.repository.js";
+import { findRandomUserByPool, findUserByIdForProfile, findUserById } from "../repositories/user.repository.js";
 import { getDayStartAndEnd, getMonthAndWeek, getToday, getWeekStartAndEnd } from "../utils/date.util.js";
 import { getLevelInfo } from "../constants/planet.constant.js";
 import { blockBadWordsInText } from "../utils/profanity.util.js";
@@ -16,6 +16,15 @@ import { findQuestionByQuestionId } from "../repositories/question.repository.js
 import { prisma } from "../configs/db.config.js";
 import { SessionCountOverError, SessionNotFoundError } from "../errors/session.error.js";
 import { sendPushNotification } from "./push.service.js";
+
+export const getLetterByAiKeyword = async ({userId, aiKeyword}) => {
+    const user = await findUserById(userId);
+    if(!user) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
+    try {const letter = await getLetterByUserIdAndAiKeyword(userId, aiKeyword);
+    return letter;} catch(err) {
+        throw new LetterNotFound("LETTER_NOT_FOUND", "해당 키워드로 작성된 편지가 없습니다.");
+    }
+}
 
 export const getLetter = async ({userId, letterId}) => {
     const {letter, receiverUserId, senderUserId, readAt} = await getLetterDetail(letterId);
