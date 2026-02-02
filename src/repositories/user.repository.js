@@ -470,13 +470,56 @@ export const findReceivedLettersForThreads = async ({ userId, letterType }) => {
 };
 
 /**
- * 특정 익명 스레드(=senderUserId)의 편지 목록
+ * 특정 익명 스레드(=senderUserId)의 편지 목록 (받은 편지)
  */
 export const findReceivedLettersBySender = async ({ userId, senderUserId, letterType }) => {
   return prisma.letter.findMany({
     where: {
       receiverUserId: userId,
       senderUserId,
+      letterType,
+    },
+    orderBy: [{ deliveredAt: "desc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+      title: true,
+      content: true,
+      deliveredAt: true,
+      createdAt: true,
+      question: {
+        select: {
+          content: true
+        }
+      },
+      design: {
+        select: {
+          paper: {
+            select: {
+              id: true,
+              color: true,
+            }
+          },
+          stamp: {
+            select: {
+              id: true,
+              name: true,
+              assetUrl: true
+            }
+          },
+        },
+      },
+    },
+  });
+};
+
+/**
+ * 특정 익명 스레드(=receiverUserId)의 편지 목록 (보낸 편지)
+ */
+export const findSentLettersByReceiver = async ({ userId, receiverUserId, letterType }) => {
+  return prisma.letter.findMany({
+    where: {
+      senderUserId: userId,
+      receiverUserId,
       letterType,
     },
     orderBy: [{ deliveredAt: "desc" }, { createdAt: "desc" }],
@@ -530,8 +573,17 @@ export const findSelfLetters = async ({ userId, letterType }) => {
       content: true,
       createdAt: true,
       deliveredAt: true,
+      questionId: true,
       design: {
-        select: { paperId: true },
+        select: { 
+          paperId: true,
+          stampId: true,
+          stamp: {
+            select: {
+              assetUrl: true
+            }
+          }
+        },
       },
     },
   });

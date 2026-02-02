@@ -1,16 +1,16 @@
 import { QuestionNotFoundError } from "../errors/question.error.js";
 import { findQuestionByDate } from "../repositories/question.repository.js";
+import { getDayStartAndEnd } from "../utils/date.util.js";
 
-export const getTodayQuestion = async () => {
-    const today = new Date();
-    const todayQuestion = await findQuestionByDate(today);
-    if(!todayQuestion) throw new QuestionNotFoundError(undefined, "오늘의 질문이 없습니다.");
+export const getTodayQuestion = async (date) => {
+    const {startTime, endTime} = getDayStartAndEnd(date);
     
-    todayQuestion.day.setHours(23, 59, 59, 999)
+    const todayQuestion = await findQuestionByDate({startTime, endTime});
+    if(!todayQuestion) throw new QuestionNotFoundError(undefined, "오늘의 질문이 없습니다.");
     
     return {
         id: todayQuestion.questionId,
         content: todayQuestion.question.content,
-        expiredAt: todayQuestion.day
+        expiredAt: endTime
     }
 }

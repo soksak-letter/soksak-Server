@@ -257,6 +257,9 @@
  *                         userId:
  *                           type: integer
  *                           example: 123
+ *                         isNewUser:
+ *                           type: boolean
+ *                           example: true
  *                         tokens:
  *                           type: object
  *                           properties:

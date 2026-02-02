@@ -1,8 +1,11 @@
 import { addLetterLike, getLetter, getLetterAssets, getPublicLetterFromFriend, getPublicLetterFromOther, getUserLetterStats, removeLetterLike, sendLetterToMe, sendLetterToOther } from "../services/letter.service.js";
 
 export const handleGetLetterDetail = async (req, res, next) => {
+    const userId = req.user.id;
+    const letterId = parseInt(req.params.letterId);
+
     try{
-        const letter = await getLetter(parseInt(req.params.letterId));
+        const letter = await getLetter({userId, letterId});
         
         res.status(200).success(letter);
     } catch(err) {
@@ -62,9 +65,11 @@ export const handleRemoveLetterLike = async (req, res, next) => {
 
 export const handleGetPublicLetterFromOther = async (req, res, next) => {
     const userId = req.user.id;
-    const isDetail = req.query.detail === "true";
+    const isDetail = req.query.detail;
+    const date = req.query.date;
+
     try{
-        const letters = await getPublicLetterFromOther(userId, isDetail);
+        const letters = await getPublicLetterFromOther({userId, date, isDetail});
 
         res.status(200).success( letters );
     } catch(err) {
@@ -74,9 +79,11 @@ export const handleGetPublicLetterFromOther = async (req, res, next) => {
 
 export const handleGetPublicLetterFromFriend = async (req, res, next) => {
     const userId = req.user.id;
-    const isDetail = req.query.detail === "true";
+    const isDetail = req.query.detail;
+    const date = req.query.date;
+
     try{
-        const letters = await getPublicLetterFromFriend(userId, isDetail);
+        const letters = await getPublicLetterFromFriend({userId, date, isDetail});
 
         res.status(200).success( letters );
     } catch(err) {
@@ -86,8 +93,10 @@ export const handleGetPublicLetterFromFriend = async (req, res, next) => {
 
 export const handleGetUserLetterStats = async (req, res, next) => {
     const userId = req.user.id;
+    const date = req.query.date;
+
     try{
-        const data = await getUserLetterStats(userId);
+        const data = await getUserLetterStats(userId, date);
 
         res.status(200).success( data );
     } catch(err) { 

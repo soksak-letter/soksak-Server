@@ -7,10 +7,10 @@ import {
 import { UserNotFoundError } from "../errors/user.error.js";
 import { findRandomUserByPool } from "../repositories/user.repository.js";
 
-export async function existsMatchingSession(userId, targetUserId, questionId) {
+export async function existsMatchingSession(userId, targetUserId) {
   const session = await prisma.matchingSession.findFirst({
     where: {
-      questionId: questionId,
+      status: { notIn: ["DISCARDED"]},
       AND: [
         { participants: { some: { userId: userId } } },
         { participants: { some: { userId: targetUserId } } },
@@ -74,7 +74,7 @@ export const insertMatchingSession = async (questionId) => {
   const session = await prisma.matchingSession.create({
     data: {
       questionId: questionId,
-      status: "IN_PROGRESS",
+      status: "PENDING",
     },
   });
   return {

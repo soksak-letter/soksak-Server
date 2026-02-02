@@ -1,3 +1,12 @@
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+import timezone from 'dayjs/plugin/timezone.js';
+import isoWeek from 'dayjs/plugin/isoWeek.js';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(isoWeek);
+
 function toUTCDateOnly(d) {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 }
@@ -100,40 +109,48 @@ export function getISOWeek(date = new Date()) {
   return week;
 }
 
+export const getToday = (date) => {
+  return dayjs(date).utc().toDate();
+}
+
 export const getWeekStartAndEnd = (date) => {
-  const dayOfWeek = date.getDay();
+  const userDate = dayjs(date);
 
-  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const weekStart = userDate.startOf("isoWeek");
+  const weekEnd = userDate.endOf("isoWeek");
 
-  const weekStart = new Date(date);
-  weekStart.setDate(date.getDate() + diffToMonday);
-  weekStart.setHours(0, 0, 0, 0);
-  
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-  weekEnd.setHours(23, 59, 59, 999);
-
-  return {weekStart, weekEnd};
+  return {
+    weekStart: weekStart.utc().toDate(), 
+    weekEnd: weekEnd.utc().toDate()
+  };
 }
 
 export const getDayStartAndEnd = (date) => {
-  const startTime = new Date(date);
-  const endTime = new Date(date);
+  const userDate = dayjs(date);
 
-  startTime.setHours(0, 0, 0, 0);
-  endTime.setHours(23, 59, 59, 999);
+  const startTime = userDate.startOf("day");
+  const endTime = userDate.endOf("day");
 
-  return { startTime, endTime };
+  return { 
+    startTime: startTime.utc().toDate(), 
+    endTime: endTime.utc().toDate()
+  };
 }
 
-export const getMonthAndWeek = (today) => {
-  const month = today.getMonth() + 1;
+export const getMonthAndWeek = (date) => {
+  const userDate = dayjs(date);
 
-  const date = today.getDate();
-  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const startDay = firstDayOfMonth.getDay();
+  const thursday = userDate.isoWeekday(4);
+  
+  const month = thursday.month() + 1;
 
-  const week = Math.ceil((date + startDay) / 7);
+  const firstThursday = thursday.startOf('month').isoWeekday(4);
+  
+  const actualFirstThursday = firstThursday.month() !== thursday.month() 
+    ? firstThursday.add(1, 'week') 
+    : firstThursday;
 
-  return {month, week};
-}
+  const week = thursday.isoWeek() - actualFirstThursday.isoWeek() + 1;
+
+  return { month, week };
+};

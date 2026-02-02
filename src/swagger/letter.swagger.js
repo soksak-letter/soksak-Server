@@ -293,6 +293,7 @@
  *           잘못된 요청:
  *           - `REQ_BAD_REQUEST`: 요청 유효성 검사 실패
  *           - `LETTER_BAD_WORD`: 편지 내용에 부적절한 단어 포함
+ *           - `SESSION_COUNTOVER_ERROR`: 세션이 10개 이상
  *         content:
  *           application/json:
  *             schema:
@@ -400,20 +401,6 @@
  *                     success:
  *                       type: object
  *                       description: "Letter details object"
- *       400:
- *         description: 없는 편지 (LETTER_NOT_FOUND)
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ErrorResponse'
- *                 - properties:
- *                     error:
- *                       properties:
- *                         errorCode:
- *                           example: "LETTER_NOT_FOUND"
- *                         reason:
- *                           example: "작성되지 않은 편지입니다."
  *       401:
  *         description: |
  *           인증 실패:
@@ -436,6 +423,20 @@
  *                             example: "AUTH_TOKEN_EXPIRED"
  *                           reason:
  *                             example: "토큰이 만료되었습니다."
+ *       404:
+ *         description: 없는 편지 (LETTER_NOT_FOUND)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "LETTER_NOT_FOUND"
+ *                         reason:
+ *                           example: "작성되지 않은 편지입니다."
  */
 
 /**
