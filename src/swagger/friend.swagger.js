@@ -233,7 +233,7 @@
  *     security:
  *       - bearerAuth: []
  *     responses:
- *       200:
+ *       '200':
  *         description: 조회 성공
  *         content:
  *           application/json:
@@ -255,17 +255,64 @@
  *                               type: array
  *                               items:
  *                                 type: object
- *                               example:
- *                                 [
- *                                   { "id": 55, "requesterUserId": 2, "receiverUserId": 1, "status": "PENDING" }
- *                                 ]
+ *                                 properties:
+ *                                   id:
+ *                                     type: integer
+ *                                     example: 1
+ *                                   requesterNickname:
+ *                                     type: string
+ *                                     example: "웃는참외"
+ *                                   requesterUserId:
+ *                                     type: integer
+ *                                     example: 30
+ *                                   receiverUserId:
+ *                                     type: integer
+ *                                     example: 2
+ *                                   sessionId:
+ *                                     type: integer
+ *                                     nullable: true
+ *                                     example: null
+ *                                   status:
+ *                                     type: string
+ *                                     example: "PENDING"
+ *                                   createdAt:
+ *                                     type: string
+ *                                     format: date-time
+ *                                     example: "2026-02-01T18:55:14.000Z"
+ *                                   updatedAt:
+ *                                     type: string
+ *                                     format: date-time
+ *                                     example: "2026-02-01T18:55:14.000Z"
+ *             examples:
+ *               success:
+ *                 value:
+ *                   success:
+ *                     message: "들어온 친구 신청 목록 조회가 성공하였습니다."
+ *                     result:
+ *                       data:
+ *                         - id: 1
+ *                           requesterNickname: "웃는참외"
+ *                           requesterUserId: 30
+ *                           receiverUserId: 2
+ *                           sessionId: null
+ *                           status: "PENDING"
+ *                           createdAt: "2026-02-01T18:55:14.000Z"
+ *                           updatedAt: "2026-02-01T18:55:14.000Z"
  *       401:
  *         description: 인증 필요 (UNAUTHORIZED)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       404:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "UNAUTHORIZED"
+ *                         reason:
+ *                           example: "인증이 필요합니다"
+ *       '404':
  *         description: 요청 없음 (FRIEND_REQUESTNOTFOUND_ERROR)
  *         content:
  *           application/json:
@@ -279,7 +326,7 @@
  *                           example: "FRIEND_REQUESTNOTFOUND_ERROR"
  *                         reason:
  *                           example: "처리할 수 있는 친구 요청이 없습니다."
- *       500:
+ *       '500':
  *         description: 친구 처리 중 서버 오류 (FRIEND_INTERNALSERVER_ERROR)
  *         content:
  *           application/json:
@@ -296,7 +343,7 @@
  *     security:
  *       - bearerAuth: []
  *     responses:
- *       200:
+ *       '200':
  *         description: 조회 성공
  *         content:
  *           application/json:
@@ -318,17 +365,64 @@
  *                               type: array
  *                               items:
  *                                 type: object
- *                               example:
- *                                 [
- *                                   { "id": 77, "requesterUserId": 1, "receiverUserId": 3, "status": "PENDING" }
- *                                 ]
+ *                                 properties:
+ *                                   id:
+ *                                     type: integer
+ *                                     example: 77
+ *                                   receiverNickname:
+ *                                     type: string
+ *                                     example: "닉네임3"
+ *                                   requesterUserId:
+ *                                     type: integer
+ *                                     example: 1
+ *                                   receiverUserId:
+ *                                     type: integer
+ *                                     example: 3
+ *                                   sessionId:
+ *                                     type: integer
+ *                                     nullable: true
+ *                                     example: null
+ *                                   status:
+ *                                     type: string
+ *                                     example: "PENDING"
+ *                                   createdAt:
+ *                                     type: string
+ *                                     format: date-time
+ *                                     example: "2026-02-01T18:55:14.000Z"
+ *                                   updatedAt:
+ *                                     type: string
+ *                                     format: date-time
+ *                                     example: "2026-02-01T18:55:14.000Z"
+ *             examples:
+ *               success:
+ *                 value:
+ *                   success:
+ *                     message: "보낸 친구 신청 목록 조회가 성공하였습니다."
+ *                     result:
+ *                       data:
+ *                         - id: 77
+ *                           receiverNickname: "닉네임3"
+ *                           requesterUserId: 1
+ *                           receiverUserId: 3
+ *                           sessionId: null
+ *                           status: "PENDING"
+ *                           createdAt: "2026-02-01T18:55:14.000Z"
+ *                           updatedAt: "2026-02-01T18:55:14.000Z"
  *       401:
  *         description: 인증 필요 (UNAUTHORIZED)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       404:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "UNAUTHORIZED"
+ *                         reason:
+ *                           example: "인증이 필요합니다"
+ *       '404':
  *         description: 요청 없음 (FRIEND_REQUESTNOTFOUND_ERROR)
  *         content:
  *           application/json:
@@ -342,7 +436,7 @@
  *                           example: "FRIEND_REQUESTNOTFOUND_ERROR"
  *                         reason:
  *                           example: "처리할 수 있는 친구 요청이 없습니다."
- *       500:
+ *       '500':
  *         description: 친구 처리 중 서버 오류 (FRIEND_INTERNALSERVER_ERROR)
  *         content:
  *           application/json:
