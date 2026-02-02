@@ -2,7 +2,7 @@ import { Queue, Worker } from "bullmq";
 import { sendReservedLetter } from "../../repositories/letter.repository.js";
 import { getDayStartAndEnd } from "../../utils/date.util.js"
 import { ioredisConnection } from "../../configs/db.config.js";
-import { sendQueuedLetters } from "../../services/letter.service.js";
+import { sendQueuedLettersByLetterId } from "../../services/letter.service.js";
 
 export const sendScheduledLetters = async () => {
     const today = new Date();
@@ -20,10 +20,18 @@ export const sendQueuedLettersWorker = () => {
     const worker = new Worker("letter-matching", async (job) => {
         if(job.name === "MATCH_BY_LETTER") {
             console.log(`[Job Start] ${job.data.letterId}번 편지 매칭중`);
-            await sendQueuedLetters(job.data);
+            await sendQueuedLettersByLetterId(job.data);
 
             console.log(`[Job Success] 편지 전송에 성공했습니다.`);
         }
+
+        if(job.name === "MATCH_BY_USER") {
+            console.log(`[Job Start] ${job.data.userId}번 유저풀에 맞는 편지 검색 중`);
+            await sendQueuedLettersByLetterId(job.data);
+
+            console.log(`[Job Success] 편지 전송에 성공했습니다.`);
+        }
+
     }, {connection: ioredisConnection});
 
     worker.on('failed', (job, err) => {

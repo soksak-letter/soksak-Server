@@ -1,7 +1,7 @@
 import { UserNotFoundError } from "../errors/user.error.js";
 import { DuplicatedValueError } from "../errors/base.error.js";
 import { findFriendById, selectAllFriendsByUserId } from "../repositories/friend.repository.js";
-import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getLetterDetail, getPublicLetters, updateLetter } from "../repositories/letter.repository.js"
+import { countLetterStatsForWeek, countTotalSentLetter, createLetter, getLetterDetail, getPublicLetters, selectQueuedLetter, updateLetter } from "../repositories/letter.repository.js"
 import { createLetterLike, deleteLetterLike, findLetterLike } from "../repositories/like.repository.js";
 import { findRandomUserByPool, findUserByIdForProfile } from "../repositories/user.repository.js";
 import { getDayStartAndEnd, getMonthAndWeek, getToday, getWeekStartAndEnd } from "../utils/date.util.js";
@@ -236,7 +236,7 @@ export const getLetterAssets = async () => {
     return assets;
 }
 
-export const sendQueuedLetters = async (data) => {
+export const sendQueuedLettersByLetterId = async (data) => {
     const receiverUserId = await findRandomUserByPool(data.userId);
     if(!receiverUserId) throw new Error("매칭 상대 없음");
 
@@ -249,6 +249,22 @@ export const sendQueuedLetters = async (data) => {
         await updateLetter({id: data.letterId, data: { 
             status: "DELIVERED", 
             receiverUserId, 
+            sessionId: session.id,
+            deliveredAt: new Date()
+        }}, tx);
+    })
+}
+
+export const sendQueuedLettersByUserId = async (data) => {
+    const letter = await selectQueuedLetter();
+    if(!letter) throw new Error("매칭되지 않은 편지가 없습니다.");
+
+    await prisma.$transaction(async (tx) => {
+        const session = await createMatchingSession(letter.senderUserId, data.userId, letter.questionId, tx);
+        await decrementSessionTurn(session.id, tx);
+        await updateLetter({id: data.letterId, data: { 
+            status: "DELIVERED", 
+            receiverUserId: data.userId, 
             sessionId: session.id,
             deliveredAt: new Date()
         }}, tx);

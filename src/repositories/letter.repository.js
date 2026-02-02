@@ -400,3 +400,14 @@ export const updateLetter = async ({id, data}, tx = prisma) => {
         }
     })
 }
+
+export const selectQueuedLetter = async () => {
+    const letter = await prisma.letter.findFirst({
+        where: {
+            status: "QUEUED",
+            orderBy: { createdAt: "asc"},
+        }
+    })
+
+    return letter;
+}

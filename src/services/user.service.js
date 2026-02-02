@@ -16,6 +16,7 @@ import {
   InterestIdsMinCountError,
   InterestIdsInvalidError,
 } from "../errors/user.error.js";
+import { letterQueue } from "../jobs/bootstraps/letter.bootstrap.js";
 
 import {
   upsertPushSubscription,
@@ -44,6 +45,7 @@ import {
   updateUserPoolById,
   uploadProfileImageToStorage,
 } from "../repositories/user.repository.js";
+import { enqueueJob } from "../utils/queue.util.js";
 import {
   mimeToExt,
   requiredEnv,
@@ -236,6 +238,9 @@ export const updateMyOnboardingInterests = async ({ userId, interestIds }) => {
 
   await replaceUserInterests({ userId, interestIds: uniqueIds });
   await updateUserPoolById({id: userId, pool: userPoolId});
+  await enqueueJob(letterQueue, "MATCH_BY_USER", {userId}, {
+    delay: 1000 * 60
+  });
 
   return { updated: true };
 };
