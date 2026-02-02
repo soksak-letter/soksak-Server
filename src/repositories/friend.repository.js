@@ -28,21 +28,61 @@ export async function insertFriendRequest(userId, targetUserId, sessionId) {
 } // 친구 신청 추가
 
 export async function selectFriendsRequestByUserId(userId) {
-  return await prisma.FriendRequest.findMany({
+  const result = await prisma.FriendRequest.findMany({
     where: {
       requesterUserId: userId,
       status: "PENDING",
     },
+    select: {
+      id: true,
+      requesterUserId: true,
+      receiverUserId: true,
+      sessionId: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+      receiver: { select: { nickname: true }},
+    }
   });
+  return result.map((r) => ({
+    id: r.id,
+    nickname: r.receiver?.nickname ?? null,
+    requesterUserId: r.requesterUserId,
+    receiverUserId: r.receiverUserId,
+    sessionId: r.sessionId,
+    status: r.status,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+  }));
 } // 내가 보낸 친구 신청 목록 조회
 
 export async function selectFriendsRequestByTargetUserId(userId) {
-  return await prisma.FriendRequest.findMany({
+  const result = await prisma.FriendRequest.findMany({
     where: {
       receiverUserId: userId,
       status: "PENDING",
     },
+    select: {
+      id: true,
+      requesterUserId: true,
+      receiverUserId: true,
+      sessionId: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+      requester: { select: { nickname: true }},
+    }
   });
+  return result.map((r) => ({
+    id: r.id,
+    nickname: r.requester?.nickname ?? null,
+    requesterUserId: r.requesterUserId,
+    receiverUserId: r.receiverUserId,
+    sessionId: r.sessionId,
+    status: r.status,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+  }));
 } // 나에게 온 친구 신청 목록 조회
 
 export async function updateFriendRequestAccept(userId, targetUserId) {
