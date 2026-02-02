@@ -6,6 +6,14 @@
  *     tags: [홈]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         required: true
+ *         description: "시간대 조정을 위한 ISO 8601 형식의 날짜 문자열"
  *     responses:
  *       200:
  *         description: 조회 성공
@@ -18,6 +26,16 @@
  *                     success:
  *                       type: object
  *                       properties:
+ *                         user:
+ *                           type: object
+ *                           properties:
+ *                             nickname:
+ *                               type: string
+ *                               example: "똑똑이"
+ *                             profileImageUrl:
+ *                               type: string
+ *                               nullable: true
+ *                               example: "https://.../profile.jpg"
  *                         todayQuestion:
  *                           type: object
  *                           properties:
@@ -54,6 +72,22 @@
  *                         sessionCount:
  *                           type: integer
  *                           example: 2
+ *       400:
+ *         description: 잘못된 요청 (Bad Request)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - type: object
+ *                   properties:
+ *                     error:
+ *                       type: object
+ *                       properties:
+ *                         errorCode:
+ *                           example: "REQ_BAD_REQUEST"
+ *                         reason:
+ *                           example: "입력값이 잘못되었습니다"
  *       401:
  *         description: |
  *           인증 실패:
@@ -84,6 +118,14 @@
  *   get:
  *     summary: 오늘의 질문 조회
  *     tags: [홈]
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         required: true
+ *         description: "시간대 조정을 위한 ISO 8601 형식의 날짜 문자열"
  *     responses:
  *       200:
  *         description: 조회 성공
@@ -105,8 +147,24 @@
  *                         expiredAt:
  *                           type: string
  *                           format: date-time
- *       500:
- *         description: 서버 에러 (오늘의 질문 없음)
+ *       400:
+ *         description: 잘못된 요청 (Bad Request)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - type: object
+ *                   properties:
+ *                     error:
+ *                       type: object
+ *                       properties:
+ *                         errorCode:
+ *                           example: "REQ_BAD_REQUEST"
+ *                         reason:
+ *                           example: "입력값이 잘못되었습니다"
+ *       404:
+ *         description: 오늘의 질문 없음 (QUESTION_NOTFOUND_ERROR)
  *         content:
  *           application/json:
  *             schema:
@@ -116,7 +174,7 @@
  *                     error:
  *                       properties:
  *                         errorCode:
- *                           example: "QUESTION_NOT_FOUND"
+ *                           example: "QUESTION_NOTFOUND_ERROR"
  *                         reason:
  *                           example: "오늘의 질문이 없습니다."
  */
@@ -131,6 +189,13 @@
  *     security:
  *       - bearerAuth: []
  *     parameters:
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         required: true
+ *         description: "시간대 조정을 위한 ISO 8601 형식의 날짜 문자열"
  *       - in: query
  *         name: detail
  *         schema:
@@ -180,6 +245,22 @@
  *                                     properties:
  *                                       id: { type: integer, example: 1 }
  *                                       name: { type: string, example: "test" }
+ *       400:
+ *         description: 잘못된 요청 (Bad Request)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - type: object
+ *                   properties:
+ *                     error:
+ *                       type: object
+ *                       properties:
+ *                         errorCode:
+ *                           example: "REQ_BAD_REQUEST"
+ *                         reason:
+ *                           example: "입력값이 잘못되었습니다"
  *       401:
  *         description: |
  *           인증 실패:
@@ -212,6 +293,13 @@
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         required: true
+ *         description: "시간대 조정을 위한 ISO 8601 형식의 날짜 문자열"
+ *       - in: query
  *         name: detail
  *         schema:
  *           type: boolean
@@ -260,6 +348,22 @@
  *                                     properties:
  *                                       id: { type: integer, example: 1 }
  *                                       name: { type: string, example: "test" }
+ *       400:
+ *         description: 잘못된 요청 (Bad Request)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - type: object
+ *                   properties:
+ *                     error:
+ *                       type: object
+ *                       properties:
+ *                         errorCode:
+ *                           example: "REQ_BAD_REQUEST"
+ *                         reason:
+ *                           example: "입력값이 잘못되었습니다"
  *       401:
  *         description: |
  *           인증 실패:
@@ -292,6 +396,14 @@
  *     tags: [홈]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         required: true
+ *         description: "시간대 조정을 위한 ISO 8601 형식의 날짜 문자열"
  *     responses:
  *       200:
  *         description: 조회 성공
@@ -322,6 +434,22 @@
  *                         message:
  *                           type: string
  *                           example: "편지 여행이 순항 중이네요!"
+ *       400:
+ *         description: 잘못된 요청 (Bad Request)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - type: object
+ *                   properties:
+ *                     error:
+ *                       type: object
+ *                       properties:
+ *                         errorCode:
+ *                           example: "REQ_BAD_REQUEST"
+ *                         reason:
+ *                           example: "입력값이 잘못되었습니다"
  *       401:
  *         description: |
  *           인증 실패:
