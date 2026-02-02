@@ -27,6 +27,7 @@
     "bcrypt": "^6.0.0",
     "bullmq": "^5.67.2",
     "cors": "^2.8.5",
+    "dayjs": "^1.11.19",
     "dotenv": "^16.6.1",
     "express": "^4.19.2",
     "express-session": "^1.18.2",

@@ -5,9 +5,12 @@ export const getLetterDetail = async (id) => {
     const letter = await prisma.letter.findFirst({
         select: {
             id: true,
+            receiverUserId: true,
+            senderUserId: true,
             title: true,
             content: true,
             deliveredAt: true,
+            readAt: true,
             question: {
                 select: {
                     content: true
@@ -45,26 +48,31 @@ export const getLetterDetail = async (id) => {
     if(!letter) return null;
 
     return {
-        id: letter.id,
-        title: letter.title,
-        content: letter.title,
-        deliveredAt: letter.deliveredAt,
-        question: letter?.question.content,
-        design: {
-            paper: {
-                id: letter?.design?.paper?.id,
-                color: letter?.design?.paper?.color,
-            },
-            stamp: {
-                id: letter?.design?.stamp?.id,
-                name: letter?.design?.stamp?.name,
-                assetUrl: letter?.design?.stamp?.assetUrl
-            },
-            font: {
-                id: letter?.design?.font?.id,
-                font: letter?.design?.font?.font,
+        letter: {
+            id: letter.id,
+            title: letter.title,
+            content: letter.title,
+            deliveredAt: letter.deliveredAt,
+            question: letter?.question.content,
+            design: {
+                paper: {
+                    id: letter?.design?.paper?.id,
+                    color: letter?.design?.paper?.color,
+                },
+                stamp: {
+                    id: letter?.design?.stamp?.id,
+                    name: letter?.design?.stamp?.name,
+                    assetUrl: letter?.design?.stamp?.assetUrl
+                },
+                font: {
+                    id: letter?.design?.font?.id,
+                    font: letter?.design?.font?.font,
+                }
             }
-        }
+        },
+        receiverUserId: letter.receiverUserId, 
+        senderUserId: letter.senderUserId,
+        readAt: letter.readAt
     }
 }
 
@@ -184,13 +192,13 @@ export const getMyLettersWithFriend = async ({userId, friendId}) => {
     return myLetters;
 }
 
-export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDetail = false}) => {
-    console.log(isFriendOnly);
+export const getPublicLetters = async ({ids, userId, startTime, endTime, isFriendOnly = false, isDetail = false}) => {
     const letters = await prisma.letter.findMany({
         where: {
             senderUserId: isFriendOnly
                 ? { in: ids }
                 : { notIn: ids },
+            deliveredAt: { gte: startTime, lte: endTime },
             isPublic: true
         },
         select: {
@@ -221,7 +229,7 @@ export const getPublicLetters = async ({ids, userId, isFriendOnly = false, isDet
         orderBy: {
             deliveredAt: 'desc'
         },
-        take: isDetail ? undefined : 3
+        take: isDetail ? undefined : 4
     })
 
     return letters.map(letter => ({ 
@@ -251,10 +259,22 @@ export const countLetterStatsForWeek = async ({userId, weekStart, weekEnd}) => {
             _count: {
                 select: {
                     sentLetters: {
-                        where: { createdAt: { gte: weekStart, lte: weekEnd } }
+                        where: { 
+                            createdAt: { 
+                                gte: weekStart, 
+                                lte: weekEnd 
+                            } 
+                        }
                     },
                     receivedLetters: {
-                        where: { createdAt: { gte: weekStart, lte: weekEnd } }
+                        where: { 
+                            deliveredAt: { 
+                                gte: weekStart, 
+                                lte: weekEnd 
+                            }, 
+                            status: "DELIVERED" ,
+                            letterType: "TO_OTHER"
+                        }
                     }
                 }
             }
@@ -267,10 +287,11 @@ export const countLetterStatsForWeek = async ({userId, weekStart, weekEnd}) => {
     }
 }
 
-export const countTotalSentLetter = async (userId) => {
+export const countTotalSentLetter = async (userId, today) => {
     const totalCount = await prisma.letter.count({
         where: {
-            senderUserId: userId
+            senderUserId: userId,
+            createdAt: { lte: today }
         }
     })
 
@@ -367,4 +388,16 @@ export const sendReservedLetter = async ({startTime, endTime}) => {
     })
 
     return updatedLetters;
+}
+
+export const updateLetter = async ({id, data}) => {
+    console.log(data);
+    await prisma.letter.update({
+        where: {
+            id
+        },
+        data: {
+            ...data
+        }
+    })
 }
