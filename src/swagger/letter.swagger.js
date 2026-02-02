@@ -118,6 +118,143 @@
 
 /**
  * @swagger
+ * /letters/keywords/{aiKeyword}:
+ *   get:
+ *     summary: AI 키워드로 내가 보낸 편지 조회
+ *     tags: [편지]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: aiKeyword
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 조회할 AI 키워드 이름 (AiKeyword.name)
+ *     responses:
+ *       200:
+ *         description: 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - properties:
+ *                     success:
+ *                       type: object
+ *                       properties:
+ *                         message:
+ *                           type: string
+ *                         result:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: integer
+ *                               title:
+ *                                 type: string
+ *                               content:
+ *                                 type: string
+ *                               senderUserId:
+ *                                 type: integer
+ *                               receiverUserId:
+ *                                 type: integer
+ *                                 nullable: true
+ *                               deliveredAt:
+ *                                 type: string
+ *                                 format: date-time
+ *                                 nullable: true
+ *                               createdAt:
+ *                                 type: string
+ *                                 format: date-time
+ *                               aiKeywords:
+ *                                 type: array
+ *                                 items:
+ *                                   type: object
+ *                                   properties:
+ *                                     keyword:
+ *                                       type: object
+ *                                       properties:
+ *                                         name:
+ *                                           type: string
+ *             examples:
+ *               SUCCESS:
+ *                 value:
+ *                   resultType: "SUCCESS"
+ *                   error: null
+ *                   success:
+ *                     message: "AI 키워드 편지 조회가 성공하였습니다."
+ *                     result:
+ *                       - id: 1
+ *                         title: "dummy title 01"
+ *                         content: "dummy content 01"
+ *                         senderUserId: 1
+ *                         receiverUserId: 1
+ *                         deliveredAt: "2026-02-02T12:00:00.000Z"
+ *                         createdAt: "2026-02-02T12:00:00.000Z"
+ *                         aiKeywords:
+ *                           - keyword:
+ *                               name: "DUMMY_KEYWORD_A"
+ *       400:
+ *         description: |
+ *           잘못된 요청:
+ *           - `REQ_BAD_REQUEST`: 요청 유효성 검사 실패
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "REQ_BAD_REQUEST"
+ *                         reason:
+ *                           example: "입력값이 잘못되었습니다."
+ *       401:
+ *         description: |
+ *           인증 실패:
+ *           - `AUTH_TOKEN_EXPIRED`
+ *           - `AUTH_INVALID_TOKEN`
+ *           - `AUTH_NOT_ACCESS_TOKEN`
+ *           - `AUTH_EXPIRED_TOKEN`
+ *           - `AUTH_UNAUTHORIZED`
+ *           - `AUTH_NOT_FOUND`
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "액세스 토큰이 유효하지 않습니다."
+ *       404:
+ *         description: |
+ *           조회 실패:
+ *           - `USER_NOT_FOUND`: 해당 정보로 가입된 계정을 찾을 수 없습니다.
+ *           - `LETTER_NOT_FOUND`: 해당 키워드로 작성된 편지가 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "LETTER_NOT_FOUND"
+ *                         reason:
+ *                           example: "해당 키워드로 작성된 편지가 없습니다."
+ */
+
+/**
+ * @swagger
  * /letter/me:
  *   post:
  *     summary: 나에게 편지 전송
