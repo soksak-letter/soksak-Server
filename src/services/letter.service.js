@@ -18,6 +18,35 @@ import { SessionCountOverError, SessionNotFoundError } from "../errors/session.e
 import { sendPushNotification } from "./push.service.js";
 import { letterQueue } from "../jobs/bootstraps/letter.bootstrap.js";
 import { enqueueJob } from "../utils/queue.util.js";
+import { pushQueue } from "../jobs/bootstraps/push.bootstrap.js";
+
+const dispatchSessionLogicByStatus = async (userId, receiverUserId, session, questionId, tx) => {
+    if (!session) {
+        const count = await countMatchingSessionWhichChating(userId);
+        if (count >= 10) throw new SessionCountOverError("SESSION_COUNTOVER_ERROR", "세션이 10개 이상입니다.");
+        
+        const newSession = await createMatchingSession(userId, receiverUserId, questionId, tx);
+        await decrementSessionTurn(newSession.id, tx);
+        return newSession;
+    }
+
+    switch (session.status) {
+        case "PENDING":
+            await updateMatchingSessionToChating(session.id, tx);
+            await decrementSessionTurn(session.id, tx);
+            session.status = "CHATING";
+
+            break;
+        case "CHATING":
+            await decrementSessionTurn(session.id, tx);
+
+            break;
+        default:
+            break;
+    }
+
+    return session;
+} 
 
 export const getLetter = async ({userId, letterId}) => {
     const {letter, receiverUserId, senderUserId, readAt} = await getLetterDetail(letterId);
@@ -26,19 +55,19 @@ export const getLetter = async ({userId, letterId}) => {
     if(userId == receiverUserId && !readAt) {
         await updateLetter({id: letter.id, data: { readAt: new Date() }});
 
-        const friend = await findFriendById(receiverUserId);
+        if(receiverUserId != senderUserId) {
+            const friend = await findFriendById(senderUserId, receiverUserId);
 
-        await sendPushNotification({
-            userId: senderUserId, 
-            type: "READ_CONFIRMATION",
-            data: {
-                isFriend: !!friend,
-                nickname: friend?.nickname
-            }
-        });
-
+            await enqueueJob(pushQueue, "PUSH_BY_LETTER", {
+                userId: senderUserId, 
+                type: "READ_CONFIRMATION",
+                data: {
+                    isFriend: !!friend,
+                    nickname: friend?.nickname
+                }
+            })
+        }
     }
-
     return letter;
 }
 
@@ -72,10 +101,6 @@ export const sendLetterToMe = async (userId, data) => {
 }
 
 export const sendLetterToOther = async (userId, data) => {
-    if(!data?.receiverUserId) {
-        data.receiverUserId = await findRandomUserByPool(userId);
-    }
-
     const question = await findQuestionByQuestionId(data.questionId);
     if(question == null) throw new QuestionNotFoundError("QUESTION_NOT_FOUND", "해당 질문을 찾을 수 없습니다.");
 
@@ -84,6 +109,7 @@ export const sendLetterToOther = async (userId, data) => {
     
     let session = null;
     let receiver = null;
+
     if(data.receiverUserId) {
         receiver = await findUserByIdForProfile(data.receiverUserId);
         if(!receiver) throw new UserNotFoundError("USER_NOT_FOUND", "해당 정보로 가입된 계정을 찾을 수 없습니다.", "id");
@@ -94,25 +120,7 @@ export const sendLetterToOther = async (userId, data) => {
 
     const letterId = await prisma.$transaction(async (tx) => {
         if(data.receiverUserId) {
-            // 친구는 아닌데 비활성화 세션일 때
-            if(session?.status === "PENDING") {
-                await updateMatchingSessionToChating(session.id, tx)
-                session.status = "CHATING";
-            }
-
-            // 친구는 아닌데 채팅중일 때
-            if(session?.status === "CHATING") {
-                await decrementSessionTurn(session.id, tx);
-            }
-            
-            // 친구도 아니고 채팅중도 아닐 때
-            if(!session){
-                const count = await countMatchingSessionWhichChating(userId);
-                if(count >= 10) throw new SessionCountOverError("SESSION_COUNTOVER_ERROR", "세션이 10개 이상입니다.");
-
-                session = await createMatchingSession(userId, data.receiverUserId, data.questionId, tx);
-                await decrementSessionTurn(session.id, tx);
-            }
+            session = await dispatchSessionLogicByStatus(userId, data.receiverUserId, session, data.questionId, tx);
         }
 
         const letterId = await createLetter({
@@ -138,16 +146,16 @@ export const sendLetterToOther = async (userId, data) => {
         return letterId
     })
 
-    // 매칭잡혔을 때 푸시알림 전송
     if (data.receiverUserId) {  
-        await sendPushNotification({
+        // 매칭잡혔을 때 푸시알림 큐에 작업 추가
+        await enqueueJob(pushQueue, "PUSH_BY_LETTER", {
             userId: data.receiverUserId, 
             type: "NEW_LETTER",
             data: {
                 nickname: receiver.nickname,
                 status: session.status
             }
-        });
+        })
     } else {
         // 매칭이 잡히지 않았을 때 큐에 작업 추가
         await enqueueJob(letterQueue, "MATCH_BY_LETTER", {
@@ -252,6 +260,11 @@ export const sendQueuedLettersByLetterId = async (data) => {
             sessionId: session.id,
             deliveredAt: new Date()
         }}, tx);
+    })
+
+    await enqueueJob(pushQueue, "PUSH_BY_LETTER", {
+        userId: data.receiverUserId, 
+        type: "NEW_LETTER"
     })
 }
 
