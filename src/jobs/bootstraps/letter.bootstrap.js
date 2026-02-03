@@ -8,8 +8,8 @@ export const sendScheduledLetters = async () => {
     const today = new Date();
     const { startTime, endTime } = getDayStartAndEnd(today);
 
-    const isUpdated = await sendReservedLetter({startTime, endTime});
-    if(isUpdated != 0){
+    const {count} = await sendReservedLetter({startTime, endTime});
+    if(count != 0){
         console.log("[Cron Success] 편지 전송에 성공했습니다.");
     }
 }
