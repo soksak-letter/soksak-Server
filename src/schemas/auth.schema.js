@@ -41,7 +41,8 @@ export const usernameSchema = z.object({
 
 export const passwordSchema = z.object({
     body: z.object({
-        password: passwordPart
+        oldPassword: passwordPart,
+        newPassword: passwordPart
     })
 })
 
