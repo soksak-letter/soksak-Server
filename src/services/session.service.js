@@ -4,7 +4,8 @@ import {
   updateMatchingSessionToDiscard,
   updateMatchingSessionToFriends,
   findSessionParticipantByUserIdAndSessionId,
-  countMatchingSessionWhichChating
+  countMatchingSessionWhichChating,
+  findMatchingSessionByParticipantUserId
 } from "../repositories/session.repository.js";
 import {
   SessionCountOverError,
@@ -46,6 +47,10 @@ export function validateTemperatureScore(temperatureScore) {
 }
 
 export const createMatchingSession = async (userId, targetUserId, questionId, tx) => {
+  const existingSession = await findMatchingSessionByParticipantUserId(userId, targetUserId);
+  if (existingSession) {
+    throw new SessionInternalError('An active session already exists between these users.', undefined, { userId, targetUserId });
+  }
   try {
     const result = await acceptSessionRequestTx(userId, targetUserId, questionId, tx);
     if (result == null) throw new SessionInternalError(undefined, undefined, { userId, questionId });
