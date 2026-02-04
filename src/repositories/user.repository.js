@@ -485,6 +485,7 @@ export const findReceivedLettersBySender = async ({ userId, senderUserId, letter
       title: true,
       content: true,
       deliveredAt: true,
+      readAt: true,
       createdAt: true,
       question: {
         select: {
@@ -528,6 +529,7 @@ export const findSentLettersByReceiver = async ({ userId, receiverUserId, letter
       title: true,
       content: true,
       deliveredAt: true,
+      readAt: true,
       createdAt: true,
       question: {
         select: {

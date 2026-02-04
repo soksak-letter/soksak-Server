@@ -1,5 +1,6 @@
 import { prisma } from "../configs/db.config.js"
 import { ReferenceNotFoundError } from "../errors/base.error.js";
+import { LETTER_TYPE_ANON } from "../utils/user.util.js";
 
 export const getLetterByUserIdAndAiKeyword = async (senderUserId, keyword) => {
     const letter = await prisma.letter.findMany({
@@ -347,6 +348,23 @@ export const selectLetterByUserIds = async (userId, targetUserId) => {
     },
   });
   return count; 
+};
+
+export const selectAnonymousLetterCountByUserIds = async (userId, targetUserId) => {
+  if (!userId || !targetUserId) {
+    return 0;
+  }
+  
+  const count = await prisma.letter.count({
+    where: {
+      letterType: LETTER_TYPE_ANON,
+      OR: [
+        { senderUserId: userId, receiverUserId: targetUserId },
+        { senderUserId: targetUserId, receiverUserId: userId },
+      ],
+    },
+  });
+  return count;
 };
 
 export const selectRecentLetterByUserIds = async (userId, targetUserId) => {

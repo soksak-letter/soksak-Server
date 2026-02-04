@@ -8,7 +8,7 @@ import {
 import { LETTER_TYPE_ANON, LETTER_TYPE_SELF, makePreview } from "../utils/user.util.js";
 import { findFriendById } from "../repositories/friend.repository.js";
 import { NotFriendError } from "../errors/friend.error.js";
-import { getFriendLetters, getMyLettersWithFriend } from "../repositories/letter.repository.js";
+import { getFriendLetters, getMyLettersWithFriend, selectAnonymousLetterCountByUserIds } from "../repositories/letter.repository.js";
 
 // ------------------------------
 // Mailbox
@@ -31,6 +31,15 @@ export const getAnonymousThreads = async (userId) => {
   const senderIds = Array.from(latestBySender.keys());
   const nicknameMap = senderIds.length ? await findUsersNicknameByIds(senderIds) : new Map();
 
+  // 각 발신자별 편지 개수 조회
+  const letterCounts = await Promise.all(
+    senderIds.map(async (senderId) => {
+      const count = await selectAnonymousLetterCountByUserIds(userId, senderId);
+      return [senderId, count];
+    })
+  );
+  const letterCountMap = new Map(letterCounts);
+
   const letters = senderIds.map((senderId) => {
     const l = latestBySender.get(senderId);
 
@@ -43,6 +52,7 @@ export const getAnonymousThreads = async (userId) => {
       sender: {
         id: senderId,
         nickname: nicknameMap.get(senderId) ?? null,
+        letterCount: letterCountMap.get(senderId) ?? 0,
       },
       stampId: l.design?.stamp?.id ?? null,
       stampUrl: l.design?.stamp?.assetUrl ?? null,
@@ -93,6 +103,7 @@ export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
     id: l.id,
     title: l.title,
     deliveredAt: l.deliveredAt ?? null,
+    readAt: l.readAt ?? null,
     isMine: false,
     stampId: l.design?.stamp?.id ?? null,
     stampUrl: l.design?.stamp?.assetUrl ?? null,
@@ -113,6 +124,7 @@ export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
     id: l.id,
     title: l.title,
     deliveredAt: l.deliveredAt ?? null,
+    readAt: l.readAt ?? null,
     isMine: true,
     stampId: l.design?.stamp?.id ?? null,
     stampUrl: l.design?.stamp?.assetUrl ?? null,
