@@ -27,7 +27,7 @@ import { isRestricted } from "./middlewares/restriction.middleware.js";
 import { letterByAiKeywordSchema, letterToMeSchema, letterToOtherSchema, publicCarouselSchema } from "./schemas/letter.schema.js";
 import { idParamSchema, ISOTimeSchema } from "./schemas/common.schema.js";
 import { pushSubscriptionSchema, onboardingStep1Schema, updateInterestsSchema, updateProfileSchema, updateNotificationSettingsSchema, updateConsentsSchema, updateActivitySchema, createUserAgreementsSchema } from "./schemas/user.schema.js";
-import { threadIdParamSchema } from "./schemas/mailbox.schema.js";
+import { sessionIdParamSchema } from "./schemas/mailbox.schema.js";
 import { noticeIdParamSchema } from "./schemas/notice.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
 import { handleInsertUserReport, handleGetUserReports, handleGetUserReport } from "./controllers/report.controller.js";
@@ -209,7 +209,7 @@ app.put("/users/me/push-subscriptions", isLogin, validate(pushSubscriptionSchema
 
 // / 편지함
 app.get("/mailbox/anonymous", isLogin, handleGetAnonymousThreads);
-app.get("/mailbox/anonymous/threads/:threadId/letters", isLogin, validate(threadIdParamSchema), handleGetAnonymousThreadLetters);
+app.get("/mailbox/anonymous/threads/:sessionId/letters", isLogin, validate(sessionIdParamSchema), handleGetAnonymousThreadLetters);
 app.get("/mailbox/friends/threads/:friendId/letters", isLogin, validate(idParamSchema("friendId")), handleGetLetterFromFriend); // 친구 대화 목록 화면 조회
 app.get("/mailbox/self", isLogin, handleGetSelfMailbox);
 

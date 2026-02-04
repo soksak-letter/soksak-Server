@@ -7,8 +7,8 @@ export class MailboxUnauthorizedError extends unauthorizedError {
   }
 }
 
-export class MailboxInvalidThreadIdError extends BadRequestError {
-  constructor(code = "MAILBOX_INVALID_THREAD_ID", message = "threadId가 올바르지 않습니다.", data = null) {
+export class MailboxInvalidSessionIdError extends BadRequestError {
+  constructor(code = "MAILBOX_INVALID_SESSION_ID", message = "sessionId가 올바르지 않습니다.", data = null) {
     super(code, message, data);
   }
 }
