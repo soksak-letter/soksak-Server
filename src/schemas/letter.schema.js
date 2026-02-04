@@ -44,3 +44,11 @@ export const publicCarouselSchema = z.object({
         date: ISOTimePart
     })
 })
+
+export const letterByAiKeywordSchema = z.object({
+    params: z.object({
+        aiKeyword: z.string("AI 키워드는 필수 항목입니다.").min(1, "AI 키워드는 최소 1자 이상입니다.")
+    }),
+    query: z.object({}).strict().optional().default({}),
+    body: z.object({}).strict().optional().default({}),
+});

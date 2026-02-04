@@ -575,7 +575,7 @@
  *                 example: "123456"
  *     responses:
  *       200:
- *         description: 인증 성공
+ *         description: 인증 성공. type이 'reset-password'인 경우, 임시 액세스 토큰이 발급됩니다.
  *         content:
  *           application/json:
  *             schema:
@@ -590,7 +590,7 @@
  *                           example: true
  *                         jwtAccessToken:
  *                           type: string
- *                           description: "reset-password 타입일 경우에만 반환됨"
+ *                           description: "type이 'reset-password'일 경우에만 반환됨"
  *       400:
  *         description: 인증번호 불일치 (EMAIL_INVALID_CODE)
  *         content:
@@ -606,7 +606,7 @@
  *                         reason:
  *                           example: "인증번호가 일치하지 않습니다."
  *       404:
- *         description: 가입된 계정 없음 (USER_NOT_FOUND)
+ *         description: 가입된 계정 없음 (USER_NOT_FOUND). type이 'reset-password'일 때 발생 가능.
  *         content:
  *           application/json:
  *             schema:
@@ -703,14 +703,18 @@
  *           schema:
  *             type: object
  *             required:
- *               - password
+ *               - oldPassword
+ *               - newPassword
  *             properties:
- *               password:
+ *               oldPassword:
  *                 type: string
- *                 example: "newPass123!"
+ *                 example: "currentPassword123"
+ *               newPassword:
+ *                 type: string
+ *                 example: "newStrongPassword123"
  *     responses:
  *       200:
- *         description: 재설정 성공
+ *         description: 비밀번호 변경 성공
  *         content:
  *           application/json:
  *             schema:
@@ -790,6 +794,20 @@
  *                             example: "AUTH_NOT_FOUND"
  *                           reason:
  *                             example: "인증 토큰이 없습니다."
+ *       404:
+ *         description: 기존 비밀번호를 찾을 수 없음 (PASSWORD_NOT_FOUND). 주로 소셜 로그인 유저에게 발생합니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ErrorResponse'
+ *                 - properties:
+ *                     error:
+ *                       properties:
+ *                         errorCode:
+ *                           example: "PASSWORD_NOT_FOUND"
+ *                         reason:
+ *                           example: "기존 비밀번호를 찾을 수 없습니다."
  */
 
 /**
@@ -1023,5 +1041,3 @@
  *                         reason:
  *                           example: "로그아웃에 실패했습니다. 다시 시도해주세요."
  */
-
-

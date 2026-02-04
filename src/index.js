@@ -2,15 +2,15 @@
 import cors from "cors";
 import "dotenv/config";
 import express from "express";
-import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
 import session from "express-session";
 import passport from "passport";
 import multer from "multer";
+import httpLogger from "./middlewares/logger.middleware.js";
 import { specs } from "./configs/swagger.config.js";
 import { jwtStrategy } from "./Auths/strategies/jwt.strategy.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriendRequest } from "./controllers/friend.controller.js";
-import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats, handleGetLetterAssets } from "./controllers/letter.controller.js";
+import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats, handleGetLetterAssets, handleGetLetterByAiKeyword } from "./controllers/letter.controller.js";
 import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername, handleSocialLogin, handleSocialLoginCertification, handleSocialLoginCallback } from "./controllers/auth.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
 import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyPushSubscription, handleGetMyConsents, handlePatchMyConsents, handleUpdateActivity, } from "./controllers/user.controller.js";
@@ -24,7 +24,7 @@ import { emailSchema, loginSchema, passwordSchema, SignUpSchema, usernameSchema,
 import { handleInsertInquiryAsUser, handleInsertInquiryAsAdmin, handleGetInquiry, handleGetInquiryDetail } from "./controllers/inquiry.controller.js";
 import { isLogin } from "./middlewares/auth.middleware.js";
 import { isRestricted } from "./middlewares/restriction.middleware.js";
-import { letterToMeSchema, letterToOtherSchema, publicCarouselSchema } from "./schemas/letter.schema.js";
+import { letterByAiKeywordSchema, letterToMeSchema, letterToOtherSchema, publicCarouselSchema } from "./schemas/letter.schema.js";
 import { idParamSchema, ISOTimeSchema } from "./schemas/common.schema.js";
 import { pushSubscriptionSchema, onboardingStep1Schema, updateInterestsSchema, updateProfileSchema, updateNotificationSettingsSchema, updateConsentsSchema, updateActivitySchema, createUserAgreementsSchema } from "./schemas/user.schema.js";
 import { threadIdParamSchema } from "./schemas/mailbox.schema.js";
@@ -40,6 +40,7 @@ import { postBlockUserSchema } from "./schemas/block.schema.js";
 import { handleGetBlock, handlePostBlock } from "./controllers/block.controller.js";
 import { handleGetRestrict } from "./controllers/restrict.controller.js";
 import { configurePush } from "./configs/push.config.js";
+import logger from "./configs/logger.config.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -51,9 +52,6 @@ app.use((req, res, next) => {
   console.log("[REQ]", req.method, req.originalUrl);
   next();
 });
-
-// 미들웨어 설정
-app.use(morgan("dev"));
 
 // app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
 
@@ -70,6 +68,9 @@ app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(passport.initialize());
+
+// 미들웨어 설정
+app.use(httpLogger);
 
 // 로그인 전략
 passport.use(jwtStrategy);
@@ -169,6 +170,7 @@ app.get("/letter-assets", isLogin, isRestricted, handleGetLetterAssets);        
 app.post("/letter/me", isLogin, isRestricted, validate(letterToMeSchema), handleSendMyLetter);                      // 나에게 편지 전송
 app.post("/letter/other", isLogin, isRestricted, validate(letterToOtherSchema),handleSendOtherLetter);              // 타인/친구에게 편지 전송
 app.get("/letters/:letterId", isLogin, isRestricted, validate(idParamSchema("letterId")),handleGetLetterDetail);    // 편지 상세 조회
+app.get("/letters/keywords/:aiKeyword", isLogin, isRestricted, validate(letterByAiKeywordSchema), asyncHandler(handleGetLetterByAiKeyword));    // AI 키워드로 편지 조회
 app.post("/letters/:letterId/like", isLogin, isRestricted, validate(idParamSchema("letterId")), handleAddLetterLike);                // 편지 좋아요 추가
 app.delete("/letters/:letterId/like", isLogin, isRestricted, validate(idParamSchema("letterId")), handleRemoveLetterLike);           // 편지 좋아요 삭제
 
@@ -224,6 +226,9 @@ app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
 
   const status = err.status || err.statusCode || 500;
+  res.locals.errorMessage = err.reason || err.message || "Internal Server Error";
+
+  if (status >= 500) logger.error(`[Server Error]\n${err.stack}`);
 
   return res.status(status).json({ resultType: "FAIL", error: { errorCode: err.errorCode || "COMMON_001", reason: err.reason || err.message || "Internal Server Error", data: err.data || null }, success: null });
 });
@@ -233,5 +238,3 @@ app.listen(port, async () => {
   console.log(`Server is running on port ${port}`);
   startBatch();
 });
-
-startBatch();

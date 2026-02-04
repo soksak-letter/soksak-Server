@@ -1,4 +1,16 @@
-import { addLetterLike, getLetter, getLetterAssets, getPublicLetterFromFriend, getPublicLetterFromOther, getUserLetterStats, removeLetterLike, sendLetterToMe, sendLetterToOther } from "../services/letter.service.js";
+import { addLetterLike, getLetter, getLetterAssets, getPublicLetterFromFriend, getPublicLetterFromOther, getUserLetterStats, removeLetterLike, sendLetterToMe, sendLetterToOther, getLetterByAiKeyword } from "../services/letter.service.js";
+
+export const handleGetLetterByAiKeyword = async (req, res, next) => {
+    const userId = req.user.id;
+    const aiKeyword = req.params.aiKeyword;
+    try {
+        const result = await getLetterByAiKeyword({userId, aiKeyword});
+
+        res.status(200).success( result );
+    } catch(err) {
+        next(err);
+    }
+}
 
 export const handleGetLetterDetail = async (req, res, next) => {
     const userId = req.user.id;

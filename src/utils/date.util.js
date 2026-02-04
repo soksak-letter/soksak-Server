@@ -110,11 +110,11 @@ export function getISOWeek(date = new Date()) {
 }
 
 export const getToday = (date) => {
-  return dayjs(date).utc().toDate();
+  return dayjs(date).tz("Asia/Seoul").utc().toDate();
 }
 
 export const getWeekStartAndEnd = (date) => {
-  const userDate = dayjs(date);
+  const userDate = dayjs(date).tz("Asia/Seoul");
 
   const weekStart = userDate.startOf("isoWeek");
   const weekEnd = userDate.endOf("isoWeek");
@@ -126,7 +126,7 @@ export const getWeekStartAndEnd = (date) => {
 }
 
 export const getDayStartAndEnd = (date) => {
-  const userDate = dayjs(date);
+  const userDate = dayjs(date).tz("Asia/Seoul");
 
   const startTime = userDate.startOf("day");
   const endTime = userDate.endOf("day");
@@ -138,7 +138,7 @@ export const getDayStartAndEnd = (date) => {
 }
 
 export const getMonthAndWeek = (date) => {
-  const userDate = dayjs(date);
+  const userDate = dayjs(date).tz("Asia/Seoul");
 
   const thursday = userDate.isoWeekday(4);
   

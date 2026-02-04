@@ -59,3 +59,9 @@ export class InvalidGrantCodeError extends BadRequestError {
       super(code, message, data);
   }
 }
+
+export class PasswordNotFoundError extends NotFoundError {
+  constructor(code, message, data = null) {
+      super(code, message, data);
+  }
+}

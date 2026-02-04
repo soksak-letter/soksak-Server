@@ -1,6 +1,45 @@
 import { prisma } from "../configs/db.config.js"
 import { ReferenceNotFoundError } from "../errors/base.error.js";
 
+export const getLetterByUserIdAndAiKeyword = async (senderUserId, keyword) => {
+    const letter = await prisma.letter.findMany({
+        where: {
+            senderUserId,
+            aiKeywords: {
+                some: {
+                    keyword: {
+                        name: keyword
+                    }
+                }
+            }
+        },
+        select: {
+            id: true,
+            senderUserId: true,
+            receiverUserId: true,
+            sessionId: true,
+            letterType: true,
+            questionId: true,
+            title: true,
+            content: true,
+            isPublic: true,
+            status: true,
+            scheduledAt: true,
+            deliveredAt: true,
+            readAt: true,
+            createdAt: true,
+            aiKeywords: {
+                select: {
+                    keyword: {
+                       select:  { name: true }
+                    }
+                }
+            }
+        }
+    })
+    return letter;
+}
+
 export const getLetterDetail = async (id) => {
     const letter = await prisma.letter.findFirst({
         select: {
@@ -390,9 +429,8 @@ export const sendReservedLetter = async ({startTime, endTime}) => {
     return updatedLetters;
 }
 
-export const updateLetter = async ({id, data}) => {
-    console.log(data);
-    await prisma.letter.update({
+export const updateLetter = async ({id, data}, tx = prisma) => {
+    await tx.letter.update({
         where: {
             id
         },
@@ -400,4 +438,15 @@ export const updateLetter = async ({id, data}) => {
             ...data
         }
     })
+}
+
+export const selectQueuedLetter = async () => {
+    const letter = await prisma.letter.findFirst({
+        where: {
+            status: "QUEUED",
+            orderBy: { createdAt: "asc"},
+        }
+    })
+
+    return letter;
 }
