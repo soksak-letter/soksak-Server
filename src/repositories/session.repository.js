@@ -170,6 +170,19 @@ export const findMatchingSessionBySessionId = async (sessionId) => {
   });
 };
 
+export const findMatchingSessionByParticipantUserId = async (userId, otherUserId) => {
+  const session = await prisma.matchingSession.findFirst({
+    where: {
+      participants: {
+        every: {
+          userId: { in: [userId, otherUserId] },
+        },
+      },
+    },
+  });
+  return session;
+};
+
 export const countMatchingSessionByUserId = async (userId) => {
   const participants = await prisma.sessionParticipant.findMany({
     where: { userId },
