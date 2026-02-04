@@ -230,7 +230,6 @@ export const acceptFriendRequest = async (receiverUserId, requesterUserId) => {
 // 6) 친구 신청 거절
 export const rejectFriendRequest = async (requesterUserId, receiverUserId) => {
   await assertUsersExistOrThrow(requesterUserId, receiverUserId);
-    const session = await findMatchingSessionByParticipantUserId(receiverUserId, requesterUserId);
   try {
     const rejectedFriendRequest = await updateFriendRequestRejectTx(
       requesterUserId, receiverUserId
