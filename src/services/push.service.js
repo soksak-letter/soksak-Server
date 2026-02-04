@@ -33,7 +33,6 @@ export const sendPushNotification = async ({userId, type, data = {}}) => {
                     if (err.statusCode === 410 || err.statusCode === 404) {
                         await deletePushSubscription(sub.id);
                     }
-                    throw err;
                 });
         })
     )
