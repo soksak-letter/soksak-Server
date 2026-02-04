@@ -77,8 +77,8 @@ export const handleGetOutgoingFriendRequests = async (req, res, next) => {
 
 export const handleAcceptFriendRequest = async (req, res, next) => {
   // 친구 신청 수락 로직 구현
-  const receiverUserId = req.user.id;
-  const { requesterUserId } = req.params;
+  const receiverUserId = Number(36);
+  const requesterUserId = Number(req.params.requesterUserId);
   userIsNull(receiverUserId, requesterUserId);
   try {
     const result = await acceptFriendRequest(receiverUserId, requesterUserId);

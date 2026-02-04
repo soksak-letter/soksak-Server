@@ -94,7 +94,7 @@ export const updateMatchingSessionToFriends = async (sessionId) => {
 };
 
 export const updateMatchingSessionToDiscard = async (sessionId) => {
-  return await prisma.matchingSession.update({
+  return await prisma.matchingSession.updateMany({
     where: {
       id: sessionId,
     },
@@ -168,6 +168,19 @@ export const findMatchingSessionBySessionId = async (sessionId) => {
       id: sessionId,
     },
   });
+};
+
+export const findMatchingSessionByParticipantUserId = async (userId, otherUserId) => {
+  const session = await prisma.matchingSession.findFirst({
+    where: {
+      participants: {
+        every: {
+          userId: { in: [userId, otherUserId] },
+        },
+      },
+    },
+  });
+  return session;
 };
 
 export const countMatchingSessionByUserId = async (userId) => {
