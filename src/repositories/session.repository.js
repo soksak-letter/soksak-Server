@@ -94,7 +94,7 @@ export const updateMatchingSessionToFriends = async (sessionId) => {
 };
 
 export const updateMatchingSessionToDiscard = async (sessionId) => {
-  return await prisma.matchingSession.updateMany({
+  return await prisma.matchingSession.update({
     where: {
       id: sessionId,
     },
