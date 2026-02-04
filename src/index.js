@@ -2,11 +2,11 @@
 import cors from "cors";
 import "dotenv/config";
 import express from "express";
-import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
 import session from "express-session";
 import passport from "passport";
 import multer from "multer";
+import httpLogger from "./middlewares/logger.middleware.js";
 import { specs } from "./configs/swagger.config.js";
 import { jwtStrategy } from "./Auths/strategies/jwt.strategy.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriendRequest } from "./controllers/friend.controller.js";
@@ -40,6 +40,7 @@ import { postBlockUserSchema } from "./schemas/block.schema.js";
 import { handleGetBlock, handlePostBlock } from "./controllers/block.controller.js";
 import { handleGetRestrict } from "./controllers/restrict.controller.js";
 import { configurePush } from "./configs/push.config.js";
+import logger from "./configs/logger.config.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -51,9 +52,6 @@ app.use((req, res, next) => {
   console.log("[REQ]", req.method, req.originalUrl);
   next();
 });
-
-// 미들웨어 설정
-app.use(morgan("dev"));
 
 // app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
 
@@ -70,6 +68,9 @@ app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(passport.initialize());
+
+// 미들웨어 설정
+app.use(httpLogger);
 
 // 로그인 전략
 passport.use(jwtStrategy);
@@ -225,6 +226,9 @@ app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
 
   const status = err.status || err.statusCode || 500;
+  res.locals.errorMessage = err.reason || err.message || "Internal Server Error";
+
+  if (status >= 500) logger.error(`[Server Error]\n${err.stack}`);
 
   return res.status(status).json({ resultType: "FAIL", error: { errorCode: err.errorCode || "COMMON_001", reason: err.reason || err.message || "Internal Server Error", data: err.data || null }, success: null });
 });
