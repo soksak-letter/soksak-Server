@@ -4,12 +4,13 @@ import { findUserByEmail, createUserAndAuth, createUserAgreement, findUserByUser
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../Auths/token.js";
 import { checkEmailRateLimit, createEmailVerifiedKey, getEmailVerifiedKey, getEmailVerifyCode, getHashedPasswordByUserId, getHashedPasswordByUsername, getRefreshToken, revokeToken, saveEmailVerifyCode, saveRefreshToken, updatePassword } from "../repositories/auth.repository.js";
 import { createRandomNumber } from "../utils/random.util.js";
-import { transporter } from "../configs/mailer.config.js";
 import { UserNotFoundError } from "../errors/user.error.js";
 import { DuplicatedValueError, InternalServerError } from "../errors/base.error.js";
 import { AuthError, InvalidGrantCodeError, InvalidVerificationCodeError, NotRefreshTokenError, PasswordNotFoundError, RequiredTermAgreementError, UnprocessableProviderError, VerificationRateLimitError } from "../errors/auth.error.js";
 import { ALLOWED_PROVIDERS, authConfigs } from "../constants/auth.constant.js";
 import axios from "axios";
+import { enqueueJob } from "../utils/queue.util.js";
+import { mailQueue } from "../jobs/bootstraps/mail.bootstrap.js";
 
 /**
  * 유저가 서비스에 가입했는지 확인하고 JWT를 반환하는 함수
@@ -238,7 +239,7 @@ export const SendVerifyEmailCode = async ({email, type}) => {
 
     const expiredAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    const info = await transporter.sendMail({
+    await enqueueJob(mailQueue, "SEND_MAIL_FOR_CODE", {
         from: `"속삭편지" <${process.env.MAILER_USER}>`,
         to: email,
         subject: "[속삭] 회원가입 인증번호",

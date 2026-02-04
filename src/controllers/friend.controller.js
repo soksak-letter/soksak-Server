@@ -65,6 +65,7 @@ export const handleGetIncomingFriendRequests = async (req, res, next) => {
 
 export const handleGetOutgoingFriendRequests = async (req, res, next) => {
   // 보낸 친구 신청 목록 조회 로직 구현
+  
   const userId = req.user.id;
   userIsNull(userId);
   try {
