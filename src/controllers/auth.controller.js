@@ -176,9 +176,9 @@ export const handleGetAccountInfo = async (req, res, next) => {
 
 export const handleResetPassword = async (req, res, next) => {
     const userId = req.user.id;
-    const {password} = req.body;
+    const {oldPassword, newPassword} = req.body;
     try{
-        const result = await resetPassword({userId, password});
+        const result = await resetPassword({userId, oldPassword, newPassword});
 
         res.status(200).success(result);
     } catch(err) {

@@ -2,14 +2,15 @@ import bcrypt from "bcrypt"
 import { prisma } from "../configs/db.config.js";
 import { findUserByEmail, createUserAndAuth, createUserAgreement, findUserByUsername, softDeleteUser } from "../repositories/user.repository.js";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../Auths/token.js";
-import { checkEmailRateLimit, createEmailVerifiedKey, getEmailVerifiedKey, getEmailVerifyCode, getHashedPassword, getRefreshToken, revokeToken, saveEmailVerifyCode, saveRefreshToken, updatePassword } from "../repositories/auth.repository.js";
+import { checkEmailRateLimit, createEmailVerifiedKey, getEmailVerifiedKey, getEmailVerifyCode, getHashedPasswordByUserId, getHashedPasswordByUsername, getRefreshToken, revokeToken, saveEmailVerifyCode, saveRefreshToken, updatePassword } from "../repositories/auth.repository.js";
 import { createRandomNumber } from "../utils/random.util.js";
-import { transporter } from "../configs/mailer.config.js";
 import { UserNotFoundError } from "../errors/user.error.js";
 import { DuplicatedValueError, InternalServerError } from "../errors/base.error.js";
-import { AuthError, InvalidGrantCodeError, InvalidVerificationCodeError, NotRefreshTokenError, RequiredTermAgreementError, UnprocessableProviderError, VerificationRateLimitError } from "../errors/auth.error.js";
+import { AuthError, InvalidGrantCodeError, InvalidVerificationCodeError, NotRefreshTokenError, PasswordNotFoundError, RequiredTermAgreementError, UnprocessableProviderError, VerificationRateLimitError } from "../errors/auth.error.js";
 import { ALLOWED_PROVIDERS, authConfigs } from "../constants/auth.constant.js";
 import axios from "axios";
+import { enqueueJob } from "../utils/queue.util.js";
+import { mailQueue } from "../jobs/bootstraps/mail.bootstrap.js";
 
 /**
  * 유저가 서비스에 가입했는지 확인하고 JWT를 반환하는 함수
@@ -175,7 +176,7 @@ export const loginUser = async ({username, password}) => {
     const user = await findUserByUsername(username);
     if(!user) throw new AuthError("AUTH_BAD_REQUEST", "아이디 또는 비밀번호가 일치하지 않습니다.");
 
-    const passwordHash = await getHashedPassword(username);
+    const passwordHash = await getHashedPasswordByUsername(username);
     if(!passwordHash) throw new AuthError("AUTH_BAD_REQUEST", "아이디 또는 비밀번호가 일치하지 않습니다.");
 
     const isValidPassword = await bcrypt.compare(password, passwordHash);
@@ -238,7 +239,7 @@ export const SendVerifyEmailCode = async ({email, type}) => {
 
     const expiredAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    const info = await transporter.sendMail({
+    await enqueueJob(mailQueue, "SEND_MAIL_FOR_CODE", {
         from: `"속삭편지" <${process.env.MAILER_USER}>`,
         to: email,
         subject: "[속삭] 회원가입 인증번호",
@@ -289,9 +290,15 @@ export const getAccountInfo = async (email) => {
     }
 }
 
-export const resetPassword = async ({userId, password}) => {
-    const passwordHash = await bcrypt.hash(password, 10);
-    await updatePassword({userId, newPassword: passwordHash});
+export const resetPassword = async ({userId, oldPassword, newPassword}) => {
+    const oldPasswordHash = await getHashedPasswordByUserId(userId);
+    if(!oldPasswordHash) throw new PasswordNotFoundError("PASSWORD_NOT_FOUND", "기존 비밀번호를 찾을 수 없습니다.");
+
+    const isValidPassword = await bcrypt.compare(oldPassword, oldPasswordHash);
+    if(!isValidPassword) throw new AuthError("AUTH_BAD_REQUEST", "비밀번호가 일치하지 않습니다.");
+
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+    await updatePassword({userId, newPassword: newPasswordHash});
 
     return { message: "비밀번호 재설정이 완료되었습니다." };
 }

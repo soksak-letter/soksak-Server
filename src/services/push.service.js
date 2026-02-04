@@ -35,7 +35,6 @@ export const sendPushNotification = async ({userId, type, data = {}, useMarketin
                     if (err.statusCode === 410 || err.statusCode === 404) {
                         await deletePushSubscription(sub.id);
                     }
-                    throw err;
                 });
         })
     )
