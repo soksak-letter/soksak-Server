@@ -91,18 +91,11 @@ export const getAnonymousThreads = async (userId) => {
         nickname: nicknameMap.get(otherParticipantId) ?? null,
         letterCount: letterCountMap.get(sessionId) ?? 0, // sessionId 기준 개수
       },
-      stampId: l.design?.stamp?.id ?? null,
-      stampUrl: l.design?.stamp?.assetUrl ?? null,
-      design: l.design
-        ? {
-            paper: l.design.paper
-              ? {
-                  id: l.design.paper.id,
-                  name: l.design.paper.color, // color를 name으로 매핑
-                }
-              : null,
-          }
-        : { paper: null },
+      design: {
+        paperId: l.design?.paper?.id ?? null,
+        stampId: l.design?.stamp?.id ?? null,
+        stampUrl: l.design?.stamp?.assetUrl ?? null,
+      },
     };
   });
 
@@ -229,18 +222,11 @@ export const getAnonymousThreadLetters = async (userId, sessionIdRaw) => {
     deliveredAt: l.deliveredAt ?? null,
     readAt: l.readAt ?? null,
     isMine: false,
-    stampId: l.design?.stamp?.id ?? null,
-    stampUrl: l.design?.stamp?.assetUrl ?? null,
-    design: l.design
-      ? {
-          paper: l.design.paper
-            ? {
-                id: l.design.paper.id,
-                name: l.design.paper.color, // color를 name으로 매핑
-              }
-            : null,
-        }
-      : { paper: null },
+    design: {
+      paperId: l.design?.paper?.id ?? null,
+      stampId: l.design?.stamp?.id ?? null,
+      stampUrl: l.design?.stamp?.assetUrl ?? null,
+    },
   }));
 
   // 보낸 편지에 isMine: true 추가
@@ -250,18 +236,11 @@ export const getAnonymousThreadLetters = async (userId, sessionIdRaw) => {
     deliveredAt: l.deliveredAt ?? null,
     readAt: l.readAt ?? null,
     isMine: true,
-    stampId: l.design?.stamp?.id ?? null,
-    stampUrl: l.design?.stamp?.assetUrl ?? null,
-    design: l.design
-      ? {
-          paper: l.design.paper
-            ? {
-                id: l.design.paper.id,
-                name: l.design.paper.color, // color를 name으로 매핑
-              }
-            : null,
-        }
-      : { paper: null },
+    design: {
+      paperId: l.design?.paper?.id ?? null,
+      stampId: l.design?.stamp?.id ?? null,
+      stampUrl: l.design?.stamp?.assetUrl ?? null,
+    },
   }));
 
   // 받은 편지 먼저, 보낸 편지 나중에 배치

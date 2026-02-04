@@ -48,24 +48,19 @@
  *                                 type: string
  *                                 format: date-time
  *                                 nullable: true
- *                               stampId:
- *                                 type: integer
- *                                 nullable: true
- *                               stampUrl:
- *                                 type: string
- *                                 nullable: true
- *                                 description: 스탬프 이미지 URL
  *                               design:
  *                                 type: object
  *                                 properties:
- *                                   paper:
- *                                     type: object
+ *                                   paperId:
+ *                                     type: integer
  *                                     nullable: true
- *                                     properties:
- *                                       id:
- *                                         type: integer
- *                                       name:
- *                                         type: string
+ *                                   stampId:
+ *                                     type: integer
+ *                                     nullable: true
+ *                                   stampUrl:
+ *                                     type: string
+ *                                     nullable: true
+ *                                     description: 스탬프 이미지 URL
  *       401:
  *         description: |
  *           인증 실패:
@@ -203,24 +198,19 @@
  *                               isMine:
  *                                 type: boolean
  *                                 description: 내가 보낸 편지인지 여부
- *                               stampId:
- *                                 type: integer
- *                                 nullable: true
- *                               stampUrl:
- *                                 type: string
- *                                 nullable: true
- *                                 description: 스탬프 이미지 URL
  *                               design:
  *                                 type: object
  *                                 properties:
- *                                   paper:
- *                                     type: object
+ *                                   paperId:
+ *                                     type: integer
  *                                     nullable: true
- *                                     properties:
- *                                       id:
- *                                         type: integer
- *                                       name:
- *                                         type: string
+ *                                   stampId:
+ *                                     type: integer
+ *                                     nullable: true
+ *                                   stampUrl:
+ *                                     type: string
+ *                                     nullable: true
+ *                                     description: 스탬프 이미지 URL
  *       400:
  *         description: |
  *           잘못된 요청:
