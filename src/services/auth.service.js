@@ -295,7 +295,7 @@ export const resetPassword = async ({userId, oldPassword, newPassword}) => {
     if(!oldPasswordHash) throw new PasswordNotFoundError("PASSWORD_NOT_FOUND", "기존 비밀번호를 찾을 수 없습니다.");
 
     const isValidPassword = await bcrypt.compare(oldPassword, oldPasswordHash);
-    if(!isValidPassword) throw new AuthError("AUTH_BAD_REQUEST", "아이디 또는 비밀번호가 일치하지 않습니다.");
+    if(!isValidPassword) throw new AuthError("AUTH_BAD_REQUEST", "비밀번호가 일치하지 않습니다.");
 
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
     await updatePassword({userId, newPassword: newPasswordHash});
