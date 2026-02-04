@@ -28,8 +28,14 @@ export const getBlackListToken = async (token) => {
     return value;
 }
 
-export const getHashedPassword = async (username) => {
+export const getHashedPasswordByUsername = async (username) => {
     const {passwordHash} = await prisma.auth.findFirst({ select: { passwordHash: true }, where: { username } });
+
+    return passwordHash;
+}
+
+export const getHashedPasswordByUserId = async (userId) => {
+    const {passwordHash} = await prisma.auth.findFirst({ select: { passwordHash: true }, where: { userId } });
 
     return passwordHash;
 }
