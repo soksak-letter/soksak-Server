@@ -689,10 +689,10 @@
 
 /**
  * @swagger
- * /auth/reset-password:
+ * /auth/change-password:
  *   patch:
- *     summary: 비밀번호 초기화
- *     description: "/auth/reset-password/confirm 에서 발급받은 임시 AccessToken이 필요합니다."
+ *     summary: 비밀번호 변경
+ *     description: "비밀번호 변경 API입니다."
  *     tags: [로그인]
  *     security:
  *       - bearerAuth: []
@@ -812,10 +812,10 @@
 
 /**
  * @swagger
- * /auth/change-password:
+ * /auth/reset-password:
  *   patch:
- *     summary: 비밀번호 변경
- *     description: "비밀번호 변경 API입니다."
+ *     summary: 비밀번호 초기화
+ *     description: "/auth/reset-password/confirm 에서 발급받은 임시 AccessToken이 필요합니다."
  *     tags: [로그인]
  *     security:
  *       - bearerAuth: []

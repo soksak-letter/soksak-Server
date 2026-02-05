@@ -39,13 +39,13 @@ export const usernameSchema = z.object({
     })
 })
 
-export const changePasswordSchema = z.object({
+export const resetPasswordSchema = z.object({
     body: z.object({
         password: passwordPart
     })
 })
 
-export const resetPasswordSchema = z.object({
+export const changePasswordSchema = z.object({
     body: z.object({
         oldPassword: passwordPart,
         newPassword: passwordPart
