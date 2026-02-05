@@ -302,3 +302,10 @@ export const resetPassword = async ({userId, oldPassword, newPassword}) => {
 
     return { message: "비밀번호 재설정이 완료되었습니다." };
 }
+
+export const changePassword = async ({userId, password}) => {
+    const newPasswordHash = await bcrypt.hash(password, 10);
+    await updatePassword({userId, newPassword: newPasswordHash});
+
+    return { message: "비밀번호 재설정이 완료되었습니다." };
+}
