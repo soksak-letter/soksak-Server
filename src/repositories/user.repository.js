@@ -179,7 +179,7 @@ export const findRandomUserByPool = async (id) => {
 
   const sessions = await prisma.matchingSession.findMany({
     where: {
-      status: "CHATING",
+      status: { in: ["PENDING", "CHATING"] },
       participants: { some: { userId: id } },
     },
     select: {
