@@ -691,7 +691,7 @@
  * @swagger
  * /auth/reset-password:
  *   patch:
- *     summary: 비밀번호 재설정
+ *     summary: 비밀번호 초기화
  *     description: "/auth/reset-password/confirm 에서 발급받은 임시 AccessToken이 필요합니다."
  *     tags: [로그인]
  *     security:
@@ -808,6 +808,111 @@
  *                           example: "PASSWORD_NOT_FOUND"
  *                         reason:
  *                           example: "기존 비밀번호를 찾을 수 없습니다."
+ */
+
+/**
+ * @swagger
+ * /auth/change-password:
+ *   patch:
+ *     summary: 비밀번호 변경
+ *     description: "비밀번호 변경 API입니다."
+ *     tags: [로그인]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - password
+ *             properties:
+ *               password:
+ *                 type: string
+ *                 example: "Password123!"
+ *     responses:
+ *       200:
+ *         description: 비밀번호 변경 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - properties:
+ *                     success:
+ *                       type: object
+ *                       properties:
+ *                         message:
+ *                           type: string
+ *                           example: "비밀번호 재설정이 완료되었습니다."
+ *       401:
+ *         description: |
+ *           인증 실패:
+ *           - `AUTH_TOKEN_EXPIRED`: 토큰이 만료되었습니다.
+ *           - `AUTH_INVALID_TOKEN`: 액세스 토큰이 아니거나 유효하지 않습니다.
+ *           - `AUTH_NOT_ACCESS_TOKEN`: 액세스 토큰이 아닙니다.
+ *           - `AUTH_EXPIRED_TOKEN`: 이미 로그아웃된 토큰입니다.
+ *           - `AUTH_UNAUTHORIZED`: 액세스 토큰이 유효하지 않습니다.
+ *           - `AUTH_NOT_FOUND`: 인증 토큰이 없습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_TOKEN_EXPIRED"
+ *                           reason:
+ *                             example: "토큰이 만료되었습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_INVALID_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아니거나 유효하지 않습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_ACCESS_TOKEN"
+ *                           reason:
+ *                             example: "액세스 토큰이 아닙니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_EXPIRED_TOKEN"
+ *                           reason:
+ *                             example: "이미 로그아웃된 토큰입니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_UNAUTHORIZED"
+ *                           reason:
+ *                             example: "액세스 토큰이 유효하지 않습니다."
+ *                 - allOf:
+ *                   - $ref: '#/components/schemas/ErrorResponse'
+ *                   - properties:
+ *                       error:
+ *                         properties:
+ *                           errorCode:
+ *                             example: "AUTH_NOT_FOUND"
+ *                           reason:
+ *                             example: "인증 토큰이 없습니다."
  */
 
 /**
