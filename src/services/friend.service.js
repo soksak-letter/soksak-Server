@@ -27,6 +27,9 @@ import {
 } from "../errors/base.error.js";
 import { findMatchingSessionByParticipantUserId, updateMatchingSessionToFriends, updateMatchingSessionToDiscard } from "../repositories/session.repository.js";
 import { SessionInternalError, SessionNotFoundError } from "../errors/session.error.js";
+import { sendPushNotification } from "./push.service.js";
+import { enqueueJob } from "../utils/queue.util.js";
+import { pushQueue } from "../jobs/bootstraps/push.bootstrap.js";
 
 async function userExistsOrThrow(userId) {
   const userById = await findUserById(userId);
@@ -197,8 +200,17 @@ export const acceptFriendRequest = async (receiverUserId, requesterUserId) => {
       receiverUserId,
       requesterUserId,
     });
+  const nickname = (await findUserById(receiverUserId)).nickname;
   try {
     const result = await acceptFriendRequestTx(receiverUserId, requesterUserId);
+    if (result) {
+      await enqueueJob(pushQueue, "PUSH_BY_FRIEND", {
+        userId: requesterUserId,
+        type: "FRIEND_MATCH_SUCCESS",
+        data: { nickname: nickname ?? `새 친구(${receiverUserId})` },
+    });
+   }  
+   console.log("성공함");  
     return {
       data: result,
     };
