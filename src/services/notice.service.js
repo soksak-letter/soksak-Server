@@ -19,3 +19,7 @@ export const getNoticeDetail = async (noticeId) => {
 
   return notice;
 };
+
+// sendNoticePushNotification 함수는 삭제됨
+// jobs/bootstraps/push.bootstrap.js의 sendNoticePushNotifications로 대체됨
+// 비동기 메시지 큐(BullMQ)를 통해 처리됩니다.

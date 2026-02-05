@@ -21,8 +21,8 @@ export const handleGetAnonymousThreadLetters = async (req, res, next) => {
     const userId = getAuthUserId(req);
     if (!userId) throw new MailboxUnauthorizedError();
 
-    const { threadId } = req.params;
-    const result = await getAnonymousThreadLetters(userId, threadId);
+    const { sessionId } = req.params;
+    const result = await getAnonymousThreadLetters(userId, sessionId);
 
     return res.status(200).success(result);
   } catch (err) {
