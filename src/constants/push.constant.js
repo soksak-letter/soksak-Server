@@ -41,6 +41,6 @@ export const NOTIFICATION_MESSAGES = {
   // 5. 친구 매칭 성공
   FRIEND_MATCH_SUCCESS: {
     TITLE: () => "마음이 딱 통했어요! ✨",
-    BODY: (targetUserNickname) => `${targetUserNickname}님과 새로운 친구가 되었습니다. 먼저 따뜻한 인사를 건네보는 건 어떨까요?`,
+    BODY: ({ nickname }) => `${nickname}님과 새로운 친구가 되었습니다. 먼저 따뜻한 인사를 건네보는 건 어떨까요?`,
   },
 };
