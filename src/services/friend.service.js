@@ -25,6 +25,8 @@ import {
   ConflictError,
   InternalServerError,
 } from "../errors/base.error.js";
+import { findMatchingSessionByParticipantUserId, updateMatchingSessionToFriends, updateMatchingSessionToDiscard } from "../repositories/session.repository.js";
+import { SessionInternalError, SessionNotFoundError } from "../errors/session.error.js";
 
 async function userExistsOrThrow(userId) {
   const userById = await findUserById(userId);
@@ -42,12 +44,12 @@ async function assertUsersExistOrThrow(userId, targetUserId) {
 
   if (!userById)
     throw new InvalidUserError(undefined, "잘못된 유저 정보 입력입니다.", {
-      userId,
+      userId
     });
 
   if (!targetUserById)
     throw new InvalidUserError(undefined, "잘못된 유저 정보 입력입니다.", {
-      targetUserId,
+      targetUserId
     });
 }
 
@@ -178,10 +180,17 @@ export const getOutgoingFriendRequests = async (userId) => {
   }
 };
 
-// 5) 친구 신청 수락
+// 5) 친구 신청 수락 (receiverUserId: userId, requesterUserId: targetUserId)
 export const acceptFriendRequest = async (receiverUserId, requesterUserId) => {
   await assertUsersExistOrThrow(receiverUserId, requesterUserId);
-
+  const session = await findMatchingSessionByParticipantUserId(receiverUserId, requesterUserId);
+  if (!session) { 
+    throw new SessionNotFoundError(undefined, undefined, {receiverUserId, requesterUserId});
+  }
+  const friendsSession = await updateMatchingSessionToFriends(session.id);
+  if(friendsSession.status != "FRIENDS") {
+    throw new SessionInternalError(undefined, "세션 상태 변경에 실패했습니다.", {sessionId: session.id});
+  }
   const req = await userExistsFriendRequest(receiverUserId, requesterUserId);
   if (!req)
     throw new FriendRequestNotFoundError(undefined, undefined, {
@@ -221,7 +230,6 @@ export const acceptFriendRequest = async (receiverUserId, requesterUserId) => {
 // 6) 친구 신청 거절
 export const rejectFriendRequest = async (requesterUserId, receiverUserId) => {
   await assertUsersExistOrThrow(requesterUserId, receiverUserId);
-
   try {
     const rejectedFriendRequest = await updateFriendRequestRejectTx(
       requesterUserId, receiverUserId
