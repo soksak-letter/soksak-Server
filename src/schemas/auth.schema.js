@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const emailPart = z.email("이메일 형식이 올바르지 않습니다.");
 const usernamePart = z.string("아이디는 필수입니다.").min(6, "아이디는 최소 6자 이상입니다.").max(16, "아이디는 최대 6자 이상입니다.");
-const passwordPart = z.string("비밀번호는 필수입니다.").regex(/^(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9]{8,16}$/, "비밀번호는 최소 8자-16자 제한입니다. (영문, 숫자 포함해 최대 16자리)");
+const passwordPart = z.string("비밀번호는 필수입니다.").regex(/^(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9!@#$%^&*]{8,16}$/, "비밀번호는 최소 8자-16자 제한입니다. (영문, 숫자 포함해 최대 16자리)");
 const phoneNumberPart = z.string("전화번호는 필수입니다.").regex(/^01(?:0|1|[6-9])-(?:\d{3}|\d{4})-\d{4}$/, "전화번호 형식이 올바르지 않습니다.");
 
 export const SignUpSchema = z.object({
@@ -39,7 +39,13 @@ export const usernameSchema = z.object({
     })
 })
 
-export const passwordSchema = z.object({
+export const changePasswordSchema = z.object({
+    body: z.object({
+        password: passwordPart
+    })
+})
+
+export const resetPasswordSchema = z.object({
     body: z.object({
         oldPassword: passwordPart,
         newPassword: passwordPart

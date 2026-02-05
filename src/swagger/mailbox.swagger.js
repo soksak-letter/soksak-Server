@@ -3,7 +3,7 @@
  * /mailbox/anonymous:
  *   get:
  *     summary: 익명 탭 목록 조회
- *     description: 익명으로 받은 편지의 스레드 목록을 조회합니다. senderUserId별 최신 편지 1개씩 반환됩니다.
+ *     description: 익명으로 받은 편지의 스레드 목록을 조회합니다. sessionId별 최신 편지 1개씩 반환됩니다.
  *     tags: [편지함]
  *     security:
  *       - bearerAuth: []
@@ -24,9 +24,9 @@
  *                           items:
  *                             type: object
  *                             properties:
- *                               threadId:
+ *                               sessionId:
  *                                 type: integer
- *                                 description: 스레드 ID (senderUserId)
+ *                                 description: 세션 ID (MatchingSession ID)
  *                               sender:
  *                                 type: object
  *                                 properties:
@@ -35,6 +35,9 @@
  *                                   nickname:
  *                                     type: string
  *                                     nullable: true
+ *                                   letterCount:
+ *                                     type: integer
+ *                                     description: 해당 세션의 편지 개수
  *                               lastLetterId:
  *                                 type: integer
  *                               lastLetterTitle:
@@ -45,26 +48,22 @@
  *                                 type: string
  *                                 format: date-time
  *                                 nullable: true
- *                               stampId:
- *                                 type: integer
- *                                 nullable: true
- *                               stampUrl:
- *                                 type: string
- *                                 nullable: true
- *                                 description: 스탬프 이미지 URL
+ *                               hasUnread:
+ *                                 type: boolean
+ *                                 description: 해당 세션에 읽지 않은 편지가 있는지 여부 (받은 편지 기준)
  *                               design:
  *                                 type: object
  *                                 properties:
- *                                   paper:
- *                                     type: object
+ *                                   paperId:
+ *                                     type: integer
  *                                     nullable: true
- *                                     properties:
- *                                       id:
- *                                         type: integer
- *                                       name:
- *                                         type: string
- *                                       assetUrl:
- *                                         type: string
+ *                                   stampId:
+ *                                     type: integer
+ *                                     nullable: true
+ *                                   stampUrl:
+ *                                     type: string
+ *                                     nullable: true
+ *                                     description: 스탬프 이미지 URL
  *       401:
  *         description: |
  *           인증 실패:
@@ -152,7 +151,7 @@
 
 /**
  * @swagger
- * /mailbox/anonymous/threads/{threadId}/letters:
+ * /mailbox/anonymous/threads/{sessionId}/letters:
  *   get:
  *     summary: 익명 스레드 편지 목록 조회
  *     description: 특정 익명 스레드의 편지 목록을 조회합니다.
@@ -161,11 +160,11 @@
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: threadId
+ *         name: sessionId
  *         required: true
  *         schema:
  *           type: integer
- *         description: 스레드 ID (senderUserId)
+ *         description: 세션 ID (MatchingSession ID)
  *     responses:
  *       200:
  *         description: 성공
@@ -195,32 +194,31 @@
  *                                 type: string
  *                                 format: date-time
  *                                 nullable: true
+ *                               readAt:
+ *                                 type: string
+ *                                 format: date-time
+ *                                 nullable: true
  *                               isMine:
  *                                 type: boolean
  *                                 description: 내가 보낸 편지인지 여부
- *                               stampId:
- *                                 type: integer
- *                                 nullable: true
- *                               stampUrl:
- *                                 type: string
- *                                 nullable: true
- *                                 description: 스탬프 이미지 URL
  *                               design:
  *                                 type: object
  *                                 properties:
- *                                   paper:
- *                                     type: object
+ *                                   paperId:
+ *                                     type: integer
  *                                     nullable: true
- *                                     properties:
- *                                       id:
- *                                         type: integer
- *                                       name:
- *                                         type: string
+ *                                   stampId:
+ *                                     type: integer
+ *                                     nullable: true
+ *                                   stampUrl:
+ *                                     type: string
+ *                                     nullable: true
+ *                                     description: 스탬프 이미지 URL
  *       400:
  *         description: |
  *           잘못된 요청:
  *           - `REQ_BAD_REQUEST`: 요청 유효성 검사 실패
- *           - `MAILBOX_INVALID_THREAD_ID`: threadId가 올바르지 않습니다.
+ *           - `MAILBOX_INVALID_SESSION_ID`: sessionId가 올바르지 않습니다.
  *         content:
  *           application/json:
  *             schema:
@@ -240,9 +238,9 @@
  *                       error:
  *                         properties:
  *                           errorCode:
- *                             example: "MAILBOX_INVALID_THREAD_ID"
+ *                             example: "MAILBOX_INVALID_SESSION_ID"
  *                           reason:
- *                             example: "threadId가 올바르지 않습니다."
+ *                             example: "sessionId가 올바르지 않습니다."
  *       401:
  *         description: |
  *           인증 실패:

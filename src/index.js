@@ -11,7 +11,7 @@ import { specs } from "./configs/swagger.config.js";
 import { jwtStrategy } from "./Auths/strategies/jwt.strategy.js";
 import { handleGetFriendsList, handlePostFriendsRequest, handleGetIncomingFriendRequests, handleGetOutgoingFriendRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleDeleteFriendRequest } from "./controllers/friend.controller.js";
 import { handleSendMyLetter, handleSendOtherLetter, handleGetLetterDetail, handleRemoveLetterLike, handleAddLetterLike, handleGetPublicLetterFromOther, handleGetPublicLetterFromFriend, handleGetUserLetterStats, handleGetLetterAssets, handleGetLetterByAiKeyword } from "./controllers/letter.controller.js";
-import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername, handleSocialLogin, handleSocialLoginCertification, handleSocialLoginCallback } from "./controllers/auth.controller.js";
+import { handleCheckDuplicatedEmail, handleLogin, handleRefreshToken, handleSignUp, handleSendVerifyEmailCode, handleCheckEmailCode, handleGetAccountInfo, handleResetPassword, handleLogout, handleWithdrawUser, handleCheckDuplicatedUsername, handleSocialLogin, handleSocialLoginCertification, handleSocialLoginCallback, handleChangePassword } from "./controllers/auth.controller.js";
 import { handlePostMatchingSession, handlePatchMatchingSessionStatusDiscarded, handlePatchMatchingSessionStatusFriends, handlePostSessionReview } from "./controllers/session.controller.js";
 import { handleCreateUserAgreements, handlePatchOnboardingStep1, handleGetAllInterests, handleGetMyInterests, handleUpdateMyOnboardingInterests, handleGetMyNotificationSettings, handleUpdateMyNotificationSettings, handleGetMyProfile, handlePatchMyProfile, handlePostMyProfileImage, handlePutMyPushSubscription, handleGetMyConsents, handlePatchMyConsents, handleUpdateActivity, } from "./controllers/user.controller.js";
 import { handleGetAnonymousThreads, handleGetAnonymousThreadLetters, handleGetSelfMailbox, handleGetLetterFromFriend, } from "./controllers/mailbox.controller.js";
@@ -20,14 +20,14 @@ import { handleGetCommunityGuidelines, handleGetTerms, handleGetPrivacy, } from 
 import { handleGetWeeklyReport } from "./controllers/weeklyReport.controller.js";
 import { handleGetTodayQuestion } from "./controllers/question.controller.js";
 import { validate } from "./middlewares/validate.middleware.js";
-import { emailSchema, loginSchema, passwordSchema, SignUpSchema, usernameSchema, verificationConfirmCodeSchema, verificationSendCodeSchema } from "./schemas/auth.schema.js";
+import { changePasswordSchema, emailSchema, loginSchema, resetPasswordSchema, SignUpSchema, usernameSchema, verificationConfirmCodeSchema, verificationSendCodeSchema } from "./schemas/auth.schema.js";
 import { handleInsertInquiryAsUser, handleInsertInquiryAsAdmin, handleGetInquiry, handleGetInquiryDetail } from "./controllers/inquiry.controller.js";
 import { isLogin } from "./middlewares/auth.middleware.js";
 import { isRestricted } from "./middlewares/restriction.middleware.js";
 import { letterByAiKeywordSchema, letterToMeSchema, letterToOtherSchema, publicCarouselSchema } from "./schemas/letter.schema.js";
 import { idParamSchema, ISOTimeSchema } from "./schemas/common.schema.js";
 import { pushSubscriptionSchema, onboardingStep1Schema, updateInterestsSchema, updateProfileSchema, updateNotificationSettingsSchema, updateConsentsSchema, updateActivitySchema, createUserAgreementsSchema } from "./schemas/user.schema.js";
-import { threadIdParamSchema } from "./schemas/mailbox.schema.js";
+import { sessionIdParamSchema } from "./schemas/mailbox.schema.js";
 import { noticeIdParamSchema } from "./schemas/notice.schema.js";
 import { HandleGetHomeDashboard } from "./controllers/dashboard.controller.js";
 import { handleInsertUserReport, handleGetUserReports, handleGetUserReport } from "./controllers/report.controller.js";
@@ -160,7 +160,8 @@ app.get("/auth/refresh", handleRefreshToken);                                   
 app.post("/auth/:type/verification-codes", validate(verificationSendCodeSchema), handleSendVerifyEmailCode);       // 이메일 인증번호 전송
 app.post("/auth/:type/verification-codes/confirm", validate(verificationConfirmCodeSchema), handleCheckEmailCode); // 이메일 인증번호 확인
 app.post("/auth/find-id", validate(emailSchema), handleGetAccountInfo);                        // 아이디 찾기
-app.patch("/auth/reset-password", isLogin, validate(passwordSchema), handleResetPassword);    // 비밀번호 찾기
+app.patch("/auth/reset-password", isLogin, validate(resetPasswordSchema), handleResetPassword);    // 비밀번호 초기화
+app.patch("/auth/change-password", isLogin, validate(changePasswordSchema), handleChangePassword); // 비밀번호 변경
 app.post("/auth/logout", isLogin, handleLogout);                            // 로그아웃
 app.delete("/users", isLogin, handleWithdrawUser);                          // 탈퇴
 app.post("/users/me/agreements", isLogin, validate(createUserAgreementsSchema), handleCreateUserAgreements)    // 이용약관 동의
@@ -210,7 +211,7 @@ app.put("/users/me/push-subscriptions", isLogin, validate(pushSubscriptionSchema
 
 // / 편지함
 app.get("/mailbox/anonymous", isLogin, handleGetAnonymousThreads);
-app.get("/mailbox/anonymous/threads/:threadId/letters", isLogin, validate(threadIdParamSchema), handleGetAnonymousThreadLetters);
+app.get("/mailbox/anonymous/threads/:sessionId/letters", isLogin, validate(sessionIdParamSchema), handleGetAnonymousThreadLetters);
 app.get("/mailbox/friends/threads/:friendId/letters", isLogin, validate(idParamSchema("friendId")), handleGetLetterFromFriend); // 친구 대화 목록 화면 조회
 app.get("/mailbox/self", isLogin, handleGetSelfMailbox);
 

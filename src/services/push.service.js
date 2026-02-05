@@ -1,9 +1,11 @@
 import { NOTIFICATION_MESSAGES } from "../constants/push.constant.js";
-import { deletePushSubscription, getPushSubscription } from "../repositories/user.repository.js"
+import { deletePushSubscription, getPushSubscription, getPushSubscriptionForMarketing } from "../repositories/user.repository.js"
 import webpush from "web-push"
 
-export const sendPushNotification = async ({userId, type, data = {}}) => {
-    const subscriptions = await getPushSubscription(userId);
+export const sendPushNotification = async ({userId, type, data = {}, useMarketing = false}) => {
+    const subscriptions = useMarketing 
+        ? await getPushSubscriptionForMarketing(userId)
+        : await getPushSubscription(userId);
     if(subscriptions.length === 0)  return;
 
     const messageConfig = NOTIFICATION_MESSAGES[type];

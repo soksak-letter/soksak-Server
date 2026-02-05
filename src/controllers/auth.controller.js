@@ -1,6 +1,6 @@
 import axios from "axios";
 import { getTTLFromToken } from "../Auths/token.js";
-import { checkDuplicatedEmail, checkDuplicatedUsername, signUpUser, loginUser, updateRefreshToken, SendVerifyEmailCode, checkEmailCode, getAccountInfo, resetPassword, logoutUser, withdrawUser, verifySocialAccount, socialLoginUser, socialLoginCertification } from "../services/auth.service.js";
+import { checkDuplicatedEmail, checkDuplicatedUsername, signUpUser, loginUser, updateRefreshToken, SendVerifyEmailCode, checkEmailCode, getAccountInfo, resetPassword, logoutUser, withdrawUser, verifySocialAccount, socialLoginUser, socialLoginCertification, changePassword } from "../services/auth.service.js";
 import { createSocialUserDTO } from "../dtos/auth.dto.js";
 
 export const handleSignUp = async (req, res, next) => {
@@ -179,6 +179,18 @@ export const handleResetPassword = async (req, res, next) => {
     const {oldPassword, newPassword} = req.body;
     try{
         const result = await resetPassword({userId, oldPassword, newPassword});
+
+        res.status(200).success(result);
+    } catch(err) {
+        next(err);
+    }
+}
+
+export const handleChangePassword = async (req, res, next) => {
+    const userId = req.user.id;
+    const {password} = req.body;
+    try{
+        const result = await changePassword({userId, password});
 
         res.status(200).success(result);
     } catch(err) {
