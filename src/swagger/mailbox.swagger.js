@@ -48,6 +48,9 @@
  *                                 type: string
  *                                 format: date-time
  *                                 nullable: true
+ *                               hasUnread:
+ *                                 type: boolean
+ *                                 description: 해당 세션에 읽지 않은 편지가 있는지 여부 (받은 편지 기준)
  *                               design:
  *                                 type: object
  *                                 properties:

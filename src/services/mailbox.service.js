@@ -77,6 +77,22 @@ export const getAnonymousThreads = async (userId) => {
   );
   const letterCountMap = new Map(letterCounts);
 
+  // 각 세션별 읽지 않은 편지 체크 (받은 편지만 체크)
+  const unreadChecks = await Promise.all(
+    sessionIds.map(async (sessionId) => {
+      const unreadCount = await prisma.letter.count({
+        where: {
+          letterType: LETTER_TYPE_ANON,
+          sessionId: sessionId,
+          receiverUserId: userId,
+          readAt: null, // 읽지 않은 편지
+        }
+      });
+      return [sessionId, unreadCount > 0]; // 하나라도 있으면 true
+    })
+  );
+  const hasUnreadMap = new Map(unreadChecks);
+
   const letters = sessionIds.map((sessionId) => {
     const { letter: l, otherParticipantId } = latestBySession.get(sessionId);
 
@@ -86,6 +102,7 @@ export const getAnonymousThreads = async (userId) => {
       lastLetterTitle: l.title,
       lastLetterPreview: makePreview(l.content, 30),
       deliveredAt: l.deliveredAt ?? null,
+      hasUnread: hasUnreadMap.get(sessionId) ?? false, // 읽지 않은 편지 여부
       sender: {
         id: otherParticipantId, // 상대방 ID
         nickname: nicknameMap.get(otherParticipantId) ?? null,
