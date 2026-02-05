@@ -90,8 +90,8 @@ model UserAgreement {
   termsAgreed           Boolean  @map("terms_agreed")
   privacyAgreed         Boolean  @map("privacy_agreed")
   ageOver14Agreed       Boolean  @map("age_over_14_agreed")
-  marketingPushAgreed   Boolean  @map("marketing_push_agreed")
-  marketingEmailAgreed  Boolean  @map("marketing_email_agreed")
+  marketingPushAgreed   Boolean  @default(false) @map("marketing_push_agreed")
+  marketingEmailAgreed  Boolean  @default(false) @map("marketing_email_agreed")
   agreedAt            DateTime @default(now()) @map("agreed_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

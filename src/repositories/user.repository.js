@@ -325,6 +325,21 @@ export const getPushSubscription = async (userId) => {
   return subscriptions;
 }
 
+export const getPushSubscriptionForMarketing = async (userId) => {
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { 
+      userId: userId,
+      user: {
+        notificationSetting: {
+          marketingEnabled: true
+        }
+      }
+    }
+  })
+
+  return subscriptions;
+}
+
 export const deletePushSubscription = async (id) => {
   await prisma.pushSubscription.delete({
     where: {id: id}
@@ -485,6 +500,7 @@ export const findReceivedLettersBySender = async ({ userId, senderUserId, letter
       title: true,
       content: true,
       deliveredAt: true,
+      readAt: true,
       createdAt: true,
       question: {
         select: {
@@ -528,6 +544,7 @@ export const findSentLettersByReceiver = async ({ userId, receiverUserId, letter
       title: true,
       content: true,
       deliveredAt: true,
+      readAt: true,
       createdAt: true,
       question: {
         select: {
@@ -637,6 +654,45 @@ export const findNoticeById = async (id) => {
       createdAt: true,
     },
   });
+};
+
+export const findRecentNotices = async (minutes = 10) => {
+  const now = new Date();
+  const minutesAgo = new Date(now.getTime() - minutes * 60 * 1000);
+
+  return prisma.notice.findMany({
+    where: {
+      createdAt: {
+        gte: minutesAgo,
+        lte: now,
+      },
+    },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      createdAt: true,
+    },
+  });
+};
+
+export const findUsersWithMarketingPushEnabled = async () => {
+  const users = await prisma.user.findMany({
+    where: {
+      isDeleted: false,
+      notificationSetting: {
+        marketingEnabled: true,
+      },
+      pushSubscriptions: {
+        some: {},
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return users.map((user) => user.id);
 };
 
 // ========== Notification Repository ==========

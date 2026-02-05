@@ -1,7 +1,5 @@
 import {
   findReceivedLettersForThreads,
-  findReceivedLettersBySender,
-  findSentLettersByReceiver,
   findSelfLetters,
   findUsersNicknameByIds,
 } from "../repositories/user.repository.js";
@@ -9,6 +7,8 @@ import { LETTER_TYPE_ANON, LETTER_TYPE_SELF, makePreview } from "../utils/user.u
 import { findFriendById } from "../repositories/friend.repository.js";
 import { NotFriendError } from "../errors/friend.error.js";
 import { getFriendLetters, getMyLettersWithFriend } from "../repositories/letter.repository.js";
+import { prisma } from "../configs/db.config.js";
+import { MailboxInvalidSessionIdError } from "../errors/mailbox.error.js";
 
 // ------------------------------
 // Mailbox
@@ -20,42 +20,99 @@ export const getAnonymousThreads = async (userId) => {
     letterType: LETTER_TYPE_ANON,
   });
 
-  const latestBySender = new Map(); // senderUserId -> letter
+  // sessionId로 그룹화
+  const latestBySession = new Map(); // sessionId -> { letter, otherParticipantId }
   for (const l of receivedLetters) {
-    if (!l.senderUserId) continue;
-    if (!latestBySender.has(l.senderUserId)) {
-      latestBySender.set(l.senderUserId, l);
+    if (!l.sessionId || !l.senderUserId) continue;
+    
+    // 상대방 ID는 senderUserId
+    const otherParticipantId = l.senderUserId;
+    
+    if (!latestBySession.has(l.sessionId)) {
+      latestBySession.set(l.sessionId, {
+        letter: l,
+        otherParticipantId: otherParticipantId
+      });
+    } else {
+      // 더 최신 편지로 업데이트
+      const existing = latestBySession.get(l.sessionId);
+      const existingTime = existing.letter.deliveredAt 
+        ? new Date(existing.letter.deliveredAt).getTime() 
+        : new Date(existing.letter.createdAt).getTime();
+      const currentTime = l.deliveredAt 
+        ? new Date(l.deliveredAt).getTime() 
+        : new Date(l.createdAt).getTime();
+      
+      if (currentTime > existingTime) {
+        latestBySession.set(l.sessionId, {
+          letter: l,
+          otherParticipantId: otherParticipantId
+        });
+      }
     }
   }
 
-  const senderIds = Array.from(latestBySender.keys());
-  const nicknameMap = senderIds.length ? await findUsersNicknameByIds(senderIds) : new Map();
+  const sessionIds = Array.from(latestBySession.keys());
+  const sessionData = Array.from(latestBySession.values());
+  const otherParticipantIds = sessionData.map(s => s.otherParticipantId);
+  const nicknameMap = otherParticipantIds.length 
+    ? await findUsersNicknameByIds(otherParticipantIds) 
+    : new Map();
 
-  const letters = senderIds.map((senderId) => {
-    const l = latestBySender.get(senderId);
+  // 각 세션별 편지 개수 조회 (sessionId 기준, 개별 조회)
+  const letterCounts = await Promise.all(
+    sessionIds.map(async (sessionId) => {
+      const count = await prisma.letter.count({
+        where: {
+          letterType: LETTER_TYPE_ANON,
+          sessionId: sessionId,
+          OR: [
+            { receiverUserId: userId },
+            { senderUserId: userId }
+          ]
+        }
+      });
+      return [sessionId, count];
+    })
+  );
+  const letterCountMap = new Map(letterCounts);
+
+  // 각 세션별 읽지 않은 편지 체크 (받은 편지만 체크)
+  const unreadChecks = await Promise.all(
+    sessionIds.map(async (sessionId) => {
+      const unreadCount = await prisma.letter.count({
+        where: {
+          letterType: LETTER_TYPE_ANON,
+          sessionId: sessionId,
+          receiverUserId: userId,
+          readAt: null, // 읽지 않은 편지
+        }
+      });
+      return [sessionId, unreadCount > 0]; // 하나라도 있으면 true
+    })
+  );
+  const hasUnreadMap = new Map(unreadChecks);
+
+  const letters = sessionIds.map((sessionId) => {
+    const { letter: l, otherParticipantId } = latestBySession.get(sessionId);
 
     return {
-      threadId: senderId, // threadId = senderUserId
+      sessionId: sessionId, // threadId -> sessionId로 변경
       lastLetterId: l.id,
       lastLetterTitle: l.title,
       lastLetterPreview: makePreview(l.content, 30),
       deliveredAt: l.deliveredAt ?? null,
+      hasUnread: hasUnreadMap.get(sessionId) ?? false, // 읽지 않은 편지 여부
       sender: {
-        id: senderId,
-        nickname: nicknameMap.get(senderId) ?? null,
+        id: otherParticipantId, // 상대방 ID
+        nickname: nicknameMap.get(otherParticipantId) ?? null,
+        letterCount: letterCountMap.get(sessionId) ?? 0, // sessionId 기준 개수
       },
-      stampId: l.design?.stamp?.id ?? null,
-      stampUrl: l.design?.stamp?.assetUrl ?? null,
-      design: l.design
-        ? {
-            paper: l.design.paper
-              ? {
-                  id: l.design.paper.id,
-                  name: l.design.paper.color, // color를 name으로 매핑
-                }
-              : null,
-          }
-        : { paper: null },
+      design: {
+        paperId: l.design?.paper?.id ?? null,
+        stampId: l.design?.stamp?.id ?? null,
+        stampUrl: l.design?.stamp?.assetUrl ?? null,
+      },
     };
   });
 
@@ -68,21 +125,108 @@ export const getAnonymousThreads = async (userId) => {
   return { letters };
 };
 
-export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
-  const threadId = Number(threadIdRaw);
+export const getAnonymousThreadLetters = async (userId, sessionIdRaw) => {
+  const sessionId = Number(sessionIdRaw);
 
-  // 받은 편지 조회
-  const receivedLetters = await findReceivedLettersBySender({
-    userId,
-    senderUserId: threadId,
-    letterType: LETTER_TYPE_ANON,
+  // 세션 참가자 조회하여 권한 확인
+  const session = await prisma.matchingSession.findFirst({
+    where: {
+      id: sessionId,
+      participants: {
+        some: {
+          userId: userId // 현재 사용자가 참가자인 세션만
+        }
+      }
+    },
+    include: {
+      participants: {
+        select: {
+          userId: true
+        }
+      }
+    }
   });
 
-  // 보낸 편지 조회
-  const sentLetters = await findSentLettersByReceiver({
-    userId,
-    receiverUserId: threadId,
-    letterType: LETTER_TYPE_ANON,
+  if (!session) {
+    throw new MailboxInvalidSessionIdError();
+  }
+
+  // 받은 편지 조회 (sessionId로 필터링)
+  const receivedLetters = await prisma.letter.findMany({
+    where: {
+      receiverUserId: userId,
+      sessionId: sessionId,
+      letterType: LETTER_TYPE_ANON,
+    },
+    orderBy: [{ deliveredAt: "desc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+      title: true,
+      deliveredAt: true,
+      readAt: true,
+      createdAt: true,
+      question: {
+        select: {
+          content: true
+        }
+      },
+      design: {
+        select: {
+          paper: {
+            select: {
+              id: true,
+              color: true,
+            }
+          },
+          stamp: {
+            select: {
+              id: true,
+              name: true,
+              assetUrl: true
+            }
+          },
+        },
+      },
+    },
+  });
+
+  // 보낸 편지 조회 (sessionId로 필터링)
+  const sentLetters = await prisma.letter.findMany({
+    where: {
+      senderUserId: userId,
+      sessionId: sessionId,
+      letterType: LETTER_TYPE_ANON,
+    },
+    orderBy: [{ deliveredAt: "desc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+      title: true,
+      deliveredAt: true,
+      readAt: true,
+      createdAt: true,
+      question: {
+        select: {
+          content: true
+        }
+      },
+      design: {
+        select: {
+          paper: {
+            select: {
+              id: true,
+              color: true,
+            }
+          },
+          stamp: {
+            select: {
+              id: true,
+              name: true,
+              assetUrl: true
+            }
+          },
+        },
+      },
+    },
   });
 
   // firstQuestion: 받은 편지의 첫 번째 질문 우선, 없으면 보낸 편지의 첫 번째 질문
@@ -93,19 +237,13 @@ export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
     id: l.id,
     title: l.title,
     deliveredAt: l.deliveredAt ?? null,
+    readAt: l.readAt ?? null,
     isMine: false,
-    stampId: l.design?.stamp?.id ?? null,
-    stampUrl: l.design?.stamp?.assetUrl ?? null,
-    design: l.design
-      ? {
-          paper: l.design.paper
-            ? {
-                id: l.design.paper.id,
-                name: l.design.paper.color, // color를 name으로 매핑
-              }
-            : null,
-        }
-      : { paper: null },
+    design: {
+      paperId: l.design?.paper?.id ?? null,
+      stampId: l.design?.stamp?.id ?? null,
+      stampUrl: l.design?.stamp?.assetUrl ?? null,
+    },
   }));
 
   // 보낸 편지에 isMine: true 추가
@@ -113,19 +251,13 @@ export const getAnonymousThreadLetters = async (userId, threadIdRaw) => {
     id: l.id,
     title: l.title,
     deliveredAt: l.deliveredAt ?? null,
+    readAt: l.readAt ?? null,
     isMine: true,
-    stampId: l.design?.stamp?.id ?? null,
-    stampUrl: l.design?.stamp?.assetUrl ?? null,
-    design: l.design
-      ? {
-          paper: l.design.paper
-            ? {
-                id: l.design.paper.id,
-                name: l.design.paper.color, // color를 name으로 매핑
-              }
-            : null,
-        }
-      : { paper: null },
+    design: {
+      paperId: l.design?.paper?.id ?? null,
+      stampId: l.design?.stamp?.id ?? null,
+      stampUrl: l.design?.stamp?.assetUrl ?? null,
+    },
   }));
 
   // 받은 편지 먼저, 보낸 편지 나중에 배치
