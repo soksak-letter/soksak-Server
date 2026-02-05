@@ -174,11 +174,11 @@ export const handleGetAccountInfo = async (req, res, next) => {
     }
 }
 
-export const handleResetPassword = async (req, res, next) => {
+export const handleChangePassword = async (req, res, next) => {
     const userId = req.user.id;
     const {oldPassword, newPassword} = req.body;
     try{
-        const result = await resetPassword({userId, oldPassword, newPassword});
+        const result = await changePassword({userId, oldPassword, newPassword});
 
         res.status(200).success(result);
     } catch(err) {
@@ -186,11 +186,11 @@ export const handleResetPassword = async (req, res, next) => {
     }
 }
 
-export const handleChangePassword = async (req, res, next) => {
+export const handleResetPassword = async (req, res, next) => {
     const userId = req.user.id;
     const {password} = req.body;
     try{
-        const result = await changePassword({userId, password});
+        const result = await resetPassword({userId, password});
 
         res.status(200).success(result);
     } catch(err) {

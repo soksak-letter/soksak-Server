@@ -290,7 +290,14 @@ export const getAccountInfo = async (email) => {
     }
 }
 
-export const resetPassword = async ({userId, oldPassword, newPassword}) => {
+export const resetPassword = async ({userId, password}) => {
+    const newPasswordHash = await bcrypt.hash(password, 10);
+    await updatePassword({userId, newPassword: newPasswordHash});
+
+    return { message: "비밀번호 재설정이 완료되었습니다." };
+}
+
+export const changePassword = async ({userId, oldPassword, newPassword}) => {
     const oldPasswordHash = await getHashedPasswordByUserId(userId);
     if(!oldPasswordHash) throw new PasswordNotFoundError("PASSWORD_NOT_FOUND", "기존 비밀번호를 찾을 수 없습니다.");
 
@@ -298,13 +305,6 @@ export const resetPassword = async ({userId, oldPassword, newPassword}) => {
     if(!isValidPassword) throw new AuthError("AUTH_BAD_REQUEST", "비밀번호가 일치하지 않습니다.");
 
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
-    await updatePassword({userId, newPassword: newPasswordHash});
-
-    return { message: "비밀번호 재설정이 완료되었습니다." };
-}
-
-export const changePassword = async ({userId, password}) => {
-    const newPasswordHash = await bcrypt.hash(password, 10);
     await updatePassword({userId, newPassword: newPasswordHash});
 
     return { message: "비밀번호 재설정이 완료되었습니다." };
