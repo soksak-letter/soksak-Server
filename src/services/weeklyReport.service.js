@@ -227,19 +227,19 @@ export const createWeeklyReport = async (userId, year, week) => {
     // 2) 감정 분석(키워드 기반) - 0..7 보장 + 실패 시 폴백
     const emotionsByIndex = hasKeywords
       ? await safeAnalyzeWeeklyEmotions(keywordCounts, {
-          maxEmotions: 6,
-          minRatio: 0.05,
-          temperature: 0.2,
-        })
+        maxEmotions: 6,
+        minRatio: 0.05,
+        temperature: 0.2,
+      })
       : defaultEmotionIndexMap();
 
     // 3) 편지 생성(감정+키워드) - 실패 시 폴백
     const { letterText } = hasKeywords
       ? await safeCreateLetterDraft({
-          keywordCounts,
-          nickname: user.nickname,
-          weeklyEmotions: emotionsByIndex?.["0"] ?? [],
-        })
+        keywordCounts,
+        nickname: user.nickname,
+        weeklyEmotions: emotionsByIndex?.["0"] ?? [],
+      })
       : { letterText: "이번 주는 기록된 키워드가 없어 마음 편지를 생성하지 않았어요. 스스로에게 따뜻한 위로의 편지를 보내보세요." };
 
     // 4) weekly_report 생성
@@ -281,18 +281,59 @@ export const readWeeklyReport = async (userId) => {
     const highlights = await findWeeklyReportHighlightByRId(weeklyReport.id);
     const emotionsRaw = await findWeeklyReportEmotionByRId(weeklyReport.id);
 
+    let count0Count = 0;
+    let iscount0Over3 = false;
     // count(0..7)별로 그룹핑
-    const emotionsByIndex = (emotionsRaw ?? []).reduce(
-      (acc, e) => {
-        const idx = e.count; // 0..7 기대
-        if (idx >= 0 && idx <= 7) {
-          acc[idx].push({ emotion: e.emotion, ratio: e.ratio });
-        }
-        return acc;
-      },
+    const emotionsByIndex = (emotionsRaw ?? []).reduce((acc, e) => {
+      const idx = e.count; // 0..7 기대
+      if (idx >= 0 && idx <= 7) {
+        acc[idx].push({ emotion: e.emotion, ratio: e.ratio });
+      }
+      if (idx === 0) count0Count++;
+      if (count0Count > 3) {
+        iscount0Over3 = true;
+      }
+      return acc;
+    },
       // 0..7을 무조건 보장하는 초기값
       { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [] }
     );
+
+    const emotions = {
+      TOTAL: emotionsByIndex[0],
+      MON: emotionsByIndex[1],
+      TUE: emotionsByIndex[2],
+      WED: emotionsByIndex[3],
+      THU: emotionsByIndex[4],
+      FRI: emotionsByIndex[5],
+      SAT: emotionsByIndex[6],
+      SUN: emotionsByIndex[7],
+    };
+
+    const emotionsResult = (() => {
+      const total = emotions.TOTAL ?? [];
+
+      // TOTAL이 3개 이하면 "기타" 만들 필요 없음
+      if (total.length <= 3) return emotions;
+
+      // 1~3번째는 유지
+      const top3 = total.slice(0, 3);
+
+      // 4번째 이하(인덱스 3부터 끝까지) ratio 합
+      const otherRatio = total
+        .slice(3)
+        .reduce((sum, x) => sum + (Number(x?.ratio) || 0), 0);
+
+      // "기타" 추가
+      const newTotal = otherRatio > 0
+        ? [...top3, { emotion: "기타", ratio: otherRatio }]
+        : top3;
+
+      // ✅ return에서 emotions를 그대로 쓰니까, 여기서 emotions를 변이시켜버림
+      emotions.TOTAL = newTotal;
+
+      return emotions;
+    })();
 
     // ✅ 과거에 summaryText를 JSON.stringify로 저장한 데이터가 남아있을 수 있어 복구 처리
     let summaryText = weeklyReport.summaryText ?? null;
@@ -327,7 +368,7 @@ export const readWeeklyReport = async (userId) => {
           count: k.count,
         })),
 
-        emotions: emotionsByIndex,
+        emotions: emotions,
 
         highlights: (highlights ?? []).map((h) => ({
           letterId: h.letterId,

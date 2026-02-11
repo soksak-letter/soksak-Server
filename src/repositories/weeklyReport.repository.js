@@ -195,7 +195,7 @@ export const findWeeklyReportEmotionByRId = async(rId) => {
             ratio: true,
             count: true,
         },
-        orderBy: [{ count: "asc"}, {ratio: "desc"}]
+        orderBy: [{ count: "asc"}, { ratio: "desc" }]
     })
 }
 
