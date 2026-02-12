@@ -591,6 +591,11 @@ export const findSelfLetters = async ({ userId, letterType }) => {
       createdAt: true,
       deliveredAt: true,
       questionId: true,
+      question: {
+        select: {
+          content: true
+        }
+      },
       design: {
         select: { 
           paperId: true,
