@@ -522,9 +522,10 @@
  *                                 type: string
  *                                 format: date-time
  *                                 nullable: true
- *                               questionId:
- *                                 type: integer
+ *                               questionTitle:
+ *                                 type: string
  *                                 nullable: true
+ *                                 description: 질문 내용
  *                               paperId:
  *                                 type: integer
  *                                 nullable: true

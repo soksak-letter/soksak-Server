@@ -202,3 +202,24 @@ export const countMatchingSessionByUserId = async (userId) => {
 
   return count;
 };
+
+// 세션 ID와 사용자 ID로 세션 조회 (참가자 포함)
+export const findMatchingSessionBySessionIdAndUserId = async ({ sessionId, userId }) => {
+  return await prisma.matchingSession.findFirst({
+    where: {
+      id: sessionId,
+      participants: {
+        some: {
+          userId: userId
+        }
+      }
+    },
+    include: {
+      participants: {
+        select: {
+          userId: true
+        }
+      }
+    }
+  });
+};
