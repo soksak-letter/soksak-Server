@@ -106,7 +106,7 @@ export const postFriendRequest = async (userId, targetUserId, sessionId) => {
 // 2) 친구 목록 조회
 export const getFriendsList = async (userId) => {
   await userExistsOrThrow(userId);
-
+  
   try {
     const friendsList = await selectAllFriendsByUserId(userId);
     if (friendsList.length === 0) {
