@@ -6,8 +6,15 @@ import {
 import { LETTER_TYPE_ANON, LETTER_TYPE_SELF, makePreview } from "../utils/user.util.js";
 import { findFriendById } from "../repositories/friend.repository.js";
 import { NotFriendError } from "../errors/friend.error.js";
-import { getFriendLetters, getMyLettersWithFriend } from "../repositories/letter.repository.js";
-import { prisma } from "../configs/db.config.js";
+import { 
+  getFriendLetters, 
+  getMyLettersWithFriend,
+  countLettersBySessionIdAndUserId,
+  countUnreadLettersBySessionIdAndUserId,
+  findReceivedLettersBySessionIdAndUserId,
+  findSentLettersBySessionIdAndUserId,
+} from "../repositories/letter.repository.js";
+import { findMatchingSessionBySessionIdAndUserId } from "../repositories/session.repository.js";
 import { MailboxInvalidSessionIdError } from "../errors/mailbox.error.js";
 
 // ------------------------------
@@ -62,15 +69,10 @@ export const getAnonymousThreads = async (userId) => {
   // 각 세션별 편지 개수 조회 (sessionId 기준, 개별 조회)
   const letterCounts = await Promise.all(
     sessionIds.map(async (sessionId) => {
-      const count = await prisma.letter.count({
-        where: {
-          letterType: LETTER_TYPE_ANON,
-          sessionId: sessionId,
-          OR: [
-            { receiverUserId: userId },
-            { senderUserId: userId }
-          ]
-        }
+      const count = await countLettersBySessionIdAndUserId({
+        sessionId,
+        userId,
+        letterType: LETTER_TYPE_ANON,
       });
       return [sessionId, count];
     })
@@ -80,13 +82,10 @@ export const getAnonymousThreads = async (userId) => {
   // 각 세션별 읽지 않은 편지 체크 (받은 편지만 체크)
   const unreadChecks = await Promise.all(
     sessionIds.map(async (sessionId) => {
-      const unreadCount = await prisma.letter.count({
-        where: {
-          letterType: LETTER_TYPE_ANON,
-          sessionId: sessionId,
-          receiverUserId: userId,
-          readAt: null, // 읽지 않은 편지
-        }
+      const unreadCount = await countUnreadLettersBySessionIdAndUserId({
+        sessionId,
+        userId,
+        letterType: LETTER_TYPE_ANON,
       });
       return [sessionId, unreadCount > 0]; // 하나라도 있으면 true
     })
@@ -129,22 +128,9 @@ export const getAnonymousThreadLetters = async (userId, sessionIdRaw) => {
   const sessionId = Number(sessionIdRaw);
 
   // 세션 참가자 조회하여 권한 확인
-  const session = await prisma.matchingSession.findFirst({
-    where: {
-      id: sessionId,
-      participants: {
-        some: {
-          userId: userId // 현재 사용자가 참가자인 세션만
-        }
-      }
-    },
-    include: {
-      participants: {
-        select: {
-          userId: true
-        }
-      }
-    }
+  const session = await findMatchingSessionBySessionIdAndUserId({
+    sessionId,
+    userId,
   });
 
   if (!session) {
@@ -152,81 +138,17 @@ export const getAnonymousThreadLetters = async (userId, sessionIdRaw) => {
   }
 
   // 받은 편지 조회 (sessionId로 필터링)
-  const receivedLetters = await prisma.letter.findMany({
-    where: {
-      receiverUserId: userId,
-      sessionId: sessionId,
-      letterType: LETTER_TYPE_ANON,
-    },
-    orderBy: [{ deliveredAt: "desc" }, { createdAt: "desc" }],
-    select: {
-      id: true,
-      title: true,
-      deliveredAt: true,
-      readAt: true,
-      createdAt: true,
-      question: {
-        select: {
-          content: true
-        }
-      },
-      design: {
-        select: {
-          paper: {
-            select: {
-              id: true,
-              color: true,
-            }
-          },
-          stamp: {
-            select: {
-              id: true,
-              name: true,
-              assetUrl: true
-            }
-          },
-        },
-      },
-    },
+  const receivedLetters = await findReceivedLettersBySessionIdAndUserId({
+    sessionId,
+    userId,
+    letterType: LETTER_TYPE_ANON,
   });
 
   // 보낸 편지 조회 (sessionId로 필터링)
-  const sentLetters = await prisma.letter.findMany({
-    where: {
-      senderUserId: userId,
-      sessionId: sessionId,
-      letterType: LETTER_TYPE_ANON,
-    },
-    orderBy: [{ deliveredAt: "desc" }, { createdAt: "desc" }],
-    select: {
-      id: true,
-      title: true,
-      deliveredAt: true,
-      readAt: true,
-      createdAt: true,
-      question: {
-        select: {
-          content: true
-        }
-      },
-      design: {
-        select: {
-          paper: {
-            select: {
-              id: true,
-              color: true,
-            }
-          },
-          stamp: {
-            select: {
-              id: true,
-              name: true,
-              assetUrl: true
-            }
-          },
-        },
-      },
-    },
+  const sentLetters = await findSentLettersBySessionIdAndUserId({
+    sessionId,
+    userId,
+    letterType: LETTER_TYPE_ANON,
   });
 
   // firstQuestion: 받은 편지의 첫 번째 질문 우선, 없으면 보낸 편지의 첫 번째 질문
@@ -296,7 +218,7 @@ export const getSelfMailbox = async (userId) => {
     id: l.id,
     title: l.title,
     createdAt: l.createdAt ?? null,
-    questionId: l.questionId ?? null,
+    questionTitle: l.question?.content ?? null,
     paperId: l.design?.paperId ?? null,
     stampId: l.design?.stampId ?? null,
     stampUrl: l.design?.stamp?.assetUrl ?? null,

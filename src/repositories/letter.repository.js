@@ -91,7 +91,7 @@ export const getLetterDetail = async (id) => {
         letter: {
             id: letter.id,
             title: letter.title,
-            content: letter.title,
+            content: letter.content,
             deliveredAt: letter.deliveredAt,
             question: letter?.question.content,
             design: {
@@ -468,3 +468,111 @@ export const selectQueuedLetter = async () => {
 
     return letter;
 }
+
+// 세션별 편지 개수 조회
+export const countLettersBySessionIdAndUserId = async ({ sessionId, userId, letterType }) => {
+  return await prisma.letter.count({
+    where: {
+      letterType,
+      sessionId: sessionId,
+      OR: [
+        { receiverUserId: userId },
+        { senderUserId: userId }
+      ]
+    }
+  });
+};
+
+// 세션별 읽지 않은 편지 개수 조회
+export const countUnreadLettersBySessionIdAndUserId = async ({ sessionId, userId, letterType }) => {
+  return await prisma.letter.count({
+    where: {
+      letterType,
+      sessionId: sessionId,
+      receiverUserId: userId,
+      readAt: null,
+    }
+  });
+};
+
+// 세션별 받은 편지 조회
+export const findReceivedLettersBySessionIdAndUserId = async ({ sessionId, userId, letterType }) => {
+  return await prisma.letter.findMany({
+    where: {
+      receiverUserId: userId,
+      sessionId: sessionId,
+      letterType,
+    },
+    orderBy: [{ deliveredAt: "desc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+      title: true,
+      deliveredAt: true,
+      readAt: true,
+      createdAt: true,
+      question: {
+        select: {
+          content: true
+        }
+      },
+      design: {
+        select: {
+          paper: {
+            select: {
+              id: true,
+              color: true,
+            }
+          },
+          stamp: {
+            select: {
+              id: true,
+              name: true,
+              assetUrl: true
+            }
+          },
+        },
+      },
+    },
+  });
+};
+
+// 세션별 보낸 편지 조회
+export const findSentLettersBySessionIdAndUserId = async ({ sessionId, userId, letterType }) => {
+  return await prisma.letter.findMany({
+    where: {
+      senderUserId: userId,
+      sessionId: sessionId,
+      letterType,
+    },
+    orderBy: [{ deliveredAt: "desc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+      title: true,
+      deliveredAt: true,
+      readAt: true,
+      createdAt: true,
+      question: {
+        select: {
+          content: true
+        }
+      },
+      design: {
+        select: {
+          paper: {
+            select: {
+              id: true,
+              color: true,
+            }
+          },
+          stamp: {
+            select: {
+              id: true,
+              name: true,
+              assetUrl: true
+            }
+          },
+        },
+      },
+    },
+  });
+};
