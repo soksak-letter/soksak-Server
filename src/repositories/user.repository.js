@@ -791,6 +791,7 @@ export const findPolicyDocumentByKey = async (key) => {
 
 // ========== Profile Repository ==========
 export const findUserByIdForProfile = async (userId) => {
+  console.log("==================이게 왜 문제야=====================");
   return prisma.user.findUnique({
     where: { id: userId },
     select: {

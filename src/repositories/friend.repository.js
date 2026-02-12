@@ -6,6 +6,7 @@ import {
   selectRecentLetterByUserIds,
   selectLetterDesignByLetterId,
 } from "./letter.repository.js";
+import { findUserByIdForProfile } from "./user.repository.js";
 
 export async function userExistsFriendRequest(receiverUserId, requesterUserId) {
   return await prisma.FriendRequest.findFirst({
@@ -209,9 +210,10 @@ export async function selectAllFriendsByUserId(userId) {
   // 친구별 메타(편지수 + 최근편지 + 디자인) 캐싱
   const letterMetaEntries = await Promise.all(
     uniqueFriendIds.map(async (fid) => {
-      const [letterCount, recentLetter] = await Promise.all([
+      const [letterCount, recentLetter, profile] = await Promise.all([
         selectLetterByUserIds(userId, fid), // letterCount 반환한다고 가정
         selectRecentLetterByUserIds(userId, fid), // { id, createdAt } 반환한다고 가정
+        findUserByIdForProfile(fid)
       ]);
 
       if (!recentLetter) {
@@ -220,6 +222,7 @@ export async function selectAllFriendsByUserId(userId) {
           {
             letterCount,
             recentLetter: null,
+            profileImageUrl: profile.profileImageUrl
           },
         ];
       }
@@ -234,11 +237,11 @@ export async function selectAllFriendsByUserId(userId) {
             createdAt: recentLetter.createdAt ?? null,
             design,
           },
+          profileImageUrl: profile.profileImageUrl
         },
       ];
     })
   );
-
   const letterMetaByFriendId = new Map(letterMetaEntries);
 
   return rows.map((r) => {
@@ -252,6 +255,7 @@ export async function selectAllFriendsByUserId(userId) {
       id: r.id,
       friendUserId,
       nickname: nicknameById.get(friendUserId) ?? null,
+      profileImageUrl: letterMeta.profileImageUrl,
       letterCount: letterMeta.letterCount,
       recentLetter: letterMeta.recentLetter, // null | { createdAt, letterPaperDesign, letterStampDesign }
     };
