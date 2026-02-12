@@ -91,7 +91,7 @@ export const getLetterDetail = async (id) => {
         letter: {
             id: letter.id,
             title: letter.title,
-            content: letter.title,
+            content: letter.content,
             deliveredAt: letter.deliveredAt,
             question: letter?.question.content,
             design: {
